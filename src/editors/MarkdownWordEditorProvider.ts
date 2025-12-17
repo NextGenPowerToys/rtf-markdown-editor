@@ -1,0 +1,278 @@
+import * as vscode from 'vscode';
+import * as fs from 'fs';
+import * as path from 'path';
+import { MessageFromWebview, MessageToWebview, EditorConfig } from '../types';
+import { markdownToHtml, detectRTLCharacters } from '../utils/markdownProcessor';
+import { htmlToMarkdown, hashContent } from '../utils/htmlProcessor';
+
+export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
+  private readonly context: vscode.ExtensionContext;
+  private documentMap: Map<string, WebviewDocument> = new Map();
+  private _onDidChangeCustomDocument = new vscode.EventEmitter<vscode.CustomDocumentContentChangeEvent<WebviewDocument>>();
+  
+  readonly onDidChangeCustomDocument = this._onDidChangeCustomDocument.event;
+
+  constructor(context: vscode.ExtensionContext) {
+    this.context = context;
+  }
+
+  async openCustomDocument(
+    uri: vscode.Uri,
+    openContext: vscode.CustomDocumentOpenContext,
+    token: vscode.CancellationToken
+  ): Promise<vscode.CustomDocument> {
+    const document = new WebviewDocument(uri, this.context);
+    this.documentMap.set(uri.toString(), document);
+    return document;
+  }
+
+  async resolveCustomEditor(
+    document: vscode.CustomDocument,
+    webviewPanel: vscode.WebviewPanel,
+    token: vscode.CancellationToken
+  ): Promise<void> {
+    const webviewDocument = document as WebviewDocument;
+    webviewPanel.webview.options = {
+      enableScripts: true,
+      localResourceRoots: [vscode.Uri.joinPath(this.context.extensionUri, 'media')],
+    };
+
+    webviewPanel.webview.html = this.getWebviewContent(webviewPanel.webview);
+
+    webviewDocument.onDidChange((e: WebviewDocumentChangeEvent) => {
+      webviewPanel.webview.postMessage({
+        type: 'externalUpdate',
+        content: e.content,
+        mermaidSources: e.mermaidSources,
+      } as MessageToWebview);
+    });
+
+    webviewPanel.webview.onDidReceiveMessage((message: MessageFromWebview) => {
+      this.handleWebviewMessage(message, webviewDocument, webviewPanel);
+    });
+  }
+
+  async saveCustomDocument(document: vscode.CustomDocument, cancellation: vscode.CancellationToken): Promise<void> {
+    const webviewDocument = document as WebviewDocument;
+    webviewDocument.save();
+  }
+
+  async saveCustomDocumentAs(
+    document: vscode.CustomDocument,
+    destination: vscode.Uri,
+    cancellation: vscode.CancellationToken
+  ): Promise<void> {
+    const webviewDocument = document as WebviewDocument;
+    fs.writeFileSync(destination.fsPath, webviewDocument.getContent(), 'utf8');
+  }
+
+  async revertCustomDocument(document: vscode.CustomDocument, cancellation: vscode.CancellationToken): Promise<void> {
+    const webviewDocument = document as WebviewDocument;
+    webviewDocument.reload();
+  }
+
+  async backupCustomDocument(
+    document: vscode.CustomDocument,
+    context: vscode.CustomDocumentBackupContext,
+    cancellation: vscode.CancellationToken
+  ): Promise<vscode.CustomDocumentBackup> {
+    const webviewDocument = document as WebviewDocument;
+    fs.copyFileSync(webviewDocument.uri.fsPath, context.destination.fsPath);
+    
+    return {
+      id: context.destination.toString(),
+      delete: async () => {
+        try {
+          fs.unlinkSync(context.destination.fsPath);
+        } catch (e) {
+          // Ignore errors
+        }
+      },
+    };
+  }
+
+  private handleWebviewMessage(
+    message: MessageFromWebview,
+    document: WebviewDocument,
+    panel: vscode.WebviewPanel
+  ) {
+    switch (message.type) {
+      case 'ready':
+        this.sendInitialContent(document, panel);
+        break;
+
+      case 'contentChanged':
+        document.updateContent(message.html || '', message.mermaidSources || {});
+        break;
+
+      case 'requestSaveNow':
+        document.save();
+        break;
+
+      case 'updateMermaid':
+        if (message.mermaidId && message.mermaidSource) {
+          document.updateMermaidBlock(message.mermaidId, message.mermaidSource);
+          document.save();
+        }
+        break;
+    }
+  }
+
+  private sendInitialContent(document: WebviewDocument, panel: vscode.WebviewPanel) {
+    const content = document.getContent();
+    const { html, mermaidSources } = markdownToHtml(content);
+    const rtl = detectRTLCharacters(content);
+
+    panel.webview.postMessage({
+      type: 'setContent',
+      html,
+      mermaidSources,
+      config: {
+        rtl,
+        autoDetectRtl: true,
+      },
+    } as MessageToWebview);
+  }
+
+  private getWebviewContent(webview: vscode.Webview): string {
+    const scriptUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this.context.extensionUri, 'media', 'editor.bundle.js')
+    );
+    const styleUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this.context.extensionUri, 'media', 'editor.css')
+    );
+
+    const nonce = getNonce();
+
+    return `<!DOCTYPE html>
+<html lang="en" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}'; font-src ${webview.cspSource};" />
+  <link rel="stylesheet" href="${styleUri}">
+  <title>RTF Markdown Editor</title>
+</head>
+<body>
+  <div class="editor-wrapper">
+    <div id="toolbar" class="toolbar"></div>
+    <div id="editor-container" class="editor-container"></div>
+    <div id="mermaid-modal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Edit Mermaid Diagram</h2>
+          <button class="modal-close" id="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <textarea id="mermaid-source" class="mermaid-textarea"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button id="mermaid-save" class="btn btn-primary">Save</button>
+          <button id="mermaid-cancel" class="btn btn-secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script nonce="${nonce}" src="${scriptUri}"></script>
+</body>
+</html>`;
+  }
+}
+
+class WebviewDocument extends vscode.Disposable implements vscode.CustomDocument {
+  private _uri: vscode.Uri;
+  private _documentData: string;
+  private _contentHash: string;
+  private _changeEmitter: vscode.EventEmitter<WebviewDocumentChangeEvent>;
+  private _context: vscode.ExtensionContext;
+  private _mermaidSources: Record<string, string> = {};
+  private _watcher: vscode.FileSystemWatcher | null = null;
+
+  onDidChange: vscode.Event<WebviewDocumentChangeEvent>;
+
+  constructor(uri: vscode.Uri, context: vscode.ExtensionContext) {
+    super(() => {
+      this._changeEmitter.dispose();
+      if (this._watcher) {
+        this._watcher.dispose();
+      }
+    });
+    this._uri = uri;
+    this._context = context;
+    this._documentData = fs.readFileSync(uri.fsPath, 'utf8');
+    this._contentHash = hashContent(this._documentData);
+    this._changeEmitter = new vscode.EventEmitter();
+    this.onDidChange = this._changeEmitter.event;
+
+    this.setupFileWatcher();
+  }
+
+  get uri(): vscode.Uri {
+    return this._uri;
+  }
+
+  getContent(): string {
+    return this._documentData;
+  }
+
+  reload() {
+    this._documentData = fs.readFileSync(this._uri.fsPath, 'utf8');
+    this._contentHash = hashContent(this._documentData);
+  }
+
+  updateContent(html: string, mermaidSources: Record<string, string>) {
+    this._mermaidSources = mermaidSources;
+    const markdown = htmlToMarkdown(html, mermaidSources);
+    const newHash = hashContent(markdown);
+
+    if (newHash !== this._contentHash) {
+      this._documentData = markdown;
+      this._contentHash = newHash;
+    }
+  }
+
+  updateMermaidBlock(mermaidId: string, source: string) {
+    this._mermaidSources[mermaidId] = source;
+  }
+
+  save() {
+    try {
+      fs.writeFileSync(this._uri.fsPath, this._documentData, 'utf8');
+      this._contentHash = hashContent(this._documentData);
+    } catch (error) {
+      vscode.window.showErrorMessage(`Failed to save file: ${error}`);
+    }
+  }
+
+  private setupFileWatcher() {
+    this._watcher = vscode.workspace.createFileSystemWatcher(this._uri.fsPath);
+
+    this._watcher.onDidChange(() => {
+      const newContent = fs.readFileSync(this._uri.fsPath, 'utf8');
+      const newHash = hashContent(newContent);
+
+      if (newHash !== this._contentHash) {
+        this._documentData = newContent;
+        this._contentHash = newHash;
+        this._changeEmitter.fire({
+          content: newContent,
+          mermaidSources: this._mermaidSources,
+        });
+      }
+    });
+  }
+}
+
+interface WebviewDocumentChangeEvent {
+  content: string;
+  mermaidSources: Record<string, string>;
+}
+
+function getNonce() {
+  let text = '';
+  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  for (let i = 0; i < 32; i++) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+  return text;
+}

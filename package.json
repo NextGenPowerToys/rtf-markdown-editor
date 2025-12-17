@@ -1,0 +1,103 @@
+{
+  "name": "rtf-markdown-editor",
+  "displayName": "RTF Markdown Editor",
+  "description": "Word-like WYSIWYG Markdown Editor (RTL-first, Azure DevOps Mermaid, Autosave, FULLY OFFLINE)",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other",
+    "Notebooks"
+  ],
+  "activationEvents": [
+    "onCustomEditor:rtf-markdown-editor.editor"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "rtf-markdown-editor.editor",
+        "displayName": "RTF Markdown Editor",
+        "selector": [
+          {
+            "filenamePattern": "*.md"
+          }
+        ],
+        "priority": "option"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "rtf-markdown-editor.openEditor",
+          "when": "resourceExtname == .md",
+          "group": "1_modification"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "rtf-markdown-editor.openEditor",
+        "title": "Edit with RTF Markdown Editor",
+        "category": "RTF Markdown"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run esbuild-base -- --minify",
+    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node",
+    "esbuild": "npm run esbuild-base -- --sourcemap",
+    "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
+    "build:webview": "esbuild ./media/editor.ts --bundle --outfile=media/editor.bundle.js --format=iife --sourcemap",
+    "build:webview-watch": "npm run build:webview -- --watch",
+    "build": "npm run esbuild && npm run build:webview",
+    "watch": "concurrently \"npm run esbuild-watch\" \"npm run build:webview-watch\"",
+    "compile": "tsc -p ./",
+    "test": "jest",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "concurrently": "^8.0.0",
+    "esbuild": "^0.19.0",
+    "eslint": "^8.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@tiptap/core": "^2.1.0",
+    "@tiptap/extension-bold": "^2.1.0",
+    "@tiptap/extension-bullet-list": "^2.1.0",
+    "@tiptap/extension-code": "^2.1.0",
+    "@tiptap/extension-code-block": "^2.1.0",
+    "@tiptap/extension-color": "^2.1.0",
+    "@tiptap/extension-document": "^2.1.0",
+    "@tiptap/extension-heading": "^2.1.0",
+    "@tiptap/extension-highlight": "^2.1.0",
+    "@tiptap/extension-history": "^2.1.0",
+    "@tiptap/extension-horizontal-rule": "^2.1.0",
+    "@tiptap/extension-image": "^2.1.0",
+    "@tiptap/extension-italic": "^2.1.0",
+    "@tiptap/extension-link": "^2.1.0",
+    "@tiptap/extension-list-item": "^2.1.0",
+    "@tiptap/extension-ordered-list": "^2.1.0",
+    "@tiptap/extension-paragraph": "^2.1.0",
+    "@tiptap/extension-placeholder": "^2.1.0",
+    "@tiptap/extension-strike": "^2.1.0",
+    "@tiptap/extension-table": "^2.1.0",
+    "@tiptap/extension-table-cell": "^2.1.0",
+    "@tiptap/extension-table-header": "^2.1.0",
+    "@tiptap/extension-table-row": "^2.1.0",
+    "@tiptap/extension-text": "^2.1.0",
+    "@tiptap/extension-text-align": "^2.1.0",
+    "@tiptap/extension-underline": "^2.1.0",
+    "@tiptap/pm": "^2.1.0",
+    "@tiptap/starter-kit": "^2.1.0",
+    "mermaid": "^10.6.0",
+    "markdown-it": "^13.0.0",
+    "markdown-it-front-matter": "^0.2.4"
+  }
+}

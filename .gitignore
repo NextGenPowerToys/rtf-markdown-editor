@@ -1,0 +1,8 @@
+node_modules/
+dist/
+*.vsix
+.DS_Store
+.vscode-test/
+*.log
+out/
+media/*.bundle.js*
