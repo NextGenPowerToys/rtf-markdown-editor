@@ -7,8 +7,8 @@ html, body {
   padding: 0;
   height: 100%;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  background-color: var(--vscode-editor-background);
-  color: var(--vscode-editor-foreground);
+  background-color: #ffffff;
+  color: #000000;
 }
 
 .editor-wrapper {
@@ -16,6 +16,7 @@ html, body {
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
+  background-color: #ffffff;
 }
 
 /* Toolbar */
@@ -24,8 +25,8 @@ html, body {
   flex-wrap: wrap;
   gap: 4px;
   padding: 8px 12px;
-  background-color: var(--vscode-editor-background);
-  border-bottom: 1px solid var(--vscode-editorWidget-border);
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #d0d0d0;
   border-radius: 0;
   overflow-y: auto;
 }
@@ -34,7 +35,7 @@ html, body {
   display: flex;
   gap: 2px;
   padding-right: 8px;
-  border-right: 1px solid var(--vscode-editorWidget-border);
+  border-right: 1px solid #d0d0d0;
 }
 
 .toolbar-group:last-child {
@@ -45,9 +46,9 @@ button.toolbar-btn {
   padding: 4px 8px;
   min-width: 32px;
   height: 32px;
-  border: 1px solid var(--vscode-editorWidget-border);
-  background-color: var(--vscode-button-secondaryBackground);
-  color: var(--vscode-button-secondaryForeground);
+  border: 1px solid #d0d0d0;
+  background-color: #ffffff;
+  color: #333333;
   cursor: pointer;
   border-radius: 2px;
   font-size: 12px;
@@ -55,22 +56,22 @@ button.toolbar-btn {
 }
 
 button.toolbar-btn:hover {
-  background-color: var(--vscode-button-hoverBackground);
+  background-color: #e8e8e8;
 }
 
 button.toolbar-btn.active,
 button.toolbar-btn[aria-pressed="true"] {
-  background-color: var(--vscode-button-background);
-  color: var(--vscode-button-foreground);
-  border-color: var(--vscode-focusBorder);
+  background-color: #0078d4;
+  color: #ffffff;
+  border-color: #0078d4;
 }
 
 select.toolbar-select {
   padding: 4px 6px;
   height: 32px;
-  border: 1px solid var(--vscode-editorWidget-border);
-  background-color: var(--vscode-editorWidget-background);
-  color: var(--vscode-editorWidget-foreground);
+  border: 1px solid #d0d0d0;
+  background-color: #ffffff;
+  color: #333333;
   border-radius: 2px;
   cursor: pointer;
   font-size: 12px;
@@ -81,7 +82,7 @@ select.toolbar-select {
   flex: 1;
   overflow: auto;
   padding: 16px;
-  background-color: var(--vscode-editor-background);
+  background-color: #ffffff;
 }
 
 .ProseMirror {
@@ -101,7 +102,7 @@ html[dir="rtl"] .editor-container {
 }
 
 html[dir="rtl"] .toolbar-group {
-  border-left: 1px solid var(--vscode-editorWidget-border);
+  border-left: 1px solid #d0d0d0;
   border-right: none;
   padding-left: 8px;
   padding-right: 0;
@@ -159,16 +160,16 @@ html[dir="rtl"] .toolbar-group:first-child {
 }
 
 .ProseMirror code {
-  background-color: var(--vscode-textCodeBlock-background);
-  color: var(--vscode-textCodeBlock-foreground);
+  background-color: #f0f0f0;
+  color: #333333;
   padding: 2px 4px;
   border-radius: 2px;
   font-family: 'Consolas', 'Monaco', monospace;
 }
 
 .ProseMirror pre {
-  background-color: var(--vscode-textCodeBlock-background);
-  color: var(--vscode-textCodeBlock-foreground);
+  background-color: #f0f0f0;
+  color: #333333;
   padding: 12px;
   border-radius: 4px;
   overflow-x: auto;
@@ -182,7 +183,7 @@ html[dir="rtl"] .toolbar-group:first-child {
 }
 
 .ProseMirror blockquote {
-  border-left: 3px solid var(--vscode-editorWidget-border);
+  border-left: 3px solid #999999;
   padding-left: 12px;
   margin-left: 0;
   margin-right: 0;
@@ -192,7 +193,7 @@ html[dir="rtl"] .toolbar-group:first-child {
 
 html[dir="rtl"] .ProseMirror blockquote {
   border-left: none;
-  border-right: 3px solid var(--vscode-editorWidget-border);
+  border-right: 3px solid #999999;
   padding-left: 0;
   padding-right: 12px;
   margin-left: 0;
@@ -223,7 +224,7 @@ html[dir="rtl"] .ProseMirror ol {
 
 .ProseMirror table th,
 .ProseMirror table td {
-  border: 1px solid var(--vscode-editorWidget-border);
+  border: 1px solid #cccccc;
   padding: 8px;
   text-align: left;
 }
@@ -234,18 +235,18 @@ html[dir="rtl"] .ProseMirror table td {
 }
 
 .ProseMirror table th {
-  background-color: var(--vscode-editorWidget-background);
+  background-color: #eeeeee;
   font-weight: bold;
 }
 
 .ProseMirror a {
-  color: var(--vscode-textLink-foreground);
+  color: #0078d4;
   text-decoration: underline;
   cursor: pointer;
 }
 
 .ProseMirror a:hover {
-  color: var(--vscode-textLink-activeForeground);
+  color: #005a9e;
 }
 
 .ProseMirror img {
@@ -257,10 +258,10 @@ html[dir="rtl"] .ProseMirror table td {
 /* Mermaid diagram placeholder */
 [data-mdwe="mermaid"] {
   display: inline-block;
-  border: 1px dashed var(--vscode-editorWidget-border);
+  border: 1px dashed #cccccc;
   padding: 16px;
   margin: 1em 0;
-  background-color: var(--vscode-editorWidget-background);
+  background-color: #f8f8f8;
   cursor: pointer;
   border-radius: 4px;
   min-height: 200px;
@@ -271,7 +272,7 @@ html[dir="rtl"] .ProseMirror table td {
 }
 
 [data-mdwe="mermaid"]:hover {
-  background-color: var(--vscode-editor-selectionBackground);
+  background-color: #e8e8ff;
 }
 
 .mermaid-diagram {
@@ -294,8 +295,8 @@ html[dir="rtl"] .ProseMirror table td {
 }
 
 .modal-content {
-  background-color: var(--vscode-editor-background);
-  border: 1px solid var(--vscode-editorWidget-border);
+  background-color: #ffffff;
+  border: 1px solid #cccccc;
   border-radius: 4px;
   max-width: 90vw;
   max-height: 90vh;
@@ -309,7 +310,7 @@ html[dir="rtl"] .ProseMirror table td {
   justify-content: space-between;
   align-items: center;
   padding: 16px;
-  border-bottom: 1px solid var(--vscode-editorWidget-border);
+  border-bottom: 1px solid #e0e0e0;
 }
 
 .modal-header h2 {
@@ -320,7 +321,7 @@ html[dir="rtl"] .ProseMirror table td {
 .modal-close {
   background: none;
   border: none;
-  color: var(--vscode-editorWidget-foreground);
+  color: #333333;
   font-size: 24px;
   cursor: pointer;
   padding: 0;
@@ -332,7 +333,7 @@ html[dir="rtl"] .ProseMirror table td {
 }
 
 .modal-close:hover {
-  background-color: var(--vscode-editorWidget-border);
+  background-color: #f0f0f0;
 }
 
 .modal-body {
@@ -345,9 +346,9 @@ html[dir="rtl"] .ProseMirror table td {
   width: 100%;
   height: 100%;
   min-height: 300px;
-  border: 1px solid var(--vscode-editorWidget-border);
-  background-color: var(--vscode-editorWidget-background);
-  color: var(--vscode-editorWidget-foreground);
+  border: 1px solid #cccccc;
+  background-color: #ffffff;
+  color: #333333;
   padding: 8px;
   font-family: 'Consolas', 'Monaco', monospace;
   font-size: 12px;
@@ -359,14 +360,14 @@ html[dir="rtl"] .ProseMirror table td {
   justify-content: flex-end;
   gap: 8px;
   padding: 16px;
-  border-top: 1px solid var(--vscode-editorWidget-border);
-  background-color: var(--vscode-editorGroupHeader-tabsBackground);
+  border-top: 1px solid #e0e0e0;
+  background-color: #f8f8f8;
 }
 
 /* Buttons */
 .btn {
   padding: 6px 16px;
-  border: 1px solid var(--vscode-editorWidget-border);
+  border: 1px solid #cccccc;
   border-radius: 2px;
   cursor: pointer;
   font-size: 12px;
@@ -374,22 +375,23 @@ html[dir="rtl"] .ProseMirror table td {
 }
 
 .btn-primary {
-  background-color: var(--vscode-button-background);
-  color: var(--vscode-button-foreground);
-  border-color: var(--vscode-button-background);
+  background-color: #0078d4;
+  color: #ffffff;
+  border-color: #0078d4;
 }
 
 .btn-primary:hover {
-  background-color: var(--vscode-button-hoverBackground);
+  background-color: #005a9e;
 }
 
 .btn-secondary {
-  background-color: var(--vscode-button-secondaryBackground);
-  color: var(--vscode-button-secondaryForeground);
+  background-color: #ffffff;
+  color: #333333;
+  border-color: #cccccc;
 }
 
 .btn-secondary:hover {
-  background-color: var(--vscode-button-secondaryHoverBackground);
+  background-color: #e8e8e8;
 }
 
 /* Selection and cursor */

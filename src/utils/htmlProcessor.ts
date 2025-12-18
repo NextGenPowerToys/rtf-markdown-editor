@@ -2,14 +2,13 @@ import { MermaidBlock } from '../types';
 
 /**
  * Convert HTML back to Markdown
- * Preserves inline styles and block formatting
+ * Preserves inline styles and block formatting including tables
  */
 export function htmlToMarkdown(html: string, mermaidSources: Record<string, string>): string {
-  // Simple HTML to Markdown conversion
-  // For production, consider using a library like turndown.js
-  // but we must ensure it's bundled locally
-
   let markdown = html;
+
+  // Convert tables to Markdown format FIRST (before other replacements)
+  markdown = convertTablesToMarkdown(markdown);
 
   // Convert common HTML tags to Markdown
   markdown = markdown
@@ -47,6 +46,52 @@ export function htmlToMarkdown(html: string, mermaidSources: Record<string, stri
     .trim();
 
   return markdown;
+}
+
+/**
+ * Convert HTML tables to Markdown table format
+ */
+function convertTablesToMarkdown(html: string): string {
+  const tableRegex = /<table[^>]*>([\s\S]*?)<\/table>/gi;
+  
+  return html.replace(tableRegex, (match) => {
+    const rows: string[][] = [];
+    const rowRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+    let rowMatch;
+    
+    while ((rowMatch = rowRegex.exec(match)) !== null) {
+      const rowContent = rowMatch[1];
+      const cells: string[] = [];
+      const cellRegex = /<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi;
+      let cellMatch;
+      
+      while ((cellMatch = cellRegex.exec(rowContent)) !== null) {
+        let cellText = cellMatch[1]
+          .replace(/<[^>]*>/g, '') // Remove any HTML tags
+          .trim();
+        cells.push(cellText);
+      }
+      
+      if (cells.length > 0) {
+        rows.push(cells);
+      }
+    }
+    
+    if (rows.length === 0) return match; // Return original if no rows parsed
+    
+    // Build Markdown table
+    let mdTable = '';
+    rows.forEach((row, index) => {
+      mdTable += '| ' + row.join(' | ') + ' |\n';
+      
+      // Add separator after first row (header)
+      if (index === 0) {
+        mdTable += '|' + row.map(() => ' --- ').join('|') + '|\n';
+      }
+    });
+    
+    return mdTable + '\n';
+  });
 }
 
 /**
