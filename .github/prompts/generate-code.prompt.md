@@ -66,7 +66,17 @@ Rich formatting toolbar:
 * Inline code & code blocks
 * Tables (basic)
 
-### 2.2 Editing behavior
+### 2.2 Code Formatting (CRITICAL)
+
+**Code blocks and inline code MUST ALWAYS align to the left, regardless of RTL/LTR mode.**
+
+* Inline code (`<code>` elements): `text-align: left`
+* Code blocks (`<pre>` elements): `text-align: left`
+* Code lines within blocks: always left-aligned
+* This applies even in RTL (Hebrew/Arabic) mode
+* Code is language-neutral and should follow universal programming conventions
+
+### 2.3 Editing behavior
 
 * Direct text editing
 * Selection-based formatting
@@ -75,35 +85,49 @@ Rich formatting toolbar:
 
 ---
 
-## 3. RTL (Right-to-Left) — TOP PRIORITY
+## 3. Code Alignment (CRITICAL)
 
-### 3.1 Defaults
+**All code (inline and block) must use `text-align: left` and not be affected by RTL/LTR mode.**
+
+* Inline code: left-aligned
+* Code blocks: left-aligned
+* Language badges: positioned independent of RTL
+* Scrollbars: right side for code blocks
+
+---
+
+## 4. RTL (Right-to-Left) — TOP PRIORITY
+
+### 4.1 Defaults
 
 * Webview loads with:
 
   * `dir="rtl"`
   * `text-align: right`
 * Cursor behavior must feel natural for Hebrew / Arabic.
+* **Exception:** Code blocks and inline code always use `text-align: left`
 
-### 3.2 Controls
+### 4.2 Controls
 
 * Toolbar toggle: **RTL / LTR**
 * Alignment controls must work in both modes.
+* **Exception:** Code blocks remain left-aligned in both modes
 
-### 3.3 Auto-detection
+### 4.3 Auto-detection
 
 * Detect Hebrew / Arabic characters and auto-enable RTL.
+* Code blocks remain left-aligned regardless of auto-detection.
 
 ---
 
-## 4. Markdown ↔ HTML Conversion
+## 5. Markdown ↔ HTML Conversion
 
-### 4.1 Storage model
+### 5.1 Storage model
 
 * **Markdown is the only persisted format**
 * Webview edits HTML → saved back to Markdown
 
-### 4.2 Conversion guarantees
+### 5.2 Conversion guarantees
 
 * Markdown → HTML on open
 * HTML → Markdown on save
@@ -118,9 +142,9 @@ Rich formatting toolbar:
 
 ---
 
-## 5. Azure DevOps Wiki Mermaid Support (MUST)
+## 6. Azure DevOps Wiki Mermaid Support (MUST)
 
-### 5.1 Syntax (ONLY this form)
+### 6.1 Syntax (ONLY this form)
 
 ```md
 :::: mermaid
@@ -139,29 +163,29 @@ Allowed variants:
 
 ---
 
-### 5.2 Rendering (offline)
+### 6.2 Rendering (offline)
 
 * Mermaid **must be bundled locally**
 * No CDN usage
 * No dynamic imports from the internet
 * Render diagrams inside the webview
 
-### 5.3 Editing Mermaid
+### 6.3 Editing Mermaid
 
-* Click diagram → **“Edit Mermaid Source”**
+* Click diagram → **"Edit Mermaid Source"**
 * Edit raw Mermaid text
 * Save re-renders diagram
 * Persist back to Markdown using `:::: mermaid`
 
-### 5.4 Round-trip stability
+### 6.4 Round-trip stability
 
 * Mermaid blocks survive open → autosave → reopen without modification
 
 ---
 
-## 6. Autosave (MUST)
+## 7. Autosave (MUST)
 
-### 6.1 Behavior
+### 7.1 Behavior
 
 * Autosave **750ms after last edit** (debounced)
 * Autosave on:
@@ -170,7 +194,7 @@ Allowed variants:
   * Tab hidden
   * File close
 
-### 6.2 Constraints
+### 7.2 Constraints
 
 * Hash content to prevent unnecessary saves
 * Mark document clean after save
@@ -181,9 +205,9 @@ Allowed variants:
 
 ---
 
-## 7. Editor Technology (OFFLINE-SAFE)
+## 8. Editor Technology (OFFLINE-SAFE)
 
-### 7.1 Rich editor
+### 8.1 Rich editor
 
 Use a **locally bundled** rich-text editor:
 
@@ -202,9 +226,9 @@ Must support:
 
 ---
 
-## 8. Markdown Processing Strategy (Recommended)
+## 9. Markdown Processing Strategy (Recommended)
 
-### 8.1 Preprocessing
+### 9.1 Preprocessing
 
 * Extract all `:::: mermaid` blocks
 * Replace with placeholders:
@@ -214,7 +238,7 @@ Must support:
   ```
 * Store Mermaid source map in memory
 
-### 8.2 Postprocessing
+### 9.2 Postprocessing
 
 * Convert editor HTML → Markdown
 * Re-inject Mermaid blocks:
@@ -228,9 +252,9 @@ Must support:
 
 ---
 
-## 9. VS Code Integration
+## 10. VS Code Integration
 
-### 9.1 Custom editor
+### 10.1 Custom editor
 
 * Implement `CustomEditorProvider`
 * Support:
@@ -243,7 +267,7 @@ Must support:
 
 ---
 
-## 10. Messaging Protocol
+## 11. Messaging Protocol
 
 ### Webview → Extension
 
@@ -263,7 +287,7 @@ Must support:
 
 ---
 
-## 11. Security & Offline Guarantees
+## 12. Security & Offline Guarantees
 
 * Strict CSP
 * `webview.asWebviewUri`
@@ -274,7 +298,7 @@ Must support:
 
 ---
 
-## 12. Project Structure
+## 13. Project Structure
 
 ```
 .
@@ -294,7 +318,7 @@ Bundle webview assets with **esbuild or webpack**.
 
 ---
 
-## 13. Deliverables
+## 14. Deliverables
 
 * Fully working **RTF Markdown Editor**
 * 100% offline operation
@@ -305,7 +329,7 @@ Bundle webview assets with **esbuild or webpack**.
 
 ---
 
-## 14. Non-goals
+## 15. Non-goals
 
 * No cloud services
 * No AI

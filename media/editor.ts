@@ -93,6 +93,9 @@ function initializeEditor() {
         contentHash = newHash;
         debounceAutoSave(html);
       }
+      
+      // Process code blocks for language detection and copy buttons
+      processCodeBlocks();
     },
     onBlur: () => {
       saveContent();
@@ -434,6 +437,8 @@ window.addEventListener('message', (event) => {
       if (editor && message.html) {
         editor.commands.setContent(message.html);
         contentHash = hashContent(message.html);
+        // Process code blocks after content is set
+        setTimeout(() => processCodeBlocks(), 100);
       }
       if (message.mermaidSources) {
         mermaidSources = message.mermaidSources;
@@ -483,6 +488,68 @@ function renderMermaidDiagrams() {
       } catch (e) {
         console.error('Mermaid render error:', e);
       }
+    }
+  });
+}
+
+/**
+ * Process code blocks to add language detection and styling
+ */
+function processCodeBlocks() {
+  if (!editor) return;
+  
+  const editorElement = document.querySelector('.ProseMirror');
+  if (!editorElement) return;
+  
+  const codeBlocks = editorElement.querySelectorAll('pre');
+  
+  codeBlocks.forEach((pre) => {
+    const codeElement = pre.querySelector('code');
+    if (!codeElement) return;
+    
+    // Extract language from class or data attribute
+    const classes = codeElement.className || '';
+    const languageMatch = classes.match(/language-(\w+)/);
+    const language = languageMatch ? languageMatch[1].toUpperCase() : 'CODE';
+    
+    // Set data-language attribute for CSS ::before
+    pre.setAttribute('data-language', language);
+    
+    // Add copy button functionality
+    if (!pre.querySelector('.code-copy-button')) {
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'code-copy-button';
+      copyBtn.title = 'Copy to clipboard';
+      copyBtn.textContent = '📋 Copy';
+      copyBtn.style.position = 'absolute';
+      copyBtn.style.top = '8px';
+      copyBtn.style.right = `${60 + language.length}px`;
+      
+      copyBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const text = codeElement.textContent || '';
+        navigator.clipboard.writeText(text).then(() => {
+          const originalText = copyBtn.textContent;
+          copyBtn.textContent = '✓ Copied!';
+          copyBtn.style.background = 'rgba(16, 124, 16, 0.8)';
+          
+          setTimeout(() => {
+            copyBtn.textContent = originalText;
+            copyBtn.style.background = 'rgba(255, 255, 255, 0.1)';
+          }, 2000);
+        }).catch((err) => {
+          console.error('Copy failed:', err);
+          copyBtn.textContent = '✗ Failed';
+          setTimeout(() => {
+            copyBtn.textContent = '📋 Copy';
+          }, 2000);
+        });
+      });
+      
+      pre.style.position = 'relative';
+      pre.appendChild(copyBtn);
     }
   });
 }

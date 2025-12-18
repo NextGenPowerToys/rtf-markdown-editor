@@ -47,12 +47,21 @@ Build a complete VS Code extension from scratch for word-like WYSIWYG markdown e
 - Lists (bulleted/numbered) & indentation
 - Links, images, quotes, code blocks, tables
 
+### 6.5 Code Formatting (CRITICAL)
+
+**Code blocks and inline code must ALWAYS align left:**
+- Inline code uses `text-align: left`
+- Code blocks use `text-align: left`
+- This applies even in RTL mode (Hebrew/Arabic)
+- Code is language-neutral and follows universal programming conventions
+
 ### 7. RTL (Right-to-Left) Support
 
 - Webview defaults to `dir="rtl"` & `text-align: right`
 - Add RTL/LTR toggle in toolbar
 - Auto-detect Hebrew/Arabic characters
 - Ensure alignment controls work in both modes
+- **Exception:** Code blocks always use left alignment
 
 ### 8. Azure DevOps Mermaid `::::` Blocks
 

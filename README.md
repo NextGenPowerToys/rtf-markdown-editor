@@ -122,6 +122,13 @@ Alignment controls work correctly in both modes:
 - In RTL mode: left/right buttons are visually reversed
 - Alignment is automatically applied based on direction
 
+### Code Formatting
+
+**Important:** All code (inline and code blocks) always uses left alignment, regardless of RTL/LTR mode:
+- Inline code: `text-align: left`
+- Code blocks: `text-align: left`
+- This ensures code readability across all languages (code is language-neutral and follows universal programming conventions)
+
 ## File Format
 
 Files are always saved in **Markdown** format. The editor:
