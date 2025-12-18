@@ -32,9 +32,17 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
     token: vscode.CancellationToken
   ): Promise<void> {
     const webviewDocument = document as WebviewDocument;
+    
+    // Allow access to media folder and workspace folder
+    const workspaceFolder = vscode.workspace.getWorkspaceFolder(document.uri);
+    const localResourceRoots = [vscode.Uri.joinPath(this.context.extensionUri, 'media')];
+    if (workspaceFolder) {
+      localResourceRoots.push(workspaceFolder.uri);
+    }
+    
     webviewPanel.webview.options = {
       enableScripts: true,
-      localResourceRoots: [vscode.Uri.joinPath(this.context.extensionUri, 'media')],
+      localResourceRoots,
     };
 
     webviewPanel.webview.html = this.getWebviewContent(webviewPanel.webview);
@@ -120,8 +128,11 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
 
   private sendInitialContent(document: WebviewDocument, panel: vscode.WebviewPanel) {
     const content = document.getContent();
-    const { html, mermaidSources } = markdownToHtml(content);
+    let { html, mermaidSources } = markdownToHtml(content);
     const rtl = detectRTLCharacters(content);
+
+    // Convert image paths to webview URIs
+    html = this.convertImagePathsToWebviewUris(html, document.uri, panel.webview);
 
     panel.webview.postMessage({
       type: 'setContent',
@@ -132,6 +143,31 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
         autoDetectRtl: true,
       },
     } as MessageToWebview);
+  }
+
+  private convertImagePathsToWebviewUris(html: string, documentUri: vscode.Uri, webview: vscode.Webview): string {
+    // Replace img src attributes with webview URIs
+    return html.replace(/<img([^>]*?)src="([^"]+)"([^>]*?)>/g, (match, pre, src, post) => {
+      // Skip data URLs
+      if (src.startsWith('data:')) {
+        return match;
+      }
+
+      // Resolve relative paths
+      let imagePath: vscode.Uri;
+      if (src.startsWith('/')) {
+        // Absolute path
+        imagePath = vscode.Uri.from({ scheme: 'file', path: src });
+      } else {
+        // Relative path - resolve from document directory
+        const documentDir = path.dirname(documentUri.fsPath);
+        imagePath = vscode.Uri.file(path.join(documentDir, src));
+      }
+
+      // Convert to webview URI
+      const webviewUri = webview.asWebviewUri(imagePath);
+      return `<img${pre}src="${webviewUri}"${post}>`;
+    });
   }
 
   private getWebviewContent(webview: vscode.Webview): string {
@@ -149,7 +185,7 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}'; font-src ${webview.cspSource};" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}'; font-src ${webview.cspSource}; img-src ${webview.cspSource} data:" />
   <link rel="stylesheet" href="${styleUri}">
   <title>RTF Markdown Editor</title>
 </head>

@@ -323,35 +323,73 @@ html[dir="rtl"] .ProseMirror table td {
   color: #005a9e;
 }
 
-.ProseMirror img {
+/* Image styling */
+.ProseMirror img,
+.editor-image {
   max-width: 100%;
   height: auto;
   margin: 1em 0;
+  border-radius: 4px;
+  display: block;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ProseMirror img:hover,
+.editor-image:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.ProseMirror img[src*="data:image"],
+.editor-image[src*="data:image"] {
+  max-width: 100%;
+}
+
+/* Support SVG images */
+.ProseMirror svg,
+.editor-image[src*=".svg"] {
+  max-width: 100%;
+  height: auto;
+  display: block;
 }
 
 /* Mermaid diagram placeholder */
-[data-mdwe="mermaid"] {
-  display: inline-block;
-  border: 1px dashed #cccccc;
+[data-mdwe="mermaid"],
+.mermaid-placeholder {
+  display: block;
+  border: 1px solid #e0e0e0;
   padding: 16px;
   margin: 1em 0;
   background-color: #f8f8f8;
-  cursor: pointer;
   border-radius: 4px;
   min-height: 200px;
   min-width: 300px;
+}
+
+[data-mdwe="mermaid"] svg,
+.mermaid-placeholder svg {
+  max-width: 100%;
+  height: auto !important;
+  display: block;
+  margin: 0 auto;
+}
+
+/* Ensure SVG content is visible */
+[data-mdwe="mermaid"] svg g,
+.mermaid-placeholder svg g {
+  display: block;
+}
+
+.mermaid {
   display: flex;
-  align-items: center;
   justify-content: center;
-}
-
-[data-mdwe="mermaid"]:hover {
-  background-color: #e8e8ff;
-}
-
-.mermaid-diagram {
+  align-items: center;
   width: 100%;
+}
+
+.mermaid svg {
+  max-width: 100%;
   height: auto;
+  display: block;
 }
 
 /* Modal */
@@ -416,6 +454,40 @@ html[dir="rtl"] .ProseMirror table td {
   padding: 16px;
 }
 
+.modal-split-pane {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+}
+
+.modal-pane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  background-color: #fafafa;
+  overflow: hidden;
+}
+
+.modal-pane-header {
+  padding: 8px 12px;
+  background-color: #f0f0f0;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #333333;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.modal-source-pane {
+  position: relative;
+}
+
+.modal-preview-pane {
+  min-width: 300px;
+}
+
 .mermaid-textarea {
   width: 100%;
   height: 100%;
@@ -427,6 +499,36 @@ html[dir="rtl"] .ProseMirror table td {
   font-family: 'Consolas', 'Monaco', monospace;
   font-size: 12px;
   resize: none;
+}
+
+.mermaid-preview {
+  flex: 1;
+  padding: 12px;
+  background-color: #ffffff;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mermaid-preview svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.mermaid-error {
+  padding: 8px 12px;
+  background-color: #fff4f4;
+  color: #d13438;
+  border: 1px solid #f0adac;
+  border-radius: 4px;
+  font-size: 12px;
+  margin-top: 8px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  max-height: 80px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .modal-footer {

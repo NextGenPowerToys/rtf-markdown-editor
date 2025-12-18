@@ -10,9 +10,50 @@ import Table from '@tiptap/extension-table';
 import TableRow from '@tiptap/extension-table-row';
 import TableHeader from '@tiptap/extension-table-header';
 import TableCell from '@tiptap/extension-table-cell';
+import { Node } from '@tiptap/core';
 
 import { MessageFromWebview, MessageToWebview, EditorConfig } from '../types';
 import mermaid from 'mermaid';
+
+// Custom extension to preserve Mermaid placeholder divs
+const MermaidPlaceholder = Node.create({
+  name: 'mermaidPlaceholder',
+  group: 'block',
+  atom: true,
+  
+  addAttributes() {
+    return {
+      'data-id': {
+        default: '',
+        parseHTML: element => element.getAttribute('data-id'),
+      },
+    };
+  },
+
+  parseHTML() {
+    return [
+      {
+        tag: 'div[data-mdwe="mermaid"]',
+        getAttrs: (element) => {
+          if (typeof element === 'string') return false;
+          return {
+            'data-id': element.getAttribute('data-id') || '',
+          };
+        },
+      },
+    ];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return ['div', { ...HTMLAttributes, 'data-mdwe': 'mermaid', class: 'mermaid-placeholder' }, 0];
+  },
+
+  parseDOM: [
+    {
+      tag: 'div[data-mdwe="mermaid"]',
+    },
+  ],
+});
 
 // Type definitions for VSCode API
 interface VSCodeApi {
@@ -72,6 +113,10 @@ function initializeEditor() {
       }),
       Image.configure({
         allowBase64: true,
+        inline: false,
+        HTMLAttributes: {
+          class: 'editor-image',
+        },
       }),
       Color,
       Highlight.configure({
@@ -83,6 +128,7 @@ function initializeEditor() {
       TableRow,
       TableHeader,
       TableCell,
+      MermaidPlaceholder,
     ],
     content: '<p></p>',
     onUpdate: ({ editor: e }) => {
@@ -96,6 +142,9 @@ function initializeEditor() {
       
       // Process code blocks for language detection and copy buttons
       processCodeBlocks();
+      
+      // Render Mermaid diagrams after content updates
+      setTimeout(() => renderMermaidDiagrams(), 100);
     },
     onBlur: () => {
       saveContent();
@@ -306,10 +355,34 @@ function attachToolbarEventListeners() {
   });
 
   document.getElementById('image-btn')?.addEventListener('click', () => {
-    const src = prompt('Enter image URL or relative path:');
-    if (src) {
-      editor!.chain().focus().setImage({ src }).run();
-    }
+    // Create hidden file input
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/png,image/jpeg,image/jpg,image/svg+xml,.png,.jpg,.jpeg,.svg';
+    
+    fileInput.addEventListener('change', (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      
+      // Validate file type
+      const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml'];
+      if (!validTypes.includes(file.type)) {
+        alert('Please select a valid image file (PNG, JPG, or SVG)');
+        return;
+      }
+      
+      // Read file as base64
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64String = event.target?.result as string;
+        if (base64String) {
+          editor!.chain().focus().setImage({ src: base64String }).run();
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+    
+    fileInput.click();
   });
 
   document.getElementById('table-btn')?.addEventListener('click', () => {
@@ -350,6 +423,12 @@ function openMermaidModal(mermaidId: string) {
   if (textarea) {
     textarea.value = mermaidSources[mermaidId] || '';
     textarea.focus();
+    
+    // Set up live preview on input
+    textarea.addEventListener('input', updateMermaidPreview);
+    
+    // Initial preview render
+    setTimeout(() => updateMermaidPreview(), 50);
   }
 
   const modal = document.getElementById('mermaid-modal');
@@ -363,7 +442,54 @@ function closeMermaidModal() {
   if (modal) {
     modal.style.display = 'none';
   }
+  
+  // Clean up event listener
+  const textarea = document.getElementById('mermaid-source') as HTMLTextAreaElement;
+  if (textarea) {
+    textarea.removeEventListener('input', updateMermaidPreview);
+  }
+  
   currentMermaidEditId = null;
+}
+
+function updateMermaidPreview() {
+  const textarea = document.getElementById('mermaid-source') as HTMLTextAreaElement;
+  const preview = document.getElementById('mermaid-preview');
+  const errorDiv = document.getElementById('mermaid-error');
+  
+  if (!textarea || !preview || !errorDiv) return;
+  
+  const source = textarea.value.trim();
+  
+  if (!source) {
+    preview.innerHTML = '<div style="color: #999;">Diagram preview will appear here</div>';
+    errorDiv.style.display = 'none';
+    return;
+  }
+  
+  try {
+    // Clear error
+    errorDiv.style.display = 'none';
+    errorDiv.innerHTML = '';
+    
+    // Clear preview
+    preview.innerHTML = '<div style="color: #999;">Rendering...</div>';
+    
+    // Render Mermaid diagram
+    const uniqueId = 'mermaid-preview-' + Date.now();
+    preview.innerHTML = `<div id="${uniqueId}">${source}</div>`;
+    
+    // Initialize Mermaid rendering
+    if (typeof mermaid !== 'undefined' && mermaid.contentLoaded) {
+      mermaid.contentLoaded();
+    } else if (typeof mermaid !== 'undefined' && mermaid.run) {
+      mermaid.run();
+    }
+  } catch (error) {
+    preview.innerHTML = '<div style="color: #999;">Error rendering preview</div>';
+    errorDiv.style.display = 'block';
+    errorDiv.innerHTML = `Error: ${error instanceof Error ? error.message : String(error)}`;
+  }
 }
 
 function saveMermaidEdit() {
@@ -452,7 +578,8 @@ window.addEventListener('message', (event) => {
         }
       }
       setupMermaidHandlers();
-      renderMermaidDiagrams();
+      // Delay to ensure DOM is fully rendered by TipTap
+      setTimeout(() => renderMermaidDiagrams(), 300);
       break;
 
     case 'setConfig':
@@ -470,7 +597,8 @@ window.addEventListener('message', (event) => {
         mermaidSources = message.mermaidSources;
       }
       setupMermaidHandlers();
-      renderMermaidDiagrams();
+      // Delay to ensure DOM is fully rendered by TipTap
+      setTimeout(() => renderMermaidDiagrams(), 300);
       break;
 
     case 'showError':
@@ -480,14 +608,83 @@ window.addEventListener('message', (event) => {
 });
 
 function renderMermaidDiagrams() {
-  document.querySelectorAll('[data-mdwe="mermaid"]').forEach((element) => {
+  if (typeof mermaid === 'undefined') {
+    console.error('[Mermaid] Mermaid library not available');
+    return;
+  }
+
+  const elements = document.querySelectorAll('[data-mdwe="mermaid"]');
+  console.log(`[Mermaid] Found ${elements.length} placeholder elements`);
+
+  if (elements.length === 0) {
+    return;
+  }
+
+  elements.forEach((element) => {
     const mermaidId = element.getAttribute('data-id');
-    if (mermaidId && mermaidSources[mermaidId]) {
-      try {
-        mermaid.contentLoaded();
-      } catch (e) {
-        console.error('Mermaid render error:', e);
-      }
+
+    if (!mermaidId || !mermaidSources[mermaidId]) {
+      return;
+    }
+
+    // Check if already has SVG
+    const existingSvg = element.querySelector('svg');
+    if (existingSvg) {
+      console.log(`[Mermaid] SVG already exists for ${mermaidId}`);
+      return;
+    }
+
+    const source = mermaidSources[mermaidId];
+    console.log(`[Mermaid] Rendering ${mermaidId}`);
+
+    try {
+      const diagramId = `mermaid-${mermaidId}`;
+      
+      mermaid.render(diagramId, source)
+        .then(({ svg }) => {
+          console.log(`[Mermaid] Got SVG for ${mermaidId}, length: ${svg.length}`);
+          // Clear element and insert SVG
+          element.innerHTML = '';
+          element.innerHTML = svg;
+          console.log(`[Mermaid] Injected SVG into ${mermaidId}`);
+          
+          // Fix SVG display issues by ensuring it has proper dimensions
+          const injectedSvg = element.querySelector('svg');
+          if (injectedSvg) {
+            // Ensure width is set to 100%
+            injectedSvg.setAttribute('width', '100%');
+            
+            // Set height based on viewBox aspect ratio if height not set
+            const viewBox = injectedSvg.getAttribute('viewBox');
+            if (viewBox && !injectedSvg.getAttribute('height')) {
+              const parts = viewBox.split(/\s+|,/);
+              if (parts.length >= 4) {
+                const vbWidth = parseFloat(parts[2]);
+                const vbHeight = parseFloat(parts[3]);
+                if (vbWidth > 0 && vbHeight > 0) {
+                  const aspectRatio = vbHeight / vbWidth;
+                  injectedSvg.setAttribute('height', `${aspectRatio * 100}%`);
+                  injectedSvg.style.minHeight = '300px';
+                }
+              }
+            }
+            
+            console.log(`[Mermaid] SVG element found in DOM for ${mermaidId}`, {
+              width: injectedSvg.getAttribute('width'),
+              height: injectedSvg.getAttribute('height'),
+              viewBox: injectedSvg.getAttribute('viewBox'),
+            });
+          } else {
+            console.warn(`[Mermaid] SVG element NOT found in DOM after injection for ${mermaidId}`);
+          }
+        })
+        .catch((err) => {
+          console.error(`[Mermaid] Error rendering ${mermaidId}:`, err);
+          element.innerHTML = `<div style="color: #d13438; padding: 12px; background: #fff4f4; border: 1px solid #f0adac; border-radius: 4px; font-size: 12px; word-break: break-all;">Error: ${err.message || String(err)}</div>`;
+        });
+    } catch (error) {
+      console.error(`[Mermaid] Error processing diagram ${mermaidId}:`, error);
+      element.innerHTML = `<div style="color: #d13438; padding: 12px; background: #fff4f4; border: 1px solid #f0adac; border-radius: 4px; font-size: 12px;">Error: ${error instanceof Error ? error.message : String(error)}</div>`;
     }
   });
 }

@@ -7,8 +7,9 @@ const md = new MarkdownIt({
   linkify: true,
 });
 
-const MERMAID_FENCE_PATTERN = /^::::?\s*mermaid\s*$/;
-const MERMAID_CLOSE_PATTERN = /^::::?\s*$/;
+// Mermaid fence patterns - ONLY standard backtick syntax
+const MERMAID_FENCE_PATTERN = /^```\s*mermaid\s*$/i;
+const MERMAID_CLOSE_PATTERN = /^```\s*$/;
 
 /**
  * Detects Hebrew/Arabic RTL characters in text
@@ -44,6 +45,7 @@ export function extractMermaidBlocks(markdown: string): {
       const mermaidContent: string[] = [];
 
       i++;
+      // Collect content until closing fence
       while (i < lines.length && !MERMAID_CLOSE_PATTERN.test(lines[i].trim())) {
         mermaidContent.push(lines[i]);
         i++;
@@ -55,9 +57,11 @@ export function extractMermaidBlocks(markdown: string): {
       }
 
       const source = mermaidContent.join('\n').trim();
-      mermaidBlocks.push({ id: mermaidId, source, startLine, endLine: i - 1 });
-      mermaidSources[mermaidId] = source;
-      result.push(`<div data-mdwe="mermaid" data-id="${mermaidId}"></div>`);
+      if (source) {
+        mermaidBlocks.push({ id: mermaidId, source, startLine, endLine: i - 1 });
+        mermaidSources[mermaidId] = source;
+        result.push(`<div data-mdwe="mermaid" data-id="${mermaidId}"></div>`);
+      }
     } else {
       result.push(line);
       i++;
@@ -91,7 +95,7 @@ export function rejectMermaidBlocks(markdown: string, mermaidSources: Record<str
 
   for (const [mermaidId, source] of Object.entries(mermaidSources)) {
     const placeholder = `<p><div data-mdwe="mermaid" data-id="${mermaidId}"></div></p>`;
-    const mermaidBlock = `:::: mermaid\n${source}\n::::`;
+    const mermaidBlock = `\`\`\`mermaid\n${source}\n\`\`\``;
 
     result = result.replace(placeholder, mermaidBlock);
   }

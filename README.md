@@ -84,14 +84,14 @@ A rich text editor extension for VS Code that provides a Microsoft Word / Google
 
 ### Mermaid Diagrams
 
-To insert a Mermaid diagram using Azure DevOps Wiki syntax:
+To insert a Mermaid diagram using standard Markdown syntax:
 
 ```markdown
-:::: mermaid
+```mermaid
 graph TD
   A[Start] --> B[Process]
   B --> C[End]
-::::
+```
 ```
 
 **To edit a diagram:**

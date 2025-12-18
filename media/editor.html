@@ -16,8 +16,16 @@
           <h2>Edit Mermaid Diagram</h2>
           <button class="modal-close" id="modal-close">&times;</button>
         </div>
-        <div class="modal-body">
-          <textarea id="mermaid-source" class="mermaid-textarea"></textarea>
+        <div class="modal-body modal-split-pane">
+          <div class="modal-pane modal-source-pane">
+            <div class="modal-pane-header">Source Code</div>
+            <textarea id="mermaid-source" class="mermaid-textarea" placeholder="Enter Mermaid diagram syntax..."></textarea>
+            <div id="mermaid-error" class="mermaid-error" style="display: none;"></div>
+          </div>
+          <div class="modal-pane modal-preview-pane">
+            <div class="modal-pane-header">Live Preview</div>
+            <div id="mermaid-preview" class="mermaid-preview"></div>
+          </div>
         </div>
         <div class="modal-footer">
           <button id="mermaid-save" class="btn btn-primary">Save</button>
