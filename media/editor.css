@@ -355,11 +355,62 @@ html[dir="rtl"] .ProseMirror table td {
 .ProseMirror img:hover,
 .editor-image:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
 }
 
 .ProseMirror img[src*="data:image"],
 .editor-image[src*="data:image"] {
   max-width: 100%;
+}
+
+/* Image selection and resize */
+.image-selected {
+  outline: 2px solid #0078d4;
+  outline-offset: 2px;
+  box-shadow: 0 4px 16px rgba(0, 120, 212, 0.3) !important;
+}
+
+.image-resize-handle {
+  position: fixed;
+  width: 16px;
+  height: 16px;
+  background-color: #0078d4;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  pointer-events: auto !important;
+  user-select: none;
+  cursor: pointer;
+}
+
+.image-resize-handle-nw {
+  top: -8px;
+  left: -8px;
+  cursor: nw-resize !important;
+}
+
+.image-resize-handle-ne {
+  top: -8px;
+  right: -8px;
+  cursor: ne-resize !important;
+}
+
+.image-resize-handle-sw {
+  bottom: -8px;
+  left: -8px;
+  cursor: sw-resize !important;
+}
+
+.image-resize-handle-se {
+  bottom: -8px;
+  right: -8px;
+  cursor: se-resize !important;
+}
+
+.image-resize-handle:hover {
+  background-color: #005a9e;
+  transform: scale(1.3);
 }
 
 /* Support SVG images */

@@ -127,6 +127,7 @@ function initializeEditor() {
         inline: false,
         HTMLAttributes: {
           class: 'editor-image',
+          draggable: true,
         },
       }),
       Color,
@@ -167,6 +168,9 @@ function initializeEditor() {
 
   // Setup custom link click handler with https:// auto-prefix
   setupLinkClickHandler();
+
+  // Setup image resize and drag handlers
+  setupImageHandlers();
 
   // Setup auto-detection of RTL content
   if (editorConfig.autoDetectRtl) {
@@ -597,6 +601,207 @@ function updateLinkUrlError(url: string): void {
     errorDiv.style.display = 'none';
     saveBtn.disabled = false;
   }
+}
+
+function setupImageHandlers() {
+  const editorContainer = document.getElementById('editor-container');
+  if (!editorContainer) return;
+
+  let selectedImage: HTMLImageElement | null = null;
+  let isResizing = false;
+  let resizeHandle: 'se' | 'sw' | 'ne' | 'nw' | null = null;
+  let startX = 0;
+  let startY = 0;
+  let startWidth = 0;
+  let startHeight = 0;
+
+  // Add click handler to select images
+  editorContainer.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    
+    // Ignore clicks on resize handles
+    if (target.classList.contains('image-resize-handle')) {
+      return;
+    }
+    
+    if (target.tagName === 'IMG' && target.classList.contains('editor-image')) {
+      e.preventDefault();
+      selectImage(target as HTMLImageElement);
+    } else if (!target.closest('.image-wrapper')) {
+      deselectImage();
+    }
+  });
+
+  function selectImage(img: HTMLImageElement) {
+    deselectImage();
+    selectedImage = img;
+    img.classList.add('image-selected');
+    
+    // Create 4 corner resize handles positioned absolutely relative to viewport
+    const rect = img.getBoundingClientRect();
+    const handles = ['nw', 'ne', 'sw', 'se'];
+    const handleElements: HTMLElement[] = [];
+    
+    handles.forEach(handle => {
+      const handleDiv = document.createElement('div');
+      handleDiv.className = `image-resize-handle image-resize-handle-${handle}`;
+      handleDiv.dataset.handle = handle;
+      handleDiv.style.position = 'fixed';
+      handleDiv.style.zIndex = '10000';
+      
+      // Position based on image bounds
+      const handleSize = 16;
+      if (handle === 'nw') {
+        handleDiv.style.left = `${rect.left - handleSize / 2}px`;
+        handleDiv.style.top = `${rect.top - handleSize / 2}px`;
+      } else if (handle === 'ne') {
+        handleDiv.style.left = `${rect.right - handleSize / 2}px`;
+        handleDiv.style.top = `${rect.top - handleSize / 2}px`;
+      } else if (handle === 'sw') {
+        handleDiv.style.left = `${rect.left - handleSize / 2}px`;
+        handleDiv.style.top = `${rect.bottom - handleSize / 2}px`;
+      } else if (handle === 'se') {
+        handleDiv.style.left = `${rect.right - handleSize / 2}px`;
+        handleDiv.style.top = `${rect.bottom - handleSize / 2}px`;
+      }
+      
+      document.body.appendChild(handleDiv);
+      handleElements.push(handleDiv);
+      
+      // Attach event listener
+      handleDiv.addEventListener('mousedown', startResize);
+    });
+    
+    // Store handle elements for cleanup
+    (img as any).__resizeHandles = handleElements;
+    
+    console.log('[Image] Image selected, resize handles added to body');
+  }
+
+  function deselectImage() {
+    if (!selectedImage) return;
+    
+    selectedImage.classList.remove('image-selected');
+    
+    // Remove handles from body
+    const handles = (selectedImage as any).__resizeHandles as HTMLElement[];
+    if (handles) {
+      handles.forEach(handle => handle.remove());
+      delete (selectedImage as any).__resizeHandles;
+    }
+    
+    selectedImage = null;
+  }
+  
+  function updateHandlePositions() {
+    if (!selectedImage) return;
+    
+    const rect = selectedImage.getBoundingClientRect();
+    const handles = (selectedImage as any).__resizeHandles as HTMLElement[];
+    if (!handles) return;
+    
+    const handleSize = 16;
+    handles.forEach(handle => {
+      const type = handle.dataset.handle;
+      if (type === 'nw') {
+        handle.style.left = `${rect.left - handleSize / 2}px`;
+        handle.style.top = `${rect.top - handleSize / 2}px`;
+      } else if (type === 'ne') {
+        handle.style.left = `${rect.right - handleSize / 2}px`;
+        handle.style.top = `${rect.top - handleSize / 2}px`;
+      } else if (type === 'sw') {
+        handle.style.left = `${rect.left - handleSize / 2}px`;
+        handle.style.top = `${rect.bottom - handleSize / 2}px`;
+      } else if (type === 'se') {
+        handle.style.left = `${rect.right - handleSize / 2}px`;
+        handle.style.top = `${rect.bottom - handleSize / 2}px`;
+      }
+    });
+  }
+
+  function startResize(e: Event) {
+    const mouseEvent = e as MouseEvent;
+    mouseEvent.preventDefault();
+    mouseEvent.stopPropagation();
+    
+    if (!selectedImage) return;
+    
+    const target = mouseEvent.target as HTMLElement;
+    const handle = target.dataset.handle;
+    
+    if (!handle) return;
+    
+    console.log('[Image] Starting resize with handle:', handle);
+    
+    isResizing = true;
+    resizeHandle = handle as 'se' | 'sw' | 'ne' | 'nw';
+    startX = mouseEvent.clientX;
+    startY = mouseEvent.clientY;
+    startWidth = selectedImage.offsetWidth;
+    startHeight = selectedImage.offsetHeight;
+    
+    document.addEventListener('mousemove', doResize);
+    document.addEventListener('mouseup', stopResize);
+  }
+
+  function doResize(e: MouseEvent) {
+    if (!isResizing || !selectedImage || !resizeHandle) return;
+    
+    e.preventDefault();
+    
+    const deltaX = e.clientX - startX;
+    const deltaY = e.clientY - startY;
+    
+    let newWidth = startWidth;
+    let newHeight = startHeight;
+    
+    // Calculate new dimensions based on handle
+    if (resizeHandle.includes('e')) {
+      newWidth = startWidth + deltaX;
+    } else if (resizeHandle.includes('w')) {
+      newWidth = startWidth - deltaX;
+    }
+    
+    // Maintain aspect ratio
+    const aspectRatio = startWidth / startHeight;
+    newHeight = newWidth / aspectRatio;
+    
+    // Apply minimum size constraints
+    if (newWidth < 50) newWidth = 50;
+    if (newHeight < 50) newHeight = 50;
+    
+    selectedImage.style.width = newWidth + 'px';
+    selectedImage.style.height = newHeight + 'px';
+    selectedImage.setAttribute('width', Math.round(newWidth).toString());
+    selectedImage.setAttribute('height', Math.round(newHeight).toString());
+    
+    // Update handle positions during resize
+    updateHandlePositions();
+  }
+
+  function stopResize() {
+    if (!isResizing) return;
+    
+    console.log('[Image] Stopping resize');
+    
+    isResizing = false;
+    resizeHandle = null;
+    document.removeEventListener('mousemove', doResize);
+    document.removeEventListener('mouseup', stopResize);
+    
+    // Save content
+    if (editor) {
+      saveContent();
+    }
+  }
+
+  // Close image selection when clicking outside
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    if (!target.closest('.image-wrapper') && !target.classList.contains('editor-image')) {
+      deselectImage();
+    }
+  });
 }
 
 function openMermaidModal(mermaidId: string) {
