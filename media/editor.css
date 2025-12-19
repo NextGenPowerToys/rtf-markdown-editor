@@ -473,8 +473,7 @@ html[dir="rtl"] .ProseMirror table td {
   padding: 16px;
 }
 
-/* Link modal input fields - always left aligned */
-#link-text,
+/* Link modal - URL field always LTR, text field follows document direction */
 #link-url {
   text-align: left !important;
   direction: ltr !important;

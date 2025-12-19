@@ -82,6 +82,17 @@ let editorConfig: EditorConfig = {
   autoDetectRtl: true,
 };
 let contentHash = '';
+let systemIsRTL = false;
+
+// Detect system language direction
+function detectSystemDirection(): boolean {
+  const userLang = navigator.language || navigator.languages?.[0] || 'en';
+  const rtlLanguages = ['ar', 'he', 'fa', 'ur', 'yi', 'ji', 'iw', 'ps', 'sd'];
+  const langCode = userLang.toLowerCase().split('-')[0];
+  return rtlLanguages.includes(langCode);
+}
+
+systemIsRTL = detectSystemDirection();
 
 // Initialize editor when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
@@ -360,6 +371,12 @@ function attachToolbarEventListeners() {
     
     const textInput = document.getElementById('link-text') as HTMLInputElement;
     const urlInput = document.getElementById('link-url') as HTMLInputElement;
+    const modalContent = modal.querySelector('.modal-content') as HTMLElement;
+    
+    // Set modal direction based on system language, not document direction
+    if (modalContent) {
+      modalContent.dir = systemIsRTL ? 'rtl' : 'ltr';
+    }
     
     // Clear previous values
     textInput.value = '';
@@ -573,6 +590,8 @@ function updateLinkUrlError(url: string): void {
   if (!isValidUrl(trimmedUrl)) {
     errorDiv.style.display = 'block';
     errorDiv.textContent = '⚠ URL must start with a protocol (http://, https://, ftp://, etc.)';
+    errorDiv.dir = systemIsRTL ? 'rtl' : 'ltr';
+    errorDiv.style.textAlign = systemIsRTL ? 'right' : 'left';
     saveBtn.disabled = true;
   } else {
     errorDiv.style.display = 'none';
