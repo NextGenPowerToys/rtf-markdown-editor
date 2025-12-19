@@ -258,7 +258,7 @@ class WebviewDocument extends vscode.Disposable implements vscode.CustomDocument
 
   updateContent(html: string, mermaidSources: Record<string, string>) {
     this._mermaidSources = mermaidSources;
-    const markdown = htmlToMarkdown(html, mermaidSources);
+    const markdown = htmlToMarkdown(html, mermaidSources, this._uri.fsPath);
     const newHash = hashContent(markdown);
 
     if (newHash !== this._contentHash) {

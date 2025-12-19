@@ -1,13 +1,42 @@
 import { MermaidBlock } from '../types';
+import * as path from 'path';
 
 /**
  * Convert HTML back to Markdown
- * Preserves inline styles and block formatting including tables
+ * Preserves inline styles and block formatting including tables, code blocks, and images
  */
-export function htmlToMarkdown(html: string, mermaidSources: Record<string, string>): string {
+export function htmlToMarkdown(html: string, mermaidSources: Record<string, string>, documentPath?: string): string {
   let markdown = html;
 
-  // Convert tables to Markdown format FIRST (before other replacements)
+  // Convert code blocks FIRST (before other replacements)
+  markdown = markdown.replace(/<pre[^>]*><code[^>]*>([\s\S]*?)<\/code><\/pre>/gi, (match, code) => {
+    // Decode HTML entities in code
+    const decoded = decodeHtmlEntities(code);
+    return '```\n' + decoded + '\n```\n';
+  });
+
+  // Convert inline code
+  markdown = markdown.replace(/<code[^>]*>(.*?)<\/code>/gi, (match, code) => {
+    const decoded = decodeHtmlEntities(code);
+    return '`' + decoded + '`';
+  });
+
+  // Convert images BEFORE general tag removal
+  // Handle any img tag with a src attribute (most general approach)
+  const imgRegex = /<img\s+([^>]*?)src=["']([^"']+)["']([^>]*?)>/gi;
+  
+  markdown = markdown.replace(imgRegex, (match, preSrc, src, postSrc) => {
+    // Extract alt attribute from either side
+    const altMatch = match.match(/alt=["']([^"']*)["']/i);
+    const alt = altMatch ? altMatch[1] : '';
+    
+    let relativeSrc = convertToRelativePath(src, documentPath);
+    // Normalize path separators to forward slashes for markdown portability
+    relativeSrc = relativeSrc.replace(/\\/g, '/');
+    return `![${alt}](${relativeSrc})\n`;
+  });
+
+  // Convert tables to Markdown format
   markdown = convertTablesToMarkdown(markdown);
 
   // Convert common HTML tags to Markdown
@@ -25,7 +54,6 @@ export function htmlToMarkdown(html: string, mermaidSources: Record<string, stri
     .replace(/<u[^>]*>(.*?)<\/u>/gi, '_$1_')
     .replace(/<s[^>]*>(.*?)<\/s>/gi, '~~$1~~')
     .replace(/<strike[^>]*>(.*?)<\/strike>/gi, '~~$1~~')
-    .replace(/<code[^>]*>(.*?)<\/code>/gi, '`$1`')
     .replace(/<a\s+href=["']([^"']*)["'][^>]*>(.*?)<\/a>/gi, '[$2]($1)')
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<\/p>/gi, '\n')
@@ -46,6 +74,89 @@ export function htmlToMarkdown(html: string, mermaidSources: Record<string, stri
     .trim();
 
   return markdown;
+}
+
+/**
+ * Convert webview URI or absolute path to relative path
+ */
+function convertToRelativePath(src: string, documentPath?: string): string {
+  // Skip data URLs
+  if (src.startsWith('data:')) {
+    return src;
+  }
+
+  // Skip already relative paths
+  if (!src.startsWith('/') && !src.startsWith('file://') && !src.includes('://')) {
+    return src;
+  }
+
+  if (!documentPath) {
+    return src;
+  }
+
+  // Extract file path from webview URI
+  let filePath = src;
+  
+  // Handle webview URIs like: https://file+.vscode-resource.vscode-cdn.net/c%3A/Users/...
+  if (src.includes('vscode-resource')) {
+    try {
+      // Extract the file path part - look for anything after the domain
+      const match = src.match(/vscode-resource\.vscode-cdn\.net([^?#]*)/);
+      if (match) {
+        // Decode the URI component - it may contain %3A (colon), %2F (slash), etc.
+        filePath = match[1];
+        
+        // First decode to handle %3A, %2F, etc.
+        filePath = decodeURIComponent(filePath);
+        
+        // Remove leading slash for Windows absolute paths
+        if (filePath.startsWith('/') && filePath.length > 2 && filePath[2] === ':') {
+          filePath = filePath.substring(1); // Remove leading slash: /c: -> c:
+        }
+      }
+    } catch (e) {
+      return src;
+    }
+  } else if (src.startsWith('file://')) {
+    filePath = src.slice(7); // Remove file:// prefix
+  }
+
+  // Normalize path separators for cross-platform compatibility
+  const normalizedPath = filePath.replace(/\//g, path.sep);
+
+  // Make it absolute if it's not already
+  if (!path.isAbsolute(normalizedPath)) {
+    return src; // Can't make relative without proper path
+  }
+
+  // Calculate relative path from document directory
+  const documentDir = path.dirname(documentPath);
+  try {
+    return path.relative(documentDir, normalizedPath);
+  } catch (e) {
+    return src;
+  }
+}
+
+/**
+ * Decode HTML entities
+ */
+function decodeHtmlEntities(text: string): string {
+  const entities: { [key: string]: string } = {
+    '&amp;': '&',
+    '&lt;': '<',
+    '&gt;': '>',
+    '&quot;': '"',
+    '&#39;': "'",
+    '&nbsp;': ' ',
+    '&apos;': "'",
+  };
+  
+  let decoded = text;
+  for (const [entity, char] of Object.entries(entities)) {
+    decoded = decoded.replace(new RegExp(entity, 'g'), char);
+  }
+  return decoded;
 }
 
 /**
