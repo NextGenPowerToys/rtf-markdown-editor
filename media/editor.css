@@ -172,6 +172,24 @@ html[dir="rtl"] .toolbar-group:first-child {
   direction: ltr;
 }
 
+/* Link Styling */
+.ProseMirror a {
+  color: #0066cc;
+  text-decoration: underline;
+  cursor: pointer;
+  word-break: break-word;
+  transition: color 0.2s ease;
+}
+
+.ProseMirror a:hover {
+  color: #0052a3;
+  text-decoration: underline;
+}
+
+.ProseMirror a:visited {
+  color: #6b0099;
+}
+
 /* Code Block Styling */
 .ProseMirror pre {
   position: relative;
@@ -452,6 +470,13 @@ html[dir="rtl"] .ProseMirror table td {
   flex: 1;
   overflow: auto;
   padding: 16px;
+}
+
+/* Link modal input fields - always left aligned */
+#link-text,
+#link-url {
+  text-align: left !important;
+  direction: ltr !important;
 }
 
 .modal-split-pane {

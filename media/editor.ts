@@ -108,7 +108,7 @@ function initializeEditor() {
       }),
       Underline,
       Link.configure({
-        openOnClick: false,
+        openOnClick: true,
         autolink: true,
       }),
       Image.configure({
@@ -346,11 +346,93 @@ function attachToolbarEventListeners() {
     editor!.chain().focus().setHighlight({ color }).run();
   });
 
-  // Insert
+  // Insert Link
   document.getElementById('link-btn')?.addEventListener('click', () => {
-    const url = prompt('Enter URL:');
-    if (url) {
-      editor!.chain().focus().setLink({ href: url }).run();
+    console.log('[Link] Link button clicked');
+    const modal = document.getElementById('link-modal') as HTMLDivElement;
+    if (!modal) {
+      console.error('[Link] Modal not found');
+      return;
+    }
+    
+    const textInput = document.getElementById('link-text') as HTMLInputElement;
+    const urlInput = document.getElementById('link-url') as HTMLInputElement;
+    
+    // Clear previous values
+    textInput.value = '';
+    urlInput.value = '';
+    
+    // If text is selected, pre-fill the text field
+    const { from, to } = editor!.state.selection;
+    if (from !== to) {
+      const selectedText = editor!.state.doc.textBetween(from, to);
+      textInput.value = selectedText;
+      console.log('[Link] Pre-filled text from selection:', selectedText);
+    }
+    
+    // Show modal
+    modal.style.display = 'flex';
+    urlInput.focus();
+  });
+  
+  // Link modal handlers
+  document.getElementById('link-modal-close')?.addEventListener('click', () => {
+    const modal = document.getElementById('link-modal') as HTMLDivElement;
+    modal.style.display = 'none';
+  });
+  
+  document.getElementById('link-cancel')?.addEventListener('click', () => {
+    const modal = document.getElementById('link-modal') as HTMLDivElement;
+    modal.style.display = 'none';
+  });
+  
+  document.getElementById('link-save')?.addEventListener('click', () => {
+    console.log('[Link] Save button clicked');
+    const textInput = document.getElementById('link-text') as HTMLInputElement;
+    const urlInput = document.getElementById('link-url') as HTMLInputElement;
+    const modal = document.getElementById('link-modal') as HTMLDivElement;
+    
+    const linkText = textInput.value.trim();
+    const url = urlInput.value.trim();
+    
+    if (!url) {
+      alert('Please enter a URL');
+      return;
+    }
+    
+    try {
+      const { from, to } = editor!.state.selection;
+      const hasSelection = from !== to;
+      
+      if (hasSelection) {
+        // If text is selected, apply link to the selection
+        console.log('[Link] Applying link to selected text');
+        editor!.chain().focus().setLink({ href: url }).run();
+      } else {
+        // If no text selected, insert text and apply link
+        const displayText = linkText || url.replace(/^https?:\/\/(www\.)?/, '').split('/')[0] || url;
+        console.log('[Link] Inserting new link with text:', displayText);
+        
+        // Insert text first, then apply link mark to it
+        editor!.chain()
+          .focus()
+          .insertContent(displayText)
+          .extendMarkRange('link')
+          .setLink({ href: url })
+          .run();
+      }
+      
+      console.log('[Link] Link created successfully');
+      modal.style.display = 'none';
+    } catch (err) {
+      console.error('[Link] Error creating link:', err);
+    }
+  });
+  
+  // Allow Enter key to submit
+  document.getElementById('link-url')?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      document.getElementById('link-save')?.click();
     }
   });
 

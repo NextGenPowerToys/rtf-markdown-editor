@@ -37,7 +37,15 @@ export function htmlToMarkdown(html: string, mermaidSources: Record<string, stri
   });
 
   // Convert tables to Markdown format
+  // Convert tables to Markdown format
   markdown = convertTablesToMarkdown(markdown);
+
+  // Convert links EARLY - before other tag replacements that might interfere
+  // Handle various link formats: <a href="url">text</a>, <a href='url'>text</a>, etc.
+  markdown = markdown.replace(/<a\s+href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi, '[$2]($1)');
+  
+  // Also handle links where href might have attributes before it
+  markdown = markdown.replace(/<a\s+([^>]*?)href=["']([^"']+)["']([^>]*?)>([\s\S]*?)<\/a>/gi, '[$4]($2)');
 
   // Convert common HTML tags to Markdown
   markdown = markdown
@@ -54,7 +62,6 @@ export function htmlToMarkdown(html: string, mermaidSources: Record<string, stri
     .replace(/<u[^>]*>(.*?)<\/u>/gi, '_$1_')
     .replace(/<s[^>]*>(.*?)<\/s>/gi, '~~$1~~')
     .replace(/<strike[^>]*>(.*?)<\/strike>/gi, '~~$1~~')
-    .replace(/<a\s+href=["']([^"']*)["'][^>]*>(.*?)<\/a>/gi, '[$2]($1)')
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<\/p>/gi, '\n')
     .replace(/<p[^>]*>/gi, '')

@@ -42,6 +42,8 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
     
     webviewPanel.webview.options = {
       enableScripts: true,
+      enableCommandUris: true,
+      enableForms: true,
       localResourceRoots,
     };
 
@@ -185,7 +187,7 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}'; font-src ${webview.cspSource}; img-src ${webview.cspSource} data:" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}'; font-src ${webview.cspSource}; img-src ${webview.cspSource} data:; connect-src 'self'; child-src 'self'; frame-src https:;" />
   <link rel="stylesheet" href="${styleUri}">
   <title>RTF Markdown Editor</title>
 </head>
@@ -205,6 +207,28 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
         <div class="modal-footer">
           <button id="mermaid-save" class="btn btn-primary">Save</button>
           <button id="mermaid-cancel" class="btn btn-secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
+    <div id="link-modal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Insert Link</h2>
+          <button class="modal-close" id="link-modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div style="margin-bottom: 12px;">
+            <label for="link-text" style="display: block; margin-bottom: 4px; font-weight: 500;">Link Text:</label>
+            <input type="text" id="link-text" placeholder="Link text (optional)" style="width: 100%; padding: 8px; border: 1px solid #d0d0d0; border-radius: 4px; font-size: 14px;">
+          </div>
+          <div>
+            <label for="link-url" style="display: block; margin-bottom: 4px; font-weight: 500;">URL:</label>
+            <input type="text" id="link-url" placeholder="https://example.com" style="width: 100%; padding: 8px; border: 1px solid #d0d0d0; border-radius: 4px; font-size: 14px;">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="link-save" class="btn btn-primary">Insert Link</button>
+          <button id="link-cancel" class="btn btn-secondary">Cancel</button>
         </div>
       </div>
     </div>
