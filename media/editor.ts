@@ -672,10 +672,35 @@ function setupImageHandlers() {
       handleDiv.addEventListener('mousedown', startResize);
     });
     
+    // Create alignment toolbar
+    const toolbar = document.createElement('div');
+    toolbar.className = 'image-align-toolbar';
+    toolbar.style.position = 'fixed';
+    toolbar.style.left = `${rect.left}px`;
+    toolbar.style.top = `${rect.top - 40}px`;
+    toolbar.style.zIndex = '10000';
+    toolbar.innerHTML = `
+      <button class="image-align-btn" data-align="left" title="Align Left">◄</button>
+      <button class="image-align-btn" data-align="center" title="Center">◄►</button>
+      <button class="image-align-btn" data-align="right" title="Align Right">►</button>
+    `;
+    document.body.appendChild(toolbar);
+    handleElements.push(toolbar);
+    
+    // Add alignment button listeners
+    toolbar.querySelectorAll('.image-align-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const align = (e.target as HTMLElement).dataset.align;
+        if (align && selectedImage) {
+          applyImageAlignment(selectedImage, align);
+        }
+      });
+    });
+    
     // Store handle elements for cleanup
     (img as any).__resizeHandles = handleElements;
     
-    console.log('[Image] Image selected, resize handles added to body');
+    console.log('[Image] Image selected, resize handles and alignment toolbar added');
   }
 
   function deselectImage() {
@@ -702,21 +727,69 @@ function setupImageHandlers() {
     
     const handleSize = 16;
     handles.forEach(handle => {
-      const type = handle.dataset.handle;
-      if (type === 'nw') {
-        handle.style.left = `${rect.left - handleSize / 2}px`;
-        handle.style.top = `${rect.top - handleSize / 2}px`;
-      } else if (type === 'ne') {
-        handle.style.left = `${rect.right - handleSize / 2}px`;
-        handle.style.top = `${rect.top - handleSize / 2}px`;
-      } else if (type === 'sw') {
-        handle.style.left = `${rect.left - handleSize / 2}px`;
-        handle.style.top = `${rect.bottom - handleSize / 2}px`;
-      } else if (type === 'se') {
-        handle.style.left = `${rect.right - handleSize / 2}px`;
-        handle.style.top = `${rect.bottom - handleSize / 2}px`;
+      if (handle.classList.contains('image-align-toolbar')) {
+        // Update toolbar position
+        handle.style.left = `${rect.left}px`;
+        handle.style.top = `${rect.top - 40}px`;
+      } else {
+        const type = handle.dataset.handle;
+        if (type === 'nw') {
+          handle.style.left = `${rect.left - handleSize / 2}px`;
+          handle.style.top = `${rect.top - handleSize / 2}px`;
+        } else if (type === 'ne') {
+          handle.style.left = `${rect.right - handleSize / 2}px`;
+          handle.style.top = `${rect.top - handleSize / 2}px`;
+        } else if (type === 'sw') {
+          handle.style.left = `${rect.left - handleSize / 2}px`;
+          handle.style.top = `${rect.bottom - handleSize / 2}px`;
+        } else if (type === 'se') {
+          handle.style.left = `${rect.right - handleSize / 2}px`;
+          handle.style.top = `${rect.bottom - handleSize / 2}px`;
+        }
       }
     });
+  }
+  
+  function applyImageAlignment(img: HTMLImageElement, align: string) {
+    // Remove all alignment classes
+    img.classList.remove('image-align-left', 'image-align-center', 'image-align-right');
+    img.removeAttribute('style');
+    
+    // Apply new alignment
+    if (align === 'left') {
+      img.classList.add('image-align-left');
+      img.style.display = 'block';
+      img.style.marginLeft = '0';
+      img.style.marginRight = 'auto';
+    } else if (align === 'center') {
+      img.classList.add('image-align-center');
+      img.style.display = 'block';
+      img.style.marginLeft = 'auto';
+      img.style.marginRight = 'auto';
+    } else if (align === 'right') {
+      img.classList.add('image-align-right');
+      img.style.display = 'block';
+      img.style.marginLeft = 'auto';
+      img.style.marginRight = '0';
+    }
+    
+    // Preserve width and height
+    if (img.hasAttribute('width')) {
+      img.style.width = img.getAttribute('width') + 'px';
+    }
+    if (img.hasAttribute('height')) {
+      img.style.height = img.getAttribute('height') + 'px';
+    }
+    
+    // Update handle positions after alignment
+    setTimeout(() => updateHandlePositions(), 10);
+    
+    // Save changes
+    if (editor) {
+      saveContent();
+    }
+    
+    console.log('[Image] Applied alignment:', align);
   }
 
   function startResize(e: Event) {
