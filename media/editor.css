@@ -430,6 +430,7 @@ html[dir="rtl"] .ProseMirror table td {
   border-radius: 4px;
   max-width: 90vw;
   max-height: 90vh;
+  min-width: 500px;
   display: flex;
   flex-direction: column;
   overflow: hidden;

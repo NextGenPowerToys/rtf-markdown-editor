@@ -216,14 +216,15 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
           <h2>Insert Link</h2>
           <button class="modal-close" id="link-modal-close">&times;</button>
         </div>
-        <div class="modal-body">
-          <div style="margin-bottom: 12px;">
-            <label for="link-text" style="display: block; margin-bottom: 4px; font-weight: 500;">Link Text:</label>
-            <input type="text" id="link-text" placeholder="Link text (optional)" style="width: 100%; padding: 8px; border: 1px solid #d0d0d0; border-radius: 4px; font-size: 14px;">
+        <div class="modal-body" style="padding: 20px; min-height: 120px;">
+          <div style="margin-bottom: 16px;">
+            <label for="link-text" style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px;">Link Text:</label>
+            <input type="text" id="link-text" placeholder="Link text (optional)" style="width: calc(100% - 16px); padding: 10px 8px; border: 1px solid #d0d0d0; border-radius: 4px; font-size: 14px; box-sizing: border-box;">
           </div>
-          <div>
-            <label for="link-url" style="display: block; margin-bottom: 4px; font-weight: 500;">URL:</label>
-            <input type="text" id="link-url" placeholder="https://example.com" style="width: 100%; padding: 8px; border: 1px solid #d0d0d0; border-radius: 4px; font-size: 14px;">
+          <div style="margin-bottom: 0;">
+            <label for="link-url" style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px;">URL:</label>
+            <input type="text" id="link-url" placeholder="https://example.com" style="width: calc(100% - 16px); padding: 10px 8px; border: 1px solid #d0d0d0; border-radius: 4px; font-size: 14px; box-sizing: border-box;">
+            <div id="link-url-error" style="display: none; margin-top: 10px; padding: 10px 12px; background-color: #fff4f4; color: #d13438; border: 1px solid #f0adac; border-radius: 4px; font-size: 12px; line-height: 1.4; word-wrap: break-word;"></div>
           </div>
         </div>
         <div class="modal-footer">

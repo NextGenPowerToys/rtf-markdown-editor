@@ -108,7 +108,7 @@ function initializeEditor() {
       }),
       Underline,
       Link.configure({
-        openOnClick: true,
+        openOnClick: false,
         autolink: true,
       }),
       Image.configure({
@@ -153,6 +153,9 @@ function initializeEditor() {
 
   // Handle mermaid diagram clicks
   setupMermaidHandlers();
+
+  // Setup custom link click handler with https:// auto-prefix
+  setupLinkClickHandler();
 
   // Setup auto-detection of RTL content
   if (editorConfig.autoDetectRtl) {
@@ -378,12 +381,22 @@ function attachToolbarEventListeners() {
   // Link modal handlers
   document.getElementById('link-modal-close')?.addEventListener('click', () => {
     const modal = document.getElementById('link-modal') as HTMLDivElement;
+    const errorDiv = document.getElementById('link-url-error') as HTMLDivElement;
+    const saveBtn = document.getElementById('link-save') as HTMLButtonElement;
     modal.style.display = 'none';
+    // Reset error state and button
+    if (errorDiv) errorDiv.style.display = 'none';
+    if (saveBtn) saveBtn.disabled = false;
   });
   
   document.getElementById('link-cancel')?.addEventListener('click', () => {
     const modal = document.getElementById('link-modal') as HTMLDivElement;
+    const errorDiv = document.getElementById('link-url-error') as HTMLDivElement;
+    const saveBtn = document.getElementById('link-save') as HTMLButtonElement;
     modal.style.display = 'none';
+    // Reset error state and button
+    if (errorDiv) errorDiv.style.display = 'none';
+    if (saveBtn) saveBtn.disabled = false;
   });
   
   document.getElementById('link-save')?.addEventListener('click', () => {
@@ -397,6 +410,12 @@ function attachToolbarEventListeners() {
     
     if (!url) {
       alert('Please enter a URL');
+      return;
+    }
+    
+    // Validate URL format
+    if (!isValidUrl(url)) {
+      alert('URL must start with a protocol (http://, https://, ftp://, etc.)');
       return;
     }
     
@@ -434,6 +453,12 @@ function attachToolbarEventListeners() {
     if (e.key === 'Enter') {
       document.getElementById('link-save')?.click();
     }
+  });
+
+  // Real-time validation for URL input
+  document.getElementById('link-url')?.addEventListener('input', (e) => {
+    const urlInput = e.target as HTMLInputElement;
+    updateLinkUrlError(urlInput.value);
   });
 
   document.getElementById('image-btn')?.addEventListener('click', () => {
@@ -497,6 +522,62 @@ function setupMermaidHandlers() {
       });
     });
   }, 100);
+}
+
+function setupLinkClickHandler() {
+  const editorContainer = document.getElementById('editor-container');
+  if (!editorContainer) return;
+
+  // Delegate click handler for all links in the editor
+  editorContainer.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    const link = target.closest('a');
+    
+    if (link) {
+      e.preventDefault();
+      let url = link.getAttribute('href') || '';
+      
+      // Prepend https:// if URL doesn't start with http(s):// or other protocol
+      if (url && !url.match(/^[a-z]+:\/\//i)) {
+        url = 'https://' + url;
+      }
+      
+      if (url) {
+        window.open(url, '_blank');
+      }
+    }
+  });
+}
+
+function isValidUrl(url: string): boolean {
+  // Check if URL starts with a valid protocol (http://, https://, ftp://, etc.)
+  // or matches common domain patterns
+  const urlPattern = /^[a-z]+:\/\//i;
+  return url.match(urlPattern) !== null;
+}
+
+function updateLinkUrlError(url: string): void {
+  const errorDiv = document.getElementById('link-url-error') as HTMLDivElement;
+  const saveBtn = document.getElementById('link-save') as HTMLButtonElement;
+  
+  if (!errorDiv || !saveBtn) return;
+  
+  const trimmedUrl = url.trim();
+  
+  if (!trimmedUrl) {
+    errorDiv.style.display = 'none';
+    saveBtn.disabled = false;
+    return;
+  }
+  
+  if (!isValidUrl(trimmedUrl)) {
+    errorDiv.style.display = 'block';
+    errorDiv.textContent = '⚠ URL must start with a protocol (http://, https://, ftp://, etc.)';
+    saveBtn.disabled = true;
+  } else {
+    errorDiv.style.display = 'none';
+    saveBtn.disabled = false;
+  }
 }
 
 function openMermaidModal(mermaidId: string) {
