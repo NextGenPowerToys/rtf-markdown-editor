@@ -21,6 +21,44 @@ export function htmlToMarkdown(html: string, mermaidSources: Record<string, stri
     return '`' + decoded + '`';
   });
 
+  // Convert Mermaid blocks BEFORE other replacements
+  // Replace mermaid placeholders with actual mermaid fence blocks
+  const mermaidReplacements: string[] = [];
+  const MERMAID_PLACEHOLDER = '___MERMAID_PLACEHOLDER_';
+  
+  console.log('[htmlToMarkdown] Mermaid sources received:', Object.keys(mermaidSources));
+  
+  // Match mermaid divs - match both attribute orders: data-id first or data-mdwe first
+  // Pattern matches: <div ... data-id="MERMAID_X" ... data-mdwe="mermaid" ...>...</div>
+  markdown = markdown.replace(/<div\s+[^>]*data-id=["']([^"']+)["'][^>]*data-mdwe=["']mermaid["'][^>]*>[\s\S]*?<\/div>/gi, (match, mermaidId) => {
+    console.log('[htmlToMarkdown] Found mermaid div (data-id first):', mermaidId);
+    const source = mermaidSources[mermaidId];
+    if (source) {
+      console.log('[htmlToMarkdown] Found source for', mermaidId, 'source length:', source.length);
+      const mermaidBlock = '```mermaid\n' + source + '\n```';
+      const index = mermaidReplacements.length;
+      mermaidReplacements.push(mermaidBlock);
+      return `${MERMAID_PLACEHOLDER}${index}${MERMAID_PLACEHOLDER}`;
+    }
+    return match;
+  });
+  
+  // Also match the reverse order: data-mdwe first, then data-id
+  markdown = markdown.replace(/<div\s+[^>]*data-mdwe=["']mermaid["'][^>]*data-id=["']([^"']+)["'][^>]*>[\s\S]*?<\/div>/gi, (match, mermaidId) => {
+    console.log('[htmlToMarkdown] Found mermaid div (data-mdwe first):', mermaidId);
+    const source = mermaidSources[mermaidId];
+    if (source) {
+      console.log('[htmlToMarkdown] Found source for', mermaidId, 'source length:', source.length);
+      const mermaidBlock = '```mermaid\n' + source + '\n```';
+      const index = mermaidReplacements.length;
+      mermaidReplacements.push(mermaidBlock);
+      return `${MERMAID_PLACEHOLDER}${index}${MERMAID_PLACEHOLDER}`;
+    }
+    return match;
+  });
+  
+  console.log('[htmlToMarkdown] Total mermaid replacements:', mermaidReplacements.length);
+
   // Convert images BEFORE general tag removal
   // Handle any img tag with a src attribute (most general approach)
   const imgRegex = /<img\s+([^>]*?)src=["']([^"']+)["']([^>]*?)>/gi;
@@ -143,6 +181,11 @@ export function htmlToMarkdown(html: string, mermaidSources: Record<string, stri
   // Restore image placeholders
   imageReplacements.forEach((img, index) => {
     markdown = markdown.replace(`${IMAGE_PLACEHOLDER}${index}${IMAGE_PLACEHOLDER}`, '\n' + img + '\n');
+  });
+
+  // Restore mermaid placeholders
+  mermaidReplacements.forEach((mermaid, index) => {
+    markdown = markdown.replace(`${MERMAID_PLACEHOLDER}${index}${MERMAID_PLACEHOLDER}`, '\n' + mermaid + '\n');
   });
 
   // Clean up extra whitespace

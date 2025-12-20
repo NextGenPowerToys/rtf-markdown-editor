@@ -581,6 +581,12 @@ html[dir="rtl"] .ProseMirror table td {
   direction: ltr !important;
 }
 
+/* Mermaid modal - content always LTR and left-aligned */
+#mermaid-modal .modal-body {
+  direction: ltr !important;
+  text-align: left !important;
+}
+
 .modal-split-pane {
   display: flex;
   gap: 12px;
@@ -626,6 +632,8 @@ html[dir="rtl"] .ProseMirror table td {
   font-family: 'Consolas', 'Monaco', monospace;
   font-size: 12px;
   resize: none;
+  direction: ltr !important;
+  text-align: left !important;
 }
 
 .mermaid-preview {
@@ -636,6 +644,8 @@ html[dir="rtl"] .ProseMirror table td {
   display: flex;
   align-items: center;
   justify-content: center;
+  direction: ltr !important;
+  text-align: left !important;
 }
 
 .mermaid-preview svg {
