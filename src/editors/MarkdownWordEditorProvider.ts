@@ -130,6 +130,29 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
           document.save();
         }
         break;
+
+      case 'saveImageFile':
+        if (message.imageData && message.fileName) {
+          const savedPath = this.saveImageToAttachments(document.uri, message.imageData, message.fileName);
+          
+          // Convert to absolute path for webview URI
+          const docDir = path.dirname(document.uri.fsPath);
+          const absolutePath = path.join(docDir, savedPath);
+          const imageUri = vscode.Uri.file(absolutePath);
+          const webviewUri = panel.webview.asWebviewUri(imageUri);
+          
+          // Get image dimensions from base64
+          const dimensions = this.getImageDimensions(message.imageData);
+          
+          panel.webview.postMessage({
+            type: 'imageSaved',
+            imagePath: savedPath,
+            imageUrl: webviewUri.toString(),
+            imageWidth: dimensions.width,
+            imageHeight: dimensions.height,
+          } as MessageToWebview);
+        }
+        break;
     }
   }
 
@@ -150,6 +173,100 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
         autoDetectRtl: true,
       },
     } as MessageToWebview);
+  }
+
+  private getImageDimensions(base64Data: string): { width: number | null, height: number | null } {
+    // For SVG, try to parse width/height from the SVG content
+    if (base64Data.startsWith('data:image/svg')) {
+      try {
+        const base64Match = base64Data.match(/^data:image\/[^;]+;base64,(.+)$/);
+        if (base64Match) {
+          const svgContent = Buffer.from(base64Match[1], 'base64').toString('utf8');
+          const widthMatch = svgContent.match(/width=["']([\d.]+)["']/);
+          const heightMatch = svgContent.match(/height=["']([\d.]+)["']/);
+          
+          if (widthMatch && heightMatch) {
+            return {
+              width: Math.round(parseFloat(widthMatch[1])),
+              height: Math.round(parseFloat(heightMatch[1]))
+            };
+          }
+        }
+      } catch (error) {
+        console.error('[Image Dimensions] Error parsing SVG:', error);
+      }
+    }
+    
+    // For raster images (PNG, JPG), we can't easily get dimensions without a library
+    // Return null to let the browser determine natural size
+    return { width: null, height: null };
+  }
+
+  private saveImageToAttachments(documentUri: vscode.Uri, base64Data: string, fileName: string): string {
+    console.log('[Image Save] Starting saveImageToAttachments');
+    console.log('[Image Save] fileName:', fileName);
+    console.log('[Image Save] base64Data length:', base64Data.length);
+    console.log('[Image Save] base64Data preview:', base64Data.substring(0, 100));
+    
+    // Get the document filename without extension
+    const docBaseName = path.basename(documentUri.fsPath, path.extname(documentUri.fsPath));
+    const docDir = path.dirname(documentUri.fsPath);
+    
+    console.log('[Image Save] docBaseName:', docBaseName);
+    console.log('[Image Save] docDir:', docDir);
+    
+    // Create .attachments/.[mdfilename] folder structure
+    const attachmentsDir = path.join(docDir, '.attachments');
+    const docAttachmentsDir = path.join(attachmentsDir, `.${docBaseName}`);
+    
+    console.log('[Image Save] attachmentsDir:', attachmentsDir);
+    console.log('[Image Save] docAttachmentsDir:', docAttachmentsDir);
+    
+    if (!fs.existsSync(attachmentsDir)) {
+      fs.mkdirSync(attachmentsDir);
+      console.log('[Image Save] Created attachmentsDir');
+    }
+    if (!fs.existsSync(docAttachmentsDir)) {
+      fs.mkdirSync(docAttachmentsDir);
+      console.log('[Image Save] Created docAttachmentsDir');
+    }
+    
+    // Generate unique filename if needed
+    let finalFileName = fileName;
+    let counter = 1;
+    let filePath = path.join(docAttachmentsDir, finalFileName);
+    while (fs.existsSync(filePath)) {
+      const ext = path.extname(fileName);
+      const base = path.basename(fileName, ext);
+      finalFileName = `${base}_${counter}${ext}`;
+      filePath = path.join(docAttachmentsDir, finalFileName);
+      counter++;
+    }
+    
+    console.log('[Image Save] Final filePath:', filePath);
+    
+    // Remove data URL prefix and save
+    const base64Match = base64Data.match(/^data:image\/[^;]+;base64,(.+)$/);
+    console.log('[Image Save] base64Match:', base64Match ? 'matched' : 'NO MATCH');
+    
+    if (base64Match) {
+      try {
+        const buffer = Buffer.from(base64Match[1], 'base64');
+        console.log('[Image Save] Buffer size:', buffer.length);
+        fs.writeFileSync(filePath, buffer);
+        console.log('[Image Save] File written successfully');
+        console.log('[Image Save] File exists after write:', fs.existsSync(filePath));
+      } catch (error) {
+        console.error('[Image Save] Error writing file:', error);
+      }
+    } else {
+      console.error('[Image Save] Failed to match base64 pattern in data');
+    }
+    
+    // Return relative path from markdown file
+    const relativePath = `.attachments/.${docBaseName}/${finalFileName}`;
+    console.log('[Image Save] Returning relative path:', relativePath);
+    return relativePath;
   }
 
   private convertImagePathsToWebviewUris(html: string, documentUri: vscode.Uri, webview: vscode.Webview): string {

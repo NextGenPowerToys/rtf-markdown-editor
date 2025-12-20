@@ -517,7 +517,12 @@ function attachToolbarEventListeners() {
       reader.onload = (event) => {
         const base64String = event.target?.result as string;
         if (base64String) {
-          editor!.chain().focus().setImage({ src: base64String }).run();
+          // Send to extension to save the file
+          vscode.postMessage({
+            type: 'saveImageFile',
+            imageData: base64String,
+            fileName: file.name,
+          });
         }
       };
       reader.readAsDataURL(file);
@@ -1058,6 +1063,35 @@ window.addEventListener('message', (event) => {
 
     case 'showError':
       console.error('Editor error:', message.message);
+      break;
+
+    case 'imageSaved':
+      if (editor && message.imagePath) {
+        // Use imageUrl for display (webview URI), but store imagePath (relative path) in src attribute
+        // Set width/height if available to force HTML format storage
+        const attrs: any = { src: message.imagePath };
+        
+        if (message.imageWidth && message.imageHeight) {
+          attrs.width = message.imageWidth;
+          attrs.height = message.imageHeight;
+        }
+        
+        editor.chain().focus().setImage(attrs).run();
+        
+        // After insertion, update the img element to use webview URI for display
+        // The resize system will handle saving the relative path
+        if (message.imageUrl) {
+          setTimeout(() => {
+            const images = document.querySelectorAll('img.editor-image');
+            images.forEach((img: Element) => {
+              const htmlImg = img as HTMLImageElement;
+              if (htmlImg.src === message.imagePath || htmlImg.getAttribute('src') === message.imagePath) {
+                htmlImg.src = message.imageUrl!;
+              }
+            });
+          }, 100);
+        }
+      }
       break;
   }
 });
