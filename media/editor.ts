@@ -143,7 +143,7 @@ function initializeEditor() {
         autolink: true,
       }),
       Image.configure({
-        allowBase64: true,
+        allowBase64: false,
         inline: false,
         HTMLAttributes: {
           class: 'editor-image',
@@ -229,6 +229,9 @@ function initializeEditor() {
 
   // Setup image resize and drag handlers
   setupImageHandlers();
+
+  // Setup paste and drop handlers for images
+  setupImagePasteDropHandlers();
 
   // Setup auto-detection of RTL content
   if (editorConfig.autoDetectRtl) {
@@ -872,6 +875,80 @@ function setupImageHandlers() {
       deselectImage();
     }
   });
+}
+
+function setupImagePasteDropHandlers() {
+  const editorContainer = document.getElementById('editor-container');
+  if (!editorContainer) return;
+
+  // Handle paste events
+  editorContainer.addEventListener('paste', (e: ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.type.startsWith('image/')) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (file) {
+          handleImageFile(file);
+        }
+        break;
+      }
+    }
+  });
+
+  // Handle drop events
+  editorContainer.addEventListener('drop', (e: DragEvent) => {
+    const files = e.dataTransfer?.files;
+    if (!files) return;
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (file.type.startsWith('image/')) {
+        e.preventDefault();
+        e.stopPropagation();
+        handleImageFile(file);
+        break;
+      }
+    }
+  });
+
+  // Prevent default drag behaviors
+  editorContainer.addEventListener('dragover', (e: DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  });
+
+  editorContainer.addEventListener('dragenter', (e: DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  });
+}
+
+function handleImageFile(file: File) {
+  // Validate file type
+  const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml'];
+  if (!validTypes.includes(file.type)) {
+    alert('Please paste or drop a valid image file (PNG, JPG, or SVG)');
+    return;
+  }
+
+  // Read file as base64 and send to extension
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    const base64String = event.target?.result as string;
+    if (base64String) {
+      console.log('[Image] Pasted/dropped image, sending to extension');
+      vscode.postMessage({
+        type: 'saveImageFile',
+        imageData: base64String,
+        fileName: file.name || 'pasted-image.' + file.type.split('/')[1],
+      });
+    }
+  };
+  reader.readAsDataURL(file);
 }
 
 function openMermaidModal(mermaidId: string) {
