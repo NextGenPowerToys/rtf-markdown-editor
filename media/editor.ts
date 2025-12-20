@@ -129,6 +129,44 @@ function initializeEditor() {
           class: 'editor-image',
           draggable: true,
         },
+      }).extend({
+        addAttributes() {
+          return {
+            ...this.parent?.(),
+            width: {
+              default: null,
+              parseHTML: element => element.getAttribute('width'),
+              renderHTML: attributes => {
+                if (!attributes.width) return {};
+                return { width: attributes.width };
+              },
+            },
+            height: {
+              default: null,
+              parseHTML: element => element.getAttribute('height'),
+              renderHTML: attributes => {
+                if (!attributes.height) return {};
+                return { height: attributes.height };
+              },
+            },
+            style: {
+              default: null,
+              parseHTML: element => element.getAttribute('style'),
+              renderHTML: attributes => {
+                if (!attributes.style) return {};
+                return { style: attributes.style };
+              },
+            },
+            class: {
+              default: 'editor-image',
+              parseHTML: element => element.getAttribute('class'),
+              renderHTML: attributes => {
+                if (!attributes.class) return {};
+                return { class: attributes.class };
+              },
+            },
+          };
+        },
       }),
       Color,
       Highlight.configure({
@@ -232,25 +270,6 @@ function createToolbar(container: HTMLElement) {
   `;
   container.appendChild(headingGroup);
 
-  // Alignment group
-  const alignGroup = document.createElement('div');
-  alignGroup.className = 'toolbar-group';
-  alignGroup.innerHTML = `
-    <button class="toolbar-btn" id="align-left-btn" title="Align left">
-      ◄
-    </button>
-    <button class="toolbar-btn" id="align-center-btn" title="Align center">
-      ◄►
-    </button>
-    <button class="toolbar-btn" id="align-right-btn" title="Align right">
-      ►
-    </button>
-    <button class="toolbar-btn" id="align-justify-btn" title="Justify">
-      ◄ ►
-    </button>
-  `;
-  container.appendChild(alignGroup);
-
   // List group
   const listGroup = document.createElement('div');
   listGroup.className = 'toolbar-group';
@@ -338,12 +357,6 @@ function attachToolbarEventListeners() {
       editor!.chain().focus().toggleHeading({ level: level as any }).run();
     }
   });
-
-  // Alignment
-  document.getElementById('align-left-btn')?.addEventListener('click', () => editor!.chain().focus().setTextAlign('left').run());
-  document.getElementById('align-center-btn')?.addEventListener('click', () => editor!.chain().focus().setTextAlign('center').run());
-  document.getElementById('align-right-btn')?.addEventListener('click', () => editor!.chain().focus().setTextAlign('right').run());
-  document.getElementById('align-justify-btn')?.addEventListener('click', () => editor!.chain().focus().setTextAlign('justify').run());
 
   // Lists
   document.getElementById('bullet-list-btn')?.addEventListener('click', () => editor!.chain().focus().toggleBulletList().run());
@@ -672,31 +685,6 @@ function setupImageHandlers() {
       handleDiv.addEventListener('mousedown', startResize);
     });
     
-    // Create alignment toolbar
-    const toolbar = document.createElement('div');
-    toolbar.className = 'image-align-toolbar';
-    toolbar.style.position = 'fixed';
-    toolbar.style.left = `${rect.left}px`;
-    toolbar.style.top = `${rect.top - 40}px`;
-    toolbar.style.zIndex = '10000';
-    toolbar.innerHTML = `
-      <button class="image-align-btn" data-align="left" title="Align Left">◄</button>
-      <button class="image-align-btn" data-align="center" title="Center">◄►</button>
-      <button class="image-align-btn" data-align="right" title="Align Right">►</button>
-    `;
-    document.body.appendChild(toolbar);
-    handleElements.push(toolbar);
-    
-    // Add alignment button listeners
-    toolbar.querySelectorAll('.image-align-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const align = (e.target as HTMLElement).dataset.align;
-        if (align && selectedImage) {
-          applyImageAlignment(selectedImage, align);
-        }
-      });
-    });
-    
     // Store handle elements for cleanup
     (img as any).__resizeHandles = handleElements;
     
@@ -727,12 +715,7 @@ function setupImageHandlers() {
     
     const handleSize = 16;
     handles.forEach(handle => {
-      if (handle.classList.contains('image-align-toolbar')) {
-        // Update toolbar position
-        handle.style.left = `${rect.left}px`;
-        handle.style.top = `${rect.top - 40}px`;
-      } else {
-        const type = handle.dataset.handle;
+      const type = handle.dataset.handle;
         if (type === 'nw') {
           handle.style.left = `${rect.left - handleSize / 2}px`;
           handle.style.top = `${rect.top - handleSize / 2}px`;
@@ -742,54 +725,11 @@ function setupImageHandlers() {
         } else if (type === 'sw') {
           handle.style.left = `${rect.left - handleSize / 2}px`;
           handle.style.top = `${rect.bottom - handleSize / 2}px`;
-        } else if (type === 'se') {
-          handle.style.left = `${rect.right - handleSize / 2}px`;
-          handle.style.top = `${rect.bottom - handleSize / 2}px`;
-        }
+      } else if (type === 'se') {
+        handle.style.left = `${rect.right - handleSize / 2}px`;
+        handle.style.top = `${rect.bottom - handleSize / 2}px`;
       }
     });
-  }
-  
-  function applyImageAlignment(img: HTMLImageElement, align: string) {
-    // Remove all alignment classes
-    img.classList.remove('image-align-left', 'image-align-center', 'image-align-right');
-    img.removeAttribute('style');
-    
-    // Apply new alignment
-    if (align === 'left') {
-      img.classList.add('image-align-left');
-      img.style.display = 'block';
-      img.style.marginLeft = '0';
-      img.style.marginRight = 'auto';
-    } else if (align === 'center') {
-      img.classList.add('image-align-center');
-      img.style.display = 'block';
-      img.style.marginLeft = 'auto';
-      img.style.marginRight = 'auto';
-    } else if (align === 'right') {
-      img.classList.add('image-align-right');
-      img.style.display = 'block';
-      img.style.marginLeft = 'auto';
-      img.style.marginRight = '0';
-    }
-    
-    // Preserve width and height
-    if (img.hasAttribute('width')) {
-      img.style.width = img.getAttribute('width') + 'px';
-    }
-    if (img.hasAttribute('height')) {
-      img.style.height = img.getAttribute('height') + 'px';
-    }
-    
-    // Update handle positions after alignment
-    setTimeout(() => updateHandlePositions(), 10);
-    
-    // Save changes
-    if (editor) {
-      saveContent();
-    }
-    
-    console.log('[Image] Applied alignment:', align);
   }
 
   function startResize(e: Event) {
@@ -862,9 +802,55 @@ function setupImageHandlers() {
     document.removeEventListener('mousemove', doResize);
     document.removeEventListener('mouseup', stopResize);
     
-    // Save content
-    if (editor) {
-      saveContent();
+    // Update ProseMirror node with new dimensions
+    if (editor && selectedImage) {
+      const width = selectedImage.getAttribute('width');
+      const height = selectedImage.getAttribute('height');
+      
+      console.log('[Image] Updating node with width:', width, 'height:', height);
+      
+      // Normalize URLs for comparison (decode both to handle %2B vs + differences)
+      const normalizeUrl = (url: string) => {
+        try {
+          return decodeURIComponent(url);
+        } catch {
+          return url;
+        }
+      };
+      
+      const selectedSrc = normalizeUrl(selectedImage.src);
+      console.log('[Image] Selected image src (normalized):', selectedSrc);
+      
+      // Find and update the image node in ProseMirror
+      const { state } = editor;
+      const { doc } = state;
+      let nodePos: number | null = null;
+      let foundNode: any = null;
+      
+      doc.descendants((node, pos) => {
+        if (node.type.name === 'image') {
+          const nodeSrc = normalizeUrl(node.attrs.src);
+          if (nodeSrc === selectedSrc) {
+            nodePos = pos;
+            foundNode = node;
+            console.log('[Image] MATCH! Found at position:', pos);
+            return false;
+          }
+        }
+      });
+      
+      if (nodePos !== null && foundNode) {
+        const newAttrs = { ...foundNode.attrs, width, height };
+        console.log('[Image] Updating attributes to:', newAttrs);
+        const result = editor.commands.updateAttributes('image', newAttrs);
+        console.log('[Image] Update result:', result);
+        setTimeout(() => {
+          console.log('[Image] Calling saveContent after resize');
+          saveContent();
+        }, 100);
+      } else {
+        console.log('[Image] ERROR: Node not found!');
+      }
     }
   }
 
@@ -1000,6 +986,15 @@ function saveContent() {
   if (!editor) return;
 
   const html = editor.getHTML();
+  
+  // Log image tags in the HTML
+  const imgMatches = html.match(/<img[^>]*>/gi);
+  if (imgMatches) {
+    console.log('[SaveContent] Found', imgMatches.length, 'image tags in HTML:');
+    imgMatches.forEach((img, i) => console.log(`[SaveContent] Image ${i + 1}:`, img));
+  } else {
+    console.log('[SaveContent] No image tags found in HTML');
+  }
 
   vscode.postMessage({
     type: 'contentChanged',

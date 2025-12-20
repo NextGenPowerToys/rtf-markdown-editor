@@ -24,16 +24,81 @@ export function htmlToMarkdown(html: string, mermaidSources: Record<string, stri
   // Convert images BEFORE general tag removal
   // Handle any img tag with a src attribute (most general approach)
   const imgRegex = /<img\s+([^>]*?)src=["']([^"']+)["']([^>]*?)>/gi;
+  const imageReplacements: string[] = [];
+  const IMAGE_PLACEHOLDER = '___IMAGE_PLACEHOLDER_';
   
   markdown = markdown.replace(imgRegex, (match, preSrc, src, postSrc) => {
+    console.log('[htmlToMarkdown] Processing image:', match.substring(0, 200));
+    
     // Extract alt attribute from either side
     const altMatch = match.match(/alt=["']([^"']*)["']/i);
     const alt = altMatch ? altMatch[1] : '';
     
+    // Extract width and height attributes
+    const widthMatch = match.match(/width=["']?(\d+)["']?/i);
+    const heightMatch = match.match(/height=["']?(\d+)["']?/i);
+    const width = widthMatch ? widthMatch[1] : null;
+    const height = heightMatch ? heightMatch[1] : null;
+    
+    console.log('[htmlToMarkdown] Extracted - width:', width, 'height:', height, 'src:', src.substring(0, 100));
+    
+    // Extract style attribute for alignment
+    const styleMatch = match.match(/style=["']([^"']*)["']/i);
+    let alignment = '';
+    if (styleMatch) {
+      const style = styleMatch[1];
+      if (style.includes('margin-left: 0') || style.includes('margin-right: auto')) {
+        alignment = 'left';
+      } else if (style.includes('margin-left: auto') && style.includes('margin-right: auto')) {
+        alignment = 'center';
+      } else if (style.includes('margin-left: auto') || style.includes('margin-right: 0')) {
+        alignment = 'right';
+      }
+    }
+    
+    // Check class attribute for alignment
+    const classMatch = match.match(/class=["']([^"']*)["']/i);
+    if (classMatch) {
+      const classes = classMatch[1];
+      if (classes.includes('image-align-left')) alignment = 'left';
+      else if (classes.includes('image-align-center')) alignment = 'center';
+      else if (classes.includes('image-align-right')) alignment = 'right';
+    }
+    
     let relativeSrc = convertToRelativePath(src, documentPath);
     // Normalize path separators to forward slashes for markdown portability
     relativeSrc = relativeSrc.replace(/\\/g, '/');
-    return `![${alt}](${relativeSrc})\n`;
+    
+    console.log('[htmlToMarkdown] Relative src:', relativeSrc, 'alignment:', alignment);
+    
+    let result: string;
+    // If image has custom size or alignment, use HTML instead of markdown
+    if (width || height || alignment) {
+      let styleAttr = '';
+      if (alignment === 'left') {
+        styleAttr = ' style="display: block; margin-left: 0; margin-right: auto;"';
+      } else if (alignment === 'center') {
+        styleAttr = ' style="display: block; margin-left: auto; margin-right: auto;"';
+      } else if (alignment === 'right') {
+        styleAttr = ' style="display: block; margin-left: auto; margin-right: 0;"';
+      }
+      
+      const widthAttr = width ? ` width="${width}"` : '';
+      const heightAttr = height ? ` height="${height}"` : '';
+      const altAttr = alt ? ` alt="${alt}"` : '';
+      
+      result = `<img src="${relativeSrc}"${altAttr}${widthAttr}${heightAttr}${styleAttr} class="editor-image">`;
+      console.log('[htmlToMarkdown] Returning HTML img tag:', result.substring(0, 150));
+    } else {
+      // Standard markdown image
+      result = `![${alt}](${relativeSrc})`;
+      console.log('[htmlToMarkdown] Returning markdown image:', result);
+    }
+    
+    // Store the replacement and return placeholder
+    const index = imageReplacements.length;
+    imageReplacements.push(result);
+    return `${IMAGE_PLACEHOLDER}${index}${IMAGE_PLACEHOLDER}`;
   });
 
   // Convert tables to Markdown format
@@ -74,6 +139,11 @@ export function htmlToMarkdown(html: string, mermaidSources: Record<string, stri
     .replace(/<blockquote[^>]*>/gi, '> ')
     .replace(/<\/blockquote>/gi, '\n')
     .replace(/<[^>]*>/g, ''); // Remove any remaining HTML tags
+
+  // Restore image placeholders
+  imageReplacements.forEach((img, index) => {
+    markdown = markdown.replace(`${IMAGE_PLACEHOLDER}${index}${IMAGE_PLACEHOLDER}`, '\n' + img + '\n');
+  });
 
   // Clean up extra whitespace
   markdown = markdown

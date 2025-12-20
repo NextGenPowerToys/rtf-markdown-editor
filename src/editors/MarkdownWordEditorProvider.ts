@@ -112,7 +112,12 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
         break;
 
       case 'contentChanged':
+        console.log('[DEBUG] contentChanged received, HTML length:', (message.html || '').length);
+        console.log('[DEBUG] HTML sample:', (message.html || '').substring(0, 1000));
         document.updateContent(message.html || '', message.mermaidSources || {});
+        console.log('[DEBUG] Calling save()');
+        document.save();
+        console.log('[DEBUG] Save completed');
         break;
 
       case 'requestSaveNow':
@@ -187,7 +192,7 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}'; font-src ${webview.cspSource}; img-src ${webview.cspSource} data:; connect-src 'self'; child-src 'self'; frame-src https:;" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}'; font-src ${webview.cspSource}; img-src ${webview.cspSource} data:; connect-src 'self' ${webview.cspSource} data:; child-src 'self'; frame-src https:;" />
   <link rel="stylesheet" href="${styleUri}">
   <title>RTF Markdown Editor</title>
 </head>
@@ -284,11 +289,15 @@ class WebviewDocument extends vscode.Disposable implements vscode.CustomDocument
   updateContent(html: string, mermaidSources: Record<string, string>) {
     this._mermaidSources = mermaidSources;
     const markdown = htmlToMarkdown(html, mermaidSources, this._uri.fsPath);
+    console.log('[DEBUG] updateContent - markdown preview:', markdown.substring(0, 500));
     const newHash = hashContent(markdown);
 
     if (newHash !== this._contentHash) {
+      console.log('[DEBUG] Hash changed, updating content');
       this._documentData = markdown;
       this._contentHash = newHash;
+    } else {
+      console.log('[DEBUG] Hash unchanged, skipping update');
     }
   }
 
