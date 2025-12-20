@@ -98,6 +98,66 @@ english עם עברית
 | משימה | אחראי | תאריך |
 | --- | --- | --- |
 | כתיבת תיעוד ddd | דוד | 2025-12-17 |
+
+## דיאגרמות Mermaid
+### דיאגרמת זרימה - תהליך פיתוח
+```mermaid
+graph TD
+    A[התחלה] --> B{תכנון}
+    B -->|אישור| C[פיתוח]
+    B -->|דחייה| A
+    C --> D[בדיקות]
+    D -->|עבר| E[הטמעה]
+    D -->|נכשל| C
+    E --> F[סיום]
+```
+
+### דיאגרמת Sequence - תהליך התחברות
+```mermaid
+sequenceDiagram
+    participant משתמש
+    participant מערכת
+    participant מסד נתונים
+    
+    משתמש->>מערכת: שליחת פרטים
+    מערכת->>מסד נתונים: בדיקת אישורים
+    מסד נתונים-->>מערכת: אישור
+    מערכת-->>משתמש: התחברות מוצלחת
+```
+
+### דיאגרמת Gantt - לוח זמנים של פרויקט
+```mermaid
+gantt
+    title תוכנית עבודה לפרויקט
+    dateFormat YYYY-MM-DD
+    section שלב א
+    תכנון           :2025-01-01, 10d
+    עיצוב           :2025-01-11, 15d
+    section שלב ב
+    פיתוח           :2025-01-26, 30d
+    בדיקות          :2025-02-25, 20d
+```
+
+### דיאגרמת Class - מבנה מערכת
+```mermaid
+classDiagram
+    class User {
+        +String name
+        +String email
+        +login()
+        +logout()
+    }
+    class Admin {
+        +String permissions
+        +manageUsers()
+    }
+    class Database {
+        +connect()
+        +query()
+    }
+    User <|-- Admin
+    User --> Database
+```
 | ddd בדיקת קוד | מרים | 2025-12-18 |
 | 11 ddd פרסום 222 fff | ישראל | 2025-12-19 |
 
@@ -129,10 +189,8 @@ english עם עברית
 | היסטוריה | "מסע דרך הזמן" | דוד בכי | 2010 | 1 |
 
 ## קוד
-
 ### דוגמה: Python
-
-```python
+```
 def greet(name):
     """
     Function that prints a greeting message
@@ -146,11 +204,10 @@ greet("World")
 numbers = [1, 2, 3, 4, 5]
 for num in numbers:
     print(f"Number: {num}")
+
 ```
-
 ### דוגמה: JavaScript
-
-```javascript
+```
 // Function to greet a user
 function greet(name) {
     return `Hello ${name}!`;
@@ -166,18 +223,15 @@ console.log(`Count: ${count}`);
 // Array operations
 const items = ["apple", "banana", "orange"];
 items.forEach(item => console.log(item));
+
+```
+### דוגמה: HTML &amp; CSS
 ```
 
-### דוגמה: HTML & CSS
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sample Page</title>
-    <style>
+    
+    
+    Sample Page
+    
         body {
             font-family: Arial, sans-serif;
             background-color: #f5f5f5;
@@ -199,23 +253,22 @@ items.forEach(item => console.log(item));
             padding: 10px;
             border-left: 4px solid #ffeb3b;
         }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Welcome</h1>
-        <p>This is a sample HTML page with English content.</p>
-        <div class="highlight">
-            <p>This is a highlighted section with important information.</p>
-        </div>
-    </div>
-</body>
-</html>
+    
+
+    
+        # Welcome
+
+        This is a sample HTML page with English content.
+
+        
+            This is a highlighted section with important information.
+
+        
+    
+
 ```
-
 ### דוגמה: SQL
-
-```sql
+```
 -- Create a users table
 CREATE TABLE users (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -235,11 +288,10 @@ SELECT * FROM users WHERE created_at > DATE_SUB(NOW(), INTERVAL 7 DAY);
 
 -- Update user email
 UPDATE users SET email = 'newemail@example.com' WHERE username = 'john_doe';
+
 ```
-
 ### דוגמה: JSON
-
-```json
+```
 {
   "project": "Hebrew RTL Documentation",
   "version": "1.0",
@@ -272,6 +324,7 @@ UPDATE users SET email = 'newemail@example.com' WHERE username = 'john_doe';
     "John"
   ]
 }
+
 ```
 ## ציטוטים
 > "השפה העברית היא אחת השפות העתיקות ביותר בעולם,
@@ -292,7 +345,7 @@ UPDATE users SET email = 'newemail@example.com' WHERE username = 'john_doe';
 ## ניסיון עם עיצוב מתקדם
 ### עם emojis בעברית
 📚 **ספרים** - מקורות ידע
-💻 **מחשבים** - כלים טכנולוגיים
+💻 **מחשבים** - כלים טכנולוגיים sss
 🌍 **עולם** - קהילה גלובלית
 ✍️ **כתיבה** - אמצעי תקשורת
 ## תמיכה טכנית
@@ -318,29 +371,22 @@ UPDATE users SET email = 'newemail@example.com' WHERE username = 'john_doe';
 ⚠️ **הערה 1:** ודא שהקידוד הוא UTF-8
 ⚠️ **הערה 2:** כמה תוכנות לא תומכות בעברית במלואה
 ℹ️ **הערה 3:** השתמש ב-`dir="rtl"` ב-HTML לתמיכה טובה יותר
-
 ## דיאגרמות Mermaid
-
 ### דיאגרמה 1: תהליך עבודה
 
 ![Workflow Diagram](mermaid-diagrams/1_diagram_1.svg)
-
 ### דיאגרמה 2: מבנה ארגוני
 
 ![Organizational Structure](mermaid-diagrams/2_diagram_2.svg)
-
 ### דיאגרמה 3: מחזור חיים של פרויקט
 
 ![Project Lifecycle](mermaid-diagrams/3_diagram_3.svg)
-
 ### דיאגרמה 4: דיאגרמת מצב
 
 ![State Diagram](mermaid-diagrams/4_diagram_4.svg)
-
 ### דיאגרמה 5: תרשים גנט
 
 ![Project Timeline](mermaid-diagrams/5_project_timeline.svg)
-
 ## קישורים שימושיים
 - GitHub - עברית
 
@@ -356,9 +402,9 @@ UPDATE users SET email = 'newemail@example.com' WHERE username = 'john_doe';
 ✅ **יישור לימין נכון**
 ✅ **כיווניות RTL**
 ✅ **עיצוב ושינוע**
-✅ **קוד וטבלאות**
+✅ **קוד וטבלאות fff**
 ## יוצר ותאריך
-**יוצר:** סוכן AI
+**יוצר:** סוכן AI 333
 **תאריך יצירה:** 17 בדצמבר 2025
 **גרסה:** 1.0
 **שפה:** עברית

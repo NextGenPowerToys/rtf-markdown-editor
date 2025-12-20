@@ -66,7 +66,7 @@ const MermaidPlaceholder = Node.create({
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ['div', { ...HTMLAttributes, 'data-mdwe': 'mermaid', class: 'mermaid-placeholder' }, 0];
+    return ['div', { ...HTMLAttributes, 'data-mdwe': 'mermaid', class: 'mermaid-placeholder' }];
   },
 
   parseDOM: [
@@ -1259,28 +1259,26 @@ function renderMermaidDiagrams() {
           // Fix SVG display issues by ensuring it has proper dimensions
           const injectedSvg = element.querySelector('svg');
           if (injectedSvg) {
-            // Ensure width is set to 100%
-            injectedSvg.setAttribute('width', '100%');
+            // Remove any inline width/height attributes to let CSS handle sizing
+            injectedSvg.removeAttribute('width');
+            injectedSvg.removeAttribute('height');
             
-            // Set height based on viewBox aspect ratio if height not set
-            const viewBox = injectedSvg.getAttribute('viewBox');
-            if (viewBox && !injectedSvg.getAttribute('height')) {
-              const parts = viewBox.split(/\s+|,/);
-              if (parts.length >= 4) {
-                const vbWidth = parseFloat(parts[2]);
-                const vbHeight = parseFloat(parts[3]);
-                if (vbWidth > 0 && vbHeight > 0) {
-                  const aspectRatio = vbHeight / vbWidth;
-                  injectedSvg.setAttribute('height', `${aspectRatio * 100}%`);
-                  injectedSvg.style.minHeight = '300px';
-                }
-              }
+            // Ensure we have a viewBox for proper scaling
+            if (!injectedSvg.getAttribute('viewBox')) {
+              // If no viewBox, try to set one based on width/height if they existed
+              const width = injectedSvg.getAttribute('width') || '800';
+              const height = injectedSvg.getAttribute('height') || '600';
+              injectedSvg.setAttribute('viewBox', `0 0 ${width} ${height}`);
             }
             
+            // Let CSS handle the sizing - svg will be max-width: 100%, height: auto
+            injectedSvg.style.width = '100%';
+            injectedSvg.style.height = 'auto';
+            
             console.log(`[Mermaid] SVG element found in DOM for ${mermaidId}`, {
-              width: injectedSvg.getAttribute('width'),
-              height: injectedSvg.getAttribute('height'),
               viewBox: injectedSvg.getAttribute('viewBox'),
+              computedWidth: injectedSvg.getBoundingClientRect().width,
+              computedHeight: injectedSvg.getBoundingClientRect().height,
             });
           } else {
             console.warn(`[Mermaid] SVG element NOT found in DOM after injection for ${mermaidId}`);
