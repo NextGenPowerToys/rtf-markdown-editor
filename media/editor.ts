@@ -1,5 +1,6 @@
 import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
+import History from '@tiptap/extension-history';
 import TextAlign from '@tiptap/extension-text-align';
 import Underline from '@tiptap/extension-underline';
 import Link from '@tiptap/extension-link';
@@ -103,6 +104,8 @@ let editorConfig: EditorConfig = {
 };
 let contentHash = '';
 let systemIsRTL = false;
+let userChangesCount = 0; // Track real user changes
+let isLoadingContent = false; // Flag to prevent counting initial load as changes
 
 // Detect system language direction
 function detectSystemDirection(): boolean {
@@ -131,6 +134,7 @@ function initializeEditor() {
       StarterKit.configure({
         bulletList: { keepMarks: true },
         orderedList: { keepMarks: true },
+        // Keep history enabled
       }),
       TextAlign.configure({
         types: ['heading', 'paragraph'],
@@ -208,6 +212,12 @@ function initializeEditor() {
       if (newHash !== contentHash) {
         contentHash = newHash;
         debounceAutoSave(html);
+        
+        // Track user changes (but not during initial content loading)
+        if (!isLoadingContent) {
+          userChangesCount++;
+          console.log('[History] User change tracked. Count:', userChangesCount);
+        }
       }
       
       // Process code blocks for language detection and copy buttons
@@ -1075,6 +1085,14 @@ function saveContent() {
 
   const html = editor.getHTML();
   
+  // Check if content is empty - if so, try to redo to restore content
+  const textContent = editor.state.doc.textContent.trim();
+  if (!textContent || html === '<p></p>' || html === '<p style="text-align: right;"></p>') {
+    console.log('[SaveContent] Content is empty, attempting redo to restore');
+    editor.commands.redo();
+    return; // Don't save empty content
+  }
+  
   // Log image tags in the HTML
   const imgMatches = html.match(/<img[^>]*>/gi);
   if (imgMatches) {
@@ -1104,8 +1122,20 @@ window.addEventListener('message', (event) => {
   switch (message.type) {
     case 'setContent':
       if (editor && message.html) {
-        editor.commands.setContent(message.html);
+        // Set loading flag to prevent counting as user changes
+        isLoadingContent = true;
+        userChangesCount = 0; // Reset counter
+        
+        // Set content normally
+        editor.commands.setContent(message.html, false);
         contentHash = hashContent(message.html);
+        
+        // Re-enable tracking after a short delay
+        setTimeout(() => {
+          isLoadingContent = false;
+          console.log('[History] Content loaded, tracking enabled');
+        }, 50);
+        
         // Process code blocks after content is set
         setTimeout(() => processCodeBlocks(), 100);
       }
@@ -1134,7 +1164,13 @@ window.addEventListener('message', (event) => {
 
     case 'externalUpdate':
       if (editor && message.html) {
-        editor.commands.setContent(message.html);
+        // Set loading flag to prevent counting as user changes
+        isLoadingContent = true;
+        userChangesCount = 0; // Reset counter on external update
+        editor.commands.setContent(message.html, false);
+        setTimeout(() => {
+          isLoadingContent = false;
+        }, 100);
       }
       if (message.mermaidSources) {
         mermaidSources = message.mermaidSources;
