@@ -96,8 +96,8 @@
     "@tiptap/extension-underline": "^2.1.0",
     "@tiptap/pm": "^2.1.0",
     "@tiptap/starter-kit": "^2.1.0",
-    "mermaid": "^10.6.0",
     "markdown-it": "^13.0.0",
-    "markdown-it-front-matter": "^0.2.4"
+    "markdown-it-front-matter": "^0.2.4",
+    "mermaid": "^10.6.0"
   }
 }
