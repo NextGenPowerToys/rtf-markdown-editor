@@ -183,9 +183,9 @@ export function htmlToMarkdown(html: string, mermaidSources: Record<string, stri
     markdown = markdown.replace(`${IMAGE_PLACEHOLDER}${index}${IMAGE_PLACEHOLDER}`, '\n' + img + '\n');
   });
 
-  // Restore mermaid placeholders
+  // Restore mermaid placeholders with blank line after to prevent breaking following markdown
   mermaidReplacements.forEach((mermaid, index) => {
-    markdown = markdown.replace(`${MERMAID_PLACEHOLDER}${index}${MERMAID_PLACEHOLDER}`, '\n' + mermaid + '\n');
+    markdown = markdown.replace(`${MERMAID_PLACEHOLDER}${index}${MERMAID_PLACEHOLDER}`, '\n' + mermaid + '\n\n');
   });
 
   // Clean up extra whitespace
