@@ -831,6 +831,12 @@ html[dir="rtl"] .math-inline {
   color: #000000;
 }
 
+/* Prevent list items with math from wrapping */
+li {
+  white-space: nowrap;
+  overflow-x: auto;
+}
+
 /* KaTeX styling for better display */
 .math-rendered .katex-display {
   text-align: center;
