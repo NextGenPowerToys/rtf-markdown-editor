@@ -819,6 +819,7 @@ html[dir="rtl"] .math-inline {
   border: 1px solid #e0e0e0;
   border-radius: 3px;
   color: #000000;
+  flex-shrink: 0;
 }
 
 .math-inline-placeholder .math-rendered {
@@ -848,6 +849,7 @@ li {
   flex-wrap: nowrap;
   white-space: nowrap;
   overflow-x: auto;
+  min-width: fit-content;
   gap: 4px;
 }
 
