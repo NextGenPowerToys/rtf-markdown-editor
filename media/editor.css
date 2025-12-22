@@ -846,6 +846,8 @@ li {
   display: flex;
   align-items: center;
   flex-wrap: nowrap;
+  white-space: nowrap;
+  overflow-x: auto;
   gap: 4px;
 }
 
