@@ -8,6 +8,34 @@ import * as path from 'path';
 export function htmlToMarkdown(html: string, mermaidSources: Record<string, string>, documentPath?: string): string {
   let markdown = html;
 
+  // Preserve math expressions FIRST (before any other processing)
+  // Convert math divs and spans back to raw syntax
+  
+  // Convert display math divs: <div class="math-display">$$content$$</div>
+  markdown = markdown.replace(/<div\s+class=["']math-display["'][^>]*>([\s\S]*?)<\/div>/gi, (match, content) => {
+    // Extract the math content (removing the $$ markers if present)
+    let mathContent = content;
+    if (mathContent.startsWith('$$') && mathContent.endsWith('$$')) {
+      mathContent = mathContent.slice(2, -2);
+    }
+    return '$$' + mathContent + '$$\n';
+  });
+
+  // Convert inline math spans: <span class="math-inline">$content$</span>
+  markdown = markdown.replace(/<span\s+class=["']math-inline["'][^>]*>([\s\S]*?)<\/span>/gi, (match, content) => {
+    // Extract the math content (removing the $ markers if present)
+    let mathContent = content;
+    if (mathContent.startsWith('$') && mathContent.endsWith('$')) {
+      mathContent = mathContent.slice(1, -1);
+    }
+    return '$' + mathContent + '$';
+  });
+
+  const mathReplacements: string[] = [];
+  const MATH_PLACEHOLDER = '___MATH_PLACEHOLDER_';
+  
+  // This is handled by the HTML preservation - math should come through as text with $ signs
+
   // Convert code blocks FIRST (before other replacements)
   markdown = markdown.replace(/<pre[^>]*><code[^>]*>([\s\S]*?)<\/code><\/pre>/gi, (match, code) => {
     // Decode HTML entities in code

@@ -7,6 +7,73 @@ const md = new MarkdownIt({
   linkify: true,
 });
 
+// Configure markdown-it to not escape HTML
+md.renderer.rules.html_block = (tokens, idx) => tokens[idx].content;
+md.renderer.rules.html_inline = (tokens, idx) => tokens[idx].content;
+
+// Add a custom rule for math expressions to preserve them with special markup
+// This allows them to be styled and potentially rendered by KaTeX later
+md.inline.ruler.before('text', 'math', (state, silent) => {
+  let pos = state.pos;
+  const maximum = state.posMax;
+
+  // Check for display math $$...$$
+  if (pos + 1 < maximum && state.src[pos] === '$' && state.src[pos + 1] === '$') {
+    let searchPos = pos + 2;
+    while (searchPos < maximum) {
+      if (state.src[searchPos] === '$' && state.src[searchPos + 1] === '$' && 
+          (searchPos === pos + 2 || state.src[searchPos - 1] !== '\\')) {
+        // Found closing $$
+        const content = state.src.slice(pos + 2, searchPos);
+        if (content && !silent) {
+          const token = state.push('math_block', 'div', 0);
+          token.content = content;
+          token.markup = '$$';
+          token.meta = { display: true };
+        }
+        state.pos = searchPos + 2;
+        return true;
+      }
+      searchPos++;
+    }
+  }
+
+  // Check for inline math $...$
+  if (state.src[pos] === '$' && (pos === 0 || state.src[pos - 1] !== '\\')) {
+    let searchPos = pos + 1;
+    while (searchPos < maximum) {
+      if (state.src[searchPos] === '$' && state.src[searchPos - 1] !== '\\') {
+        // Found closing $
+        const content = state.src.slice(pos + 1, searchPos);
+        if (content && !silent) {
+          const token = state.push('math_inline', 'span', 0);
+          token.content = content;
+          token.markup = '$';
+          token.meta = { display: false };
+        }
+        state.pos = searchPos + 1;
+        return true;
+      }
+      searchPos++;
+    }
+  }
+
+  return false;
+});
+
+// Custom renderers for math
+md.renderer.rules.math_block = (tokens, idx) => {
+  const token = tokens[idx];
+  const content = token.content;
+  return `<div class="math-display">$$${content}$$</div>\n`;
+};
+
+md.renderer.rules.math_inline = (tokens, idx) => {
+  const token = tokens[idx];
+  const content = token.content;
+  return `<span class="math-inline">$${content}$</span>`;
+};
+
 // Mermaid fence patterns - ONLY standard backtick syntax
 const MERMAID_FENCE_PATTERN = /^```\s*mermaid\s*$/i;
 const MERMAID_CLOSE_PATTERN = /^```\s*$/;
