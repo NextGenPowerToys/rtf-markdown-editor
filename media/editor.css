@@ -279,8 +279,13 @@ html[dir="rtl"] .ProseMirror code {
   padding-left: 12px;
   margin-left: 0;
   margin-right: 0;
-  opacity: 0.8;
+  margin: 1em 0;
+  opacity: 1;
   font-style: italic;
+  background-color: #f9f9f9;
+  padding: 10px 12px;
+  border-radius: 2px;
+  color: inherit;
 }
 
 html[dir="rtl"] .ProseMirror blockquote {

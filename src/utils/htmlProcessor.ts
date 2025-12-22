@@ -150,6 +150,24 @@ export function htmlToMarkdown(html: string, mermaidSources: Record<string, stri
   // Also handle links where href might have attributes before it
   markdown = markdown.replace(/<a\s+([^>]*?)href=["']([^"']+)["']([^>]*?)>([\s\S]*?)<\/a>/gi, '[$4]($2)');
 
+  // Convert blockquotes BEFORE other tags to preserve structure
+  markdown = markdown.replace(/<blockquote[^>]*>([\s\S]*?)<\/blockquote>/gi, (match, content) => {
+    // Process the blockquote content to convert inner tags
+    let blockContent = content
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/p>/gi, '\n')
+      .replace(/<p[^>]*>/gi, '')
+      .replace(/<strong[^>]*>(.*?)<\/strong>/gi, '**$1**')
+      .replace(/<b[^>]*>(.*?)<\/b>/gi, '**$1**')
+      .replace(/<em[^>]*>(.*?)<\/em>/gi, '*$1*')
+      .replace(/<i[^>]*>(.*?)<\/i>/gi, '*$1*')
+      .replace(/<[^>]*>/g, ''); // Remove remaining tags
+    
+    // Split by newlines and prefix each line with >
+    const lines = blockContent.split('\n').filter(line => line.trim());
+    return '\n' + lines.map(line => '> ' + line).join('\n') + '\n';
+  });
+
   // Convert common HTML tags to Markdown
   markdown = markdown
     .replace(/<h1[^>]*>(.*?)<\/h1>/gi, '# $1\n')
@@ -174,8 +192,6 @@ export function htmlToMarkdown(html: string, mermaidSources: Record<string, stri
     .replace(/<\/ul>/gi, '')
     .replace(/<ol[^>]*>/gi, '')
     .replace(/<\/ol>/gi, '')
-    .replace(/<blockquote[^>]*>/gi, '> ')
-    .replace(/<\/blockquote>/gi, '\n')
     .replace(/<[^>]*>/g, ''); // Remove any remaining HTML tags
 
   // Restore image placeholders
