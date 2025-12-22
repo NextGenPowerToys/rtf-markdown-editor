@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="editor.css">
+  <link rel="stylesheet" href="katex.css">
   <title>RTF Markdown Editor</title>
 </head>
 <body>
@@ -30,6 +31,42 @@
         <div class="modal-footer">
           <button id="mermaid-save" class="btn btn-primary">Save</button>
           <button id="mermaid-cancel" class="btn btn-secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
+    <div id="math-modal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Insert Math Formula</h2>
+          <button class="modal-close" id="math-modal-close">&times;</button>
+        </div>
+        <div class="modal-body modal-split-pane">
+          <div class="modal-pane modal-source-pane">
+            <div class="modal-pane-header">Formula (LaTeX)</div>
+            <textarea id="math-formula" class="math-textarea" placeholder="Enter LaTeX formula (e.g., \frac{x}{y} or x^2+y^2)..."></textarea>
+            <div id="math-error" class="math-error" style="display: none;"></div>
+            <div style="margin-top: 8px; font-size: 12px; color: #666;">
+              <strong>Tips:</strong> Use $...$ for inline or $$...$$ for block display. Examples:
+              <ul>
+                <li>\frac{a}{b} = fraction</li>
+                <li>\sqrt{x} = square root</li>
+                <li>x^2 = superscript</li>
+                <li>x_i = subscript</li>
+              </ul>
+            </div>
+          </div>
+          <div class="modal-pane modal-preview-pane">
+            <div class="modal-pane-header">Preview</div>
+            <div id="math-preview" class="math-preview"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <select id="math-type" style="margin-right: auto; padding: 6px; border: 1px solid #d0d0d0; border-radius: 4px;">
+            <option value="block">Display (Block)</option>
+            <option value="inline">Inline</option>
+          </select>
+          <button id="math-save" class="btn btn-primary">Insert</button>
+          <button id="math-cancel" class="btn btn-secondary">Cancel</button>
         </div>
       </div>
     </div>

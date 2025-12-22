@@ -14,7 +14,9 @@ import TableCell from '@tiptap/extension-table-cell';
 import { Node } from '@tiptap/core';
 
 import { MessageFromWebview, MessageToWebview, EditorConfig } from '../types';
+import { MathBlock, MathInline, renderMathBlocks, convertMarkdownMath } from './mathExtension';
 import mermaid from 'mermaid';
+import katex from 'katex';
 
 // Fluent UI System Icons SVG paths
 const icons = {
@@ -34,6 +36,7 @@ const icons = {
   table: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M3 4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1H3zm0 1h14v3h-3V5H9v3H3V5zm0 4h5v3H3V9zm6 0h3v3H9V9zm4 0h4v3h-4V9zM3 13h5v2H3v-2zm6 0h3v2H9v-2zm4 0h4v2h-4v-2z"/></svg>',
   hr: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M2 9.5h16v1H2v-1z"/></svg>',
   rtl: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M3 4.5h14v1H3v-1zm0 5h10v1H3v-1zm0 5h14v1H3v-1z"/><path d="M14.5 9.5l2.5 2.5-2.5 2.5v-1.5h-4v-2h4v-1.5z"/></svg>',
+  math: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M2 5h1v10H2V5zm3.5 0c-.276 0-.5.224-.5.5v3.414L3.793 7.207a.5.5 0 1 0-.707.707L4.293 10l-1.207 1.207a.5.5 0 1 0 .707.707L5.5 11.086V14.5c0 .276.224.5.5.5s.5-.224.5-.5v-3.414l1.207 1.207a.5.5 0 1 0 .707-.707L6.707 10l1.207-1.207a.5.5 0 0 0-.707-.707L6.5 8.914V5.5c0-.276-.224-.5-.5-.5zm7 0h3.5c1.381 0 2.5 1.119 2.5 2.5v5c0 1.381-1.119 2.5-2.5 2.5h-3.5c-.276 0-.5-.224-.5-.5s.224-.5.5-.5h3.5c.829 0 1.5-.671 1.5-1.5v-5c0-.829-.671-1.5-1.5-1.5h-3.5c-.276 0-.5-.224-.5-.5s.224-.5.5-.5zm9 0h1v10h-1V5z"/></svg>',
 };
 
 // Custom extension to preserve Mermaid placeholder divs
@@ -203,6 +206,8 @@ function initializeEditor() {
       TableHeader,
       TableCell,
       MermaidPlaceholder,
+      MathBlock,
+      MathInline,
     ],
     content: '<p></p>',
     onUpdate: ({ editor: e }) => {
@@ -225,6 +230,9 @@ function initializeEditor() {
       
       // Render Mermaid diagrams after content updates
       setTimeout(() => renderMermaidDiagrams(), 100);
+      
+      // Render math blocks and inline math
+      setTimeout(() => renderMathBlocks(), 150);
     },
     onBlur: () => {
       saveContent();
@@ -333,6 +341,7 @@ function createToolbar(container: HTMLElement) {
     <button class="toolbar-btn" id="link-btn" title="Insert link">${icons.link}</button>
     <button class="toolbar-btn" id="image-btn" title="Insert picture">${icons.image}</button>
     <button class="toolbar-btn" id="table-btn" title="Insert table">${icons.table}</button>
+    <button class="toolbar-btn" id="math-btn" title="Insert math formula">${icons.math}</button>
     <button class="toolbar-btn" id="hr-btn" title="Horizontal line">${icons.hr}</button>
   `;
   container.appendChild(insertGroup);
@@ -552,6 +561,10 @@ function attachToolbarEventListeners() {
 
   document.getElementById('table-btn')?.addEventListener('click', () => {
     editor!.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+  });
+
+  document.getElementById('math-btn')?.addEventListener('click', () => {
+    openMathModal();
   });
 
   document.getElementById('hr-btn')?.addEventListener('click', () => {
@@ -1071,6 +1084,157 @@ function detectRTLContent() {
   }
 }
 
+/**
+ * Open math formula modal
+ */
+function openMathModal() {
+  const modal = document.getElementById('math-modal');
+  const textarea = document.getElementById('math-formula') as HTMLTextAreaElement;
+  const typeSelect = document.getElementById('math-type') as HTMLSelectElement;
+  
+  if (modal && textarea) {
+    textarea.value = '';
+    textarea.focus();
+    typeSelect.value = 'block';
+    
+    // Clear previous error
+    const errorDiv = document.getElementById('math-error') as HTMLDivElement;
+    if (errorDiv) {
+      errorDiv.style.display = 'none';
+      errorDiv.textContent = '';
+    }
+    
+    // Set up live preview on input
+    textarea.addEventListener('input', updateMathPreview);
+    typeSelect.addEventListener('change', updateMathPreview);
+    
+    // Initial preview render
+    setTimeout(() => updateMathPreview(), 50);
+    
+    modal.style.display = 'flex';
+  }
+
+  // Setup event listeners
+  document.getElementById('math-modal-close')?.addEventListener('click', closeMathModal);
+  document.getElementById('math-cancel')?.addEventListener('click', closeMathModal);
+  document.getElementById('math-save')?.addEventListener('click', saveMathFormula);
+}
+
+/**
+ * Close math formula modal
+ */
+function closeMathModal() {
+  const modal = document.getElementById('math-modal');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+
+  // Clean up event listeners
+  const textarea = document.getElementById('math-formula') as HTMLTextAreaElement;
+  const typeSelect = document.getElementById('math-type') as HTMLSelectElement;
+  
+  if (textarea) {
+    textarea.removeEventListener('input', updateMathPreview);
+  }
+  
+  if (typeSelect) {
+    typeSelect.removeEventListener('change', updateMathPreview);
+  }
+}
+
+/**
+ * Update math formula preview
+ */
+function updateMathPreview() {
+  const textarea = document.getElementById('math-formula') as HTMLTextAreaElement;
+  const preview = document.getElementById('math-preview');
+  const errorDiv = document.getElementById('math-error') as HTMLDivElement;
+  const typeSelect = document.getElementById('math-type') as HTMLSelectElement;
+  
+  if (!textarea || !preview || !errorDiv) return;
+
+  const formula = textarea.value.trim();
+  const displayMode = typeSelect.value === 'block';
+
+  if (!formula) {
+    preview.innerHTML = '<span style="color: #999;">Preview will appear here...</span>';
+    errorDiv.style.display = 'none';
+    return;
+  }
+
+  try {
+    const katex = (window as any).katex;
+    if (!katex) {
+      errorDiv.style.display = 'block';
+      errorDiv.textContent = 'KaTeX library not loaded';
+      return;
+    }
+
+    const html = katex.renderToString(formula, {
+      displayMode: displayMode,
+      throwOnError: false,
+      trust: true,
+    });
+
+    preview.innerHTML = `<div style="text-align: center;">${html}</div>`;
+    errorDiv.style.display = 'none';
+  } catch (error) {
+    errorDiv.style.display = 'block';
+    errorDiv.textContent = `Error: ${error instanceof Error ? error.message : 'Invalid formula'}`;
+    preview.innerHTML = '';
+  }
+}
+
+/**
+ * Save and insert math formula
+ */
+function saveMathFormula() {
+  const textarea = document.getElementById('math-formula') as HTMLTextAreaElement;
+  const typeSelect = document.getElementById('math-type') as HTMLSelectElement;
+  
+  if (!textarea || !editor) return;
+
+  const formula = textarea.value.trim();
+  if (!formula) {
+    alert('Please enter a formula');
+    return;
+  }
+
+  const displayMode = typeSelect.value === 'block';
+
+  try {
+    if (displayMode) {
+      // Insert block math
+      editor.chain().focus().insertContent({
+        type: 'mathBlock',
+        attrs: {
+          formula: formula,
+        },
+      }).run();
+    } else {
+      // Insert inline math
+      editor.chain().focus().insertContent({
+        type: 'mathInline',
+        attrs: {
+          formula: formula,
+        },
+      }).run();
+    }
+
+    closeMathModal();
+    saveContent();
+    
+    // Render the newly inserted math after a delay
+    setTimeout(() => {
+      console.log('[Math] Calling renderMathBlocks after insert');
+      renderMathBlocks();
+    }, 200);
+  } catch (error) {
+    console.error('[Math] Error inserting formula:', error);
+    alert('Error inserting formula. Check the console for details.');
+  }
+}
+
 let autoSaveTimeout: NodeJS.Timeout;
 
 function debounceAutoSave(html: string) {
@@ -1126,9 +1290,12 @@ window.addEventListener('message', (event) => {
         isLoadingContent = true;
         userChangesCount = 0; // Reset counter
         
+        // Convert markdown math syntax to custom nodes BEFORE setting content
+        const convertedHtml = convertMarkdownMath(message.html);
+        
         // Set content normally
-        editor.commands.setContent(message.html, false);
-        contentHash = hashContent(message.html);
+        editor.commands.setContent(convertedHtml, false);
+        contentHash = hashContent(convertedHtml);
         
         // Re-enable tracking after a short delay
         setTimeout(() => {
@@ -1153,7 +1320,7 @@ window.addEventListener('message', (event) => {
       setupMermaidHandlers();
       // Delay to ensure DOM is fully rendered by TipTap
       setTimeout(() => renderMermaidDiagrams(), 300);
-      break;
+      setTimeout(() => renderMathBlocks(), 300);
 
     case 'setConfig':
       if (message.config) {
@@ -1167,7 +1334,10 @@ window.addEventListener('message', (event) => {
         // Set loading flag to prevent counting as user changes
         isLoadingContent = true;
         userChangesCount = 0; // Reset counter on external update
-        editor.commands.setContent(message.html, false);
+        
+        // Convert markdown math syntax to custom nodes BEFORE setting content
+        const convertedHtml = convertMarkdownMath(message.html);
+        editor.commands.setContent(convertedHtml, false);
         setTimeout(() => {
           isLoadingContent = false;
         }, 100);
@@ -1178,6 +1348,7 @@ window.addEventListener('message', (event) => {
       setupMermaidHandlers();
       // Delay to ensure DOM is fully rendered by TipTap
       setTimeout(() => renderMermaidDiagrams(), 300);
+      setTimeout(() => renderMathBlocks(), 300);
       break;
 
     case 'showError':
