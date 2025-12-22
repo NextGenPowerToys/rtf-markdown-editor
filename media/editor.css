@@ -841,6 +841,14 @@ html[dir="rtl"] .math-inline {
   font-size: inherit;
 }
 
+/* Prevent wrapping in list items with math */
+li {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 4px;
+}
+
 /* Math error display */
 .math-error {
   padding: 8px 12px;
