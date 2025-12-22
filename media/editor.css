@@ -819,7 +819,6 @@ html[dir="rtl"] .math-inline {
   border: 1px solid #e0e0e0;
   border-radius: 3px;
   color: #000000;
-  white-space: nowrap;
 }
 
 .math-inline-placeholder .math-rendered {
@@ -829,12 +828,6 @@ html[dir="rtl"] .math-inline {
 .math-inline-placeholder .math-rendered .katex {
   font-size: 0.9em;
   color: #000000;
-}
-
-/* Prevent list items with math from wrapping */
-li {
-  white-space: nowrap;
-  overflow-x: auto;
 }
 
 /* KaTeX styling for better display */
