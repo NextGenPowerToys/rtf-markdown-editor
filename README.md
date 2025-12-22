@@ -101,6 +101,25 @@ graph TD
 
 The diagram is automatically saved in your Markdown file.
 
+### Math Formulas (Partially Supported)
+
+The editor supports LaTeX math formulas using KaTeX:
+
+**Block math:**
+```markdown
+$$\frac{a}{b}$$
+```
+
+**Inline math:**
+```markdown
+This is inline $x^2$ math.
+```
+
+**Limitations:**
+- ⚠️ HTML list wrapping with complex inline math may break across lines
+- ⚠️ Hebrew/Arabic text inside math mode (`\text{}`) is not supported—use English only
+- KaTeX rendering is offline and fully bundled
+
 ### Autosave
 
 The editor automatically saves your work:
