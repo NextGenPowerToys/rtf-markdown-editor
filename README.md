@@ -6,27 +6,131 @@ A rich text editor extension for VS Code that provides a Microsoft Word / Google
 
 ## Features
 
-### ✅ Core Features
+### ✅ Text Formatting
+- **Bold** (Ctrl+B)
+- **Italic** (Ctrl+I)
+- **Underline** (Ctrl+U)
+- **Strikethrough**
+- **Inline Code**
+- **Superscript & Subscript** (when supported in Markdown)
 
-- **WYSIWYG Editing**: Word-like interface for Markdown files
-- **Rich Formatting Toolbar**: Bold, italic, underline, strikethrough, headings, colors, alignment, lists, tables, and more
-- **RTL-First Design**: Full support for Hebrew, Arabic, and other right-to-left languages
-  - Automatic RTL/LTR detection
-  - RTL/LTR toggle button in toolbar
-  - Proper cursor behavior and text alignment
-- **Autosave**: 750ms debounce, saves on blur/tab hidden/close
-- **Azure DevOps Mermaid Diagrams**: Support for `:::: mermaid` block syntax
-  - Bundled Mermaid renderer (no CDN)
-  - Click to edit diagrams
-  - Round-trip preservation
+### ✅ Paragraph & Block Formatting
+- **Headings**: H1–H6 style selection
+- **Block Quotes**: Multi-level block quotes with > syntax
+- **Code Blocks**: Syntax-highlighted with language detection
+- **Horizontal Rules**: Visual separator lines
+- **Line Breaks**: Soft and hard breaks preserved
+
+### ✅ Lists & Tables
+- **Unordered Lists** (bullet points)
+- **Ordered Lists** (numbered)
+- **Nested Lists**: Full nesting support
+- **Tables**: Create, edit, and format markdown tables with:
+  - Multiple columns and rows
+  - Alignment (left, center, right)
+  - Header rows
+  - Pipes and delimiter preservation
+
+### ✅ Links & Media
+- **Hyperlinks**: Insert, edit, and remove links
+- **Image Insertion**: Support for:
+  - Relative paths (local files)
+  - Absolute URLs
+  - Image attributes (alt text, titles)
+- **Link Previews**: Hover to see URLs
+- **Image Scaling**: Respects markdown image syntax
+
+### ✅ Colors & Styling
+- **Text Color Picker**: Full RGB color selection
+- **Highlight/Background Color**: Span-level highlighting
+- **Alignment Controls**:
+  - Left align
+  - Center align
+  - Right align
+  - Justify (full)
+- **Visual Feedback**: Toolbar buttons show current formatting
+
+### ✅ RTL (Right-to-Left) Language Support
+- **Hebrew**: Full first-class support
+- **Arabic**: Full support (Persian, Urdu, etc.)
+- **Automatic Detection**: Language detection from content
+- **RTL Toggle Button**: Manual RTL/LTR switching
+- **Proper Alignment**: Direction-aware alignment controls
+- **Cursor Behavior**: Correct cursor movement in RTL text
+- **Bidirectional Text**: Mixed LTR/RTL content support
+
+### ✅ Diagram Support
+- **Mermaid Diagrams**: Full integration with all Mermaid diagram types:
+  - Flowcharts
+  - Sequence diagrams
+  - Gantt charts
+  - Class diagrams
+  - State diagrams
+  - Entity-Relationship diagrams
+  - User journey diagrams
+  - Git graphs
+  - Pie charts
+- **Syntax**: Standard `:::: mermaid` blocks (Azure DevOps compatible)
+- **Live Editing**: Click diagram to open editor modal
+- **Bundled Renderer**: No CDN required, fully offline
+
+### ✅ Math Formulas (Partially Supported)
+- **Block Math**: `$$formula$$` syntax with KaTeX rendering
+- **Inline Math**: `$formula$` for inline mathematical notation
+- **LaTeX Support**: Most standard LaTeX commands supported
+- **KaTeX Engine**: Offline, bundled math renderer
+- **Limitations**:
+  - List item wrapping may break with complex inline math
+  - Hebrew/Arabic text in `\text{}` commands not supported (English only)
 
 ### 🔒 100% Offline & Secure
-
 - **No Internet Required**: All dependencies bundled locally
 - **No CDN Calls**: Fonts, scripts, and styles are embedded
 - **No Network Calls**: Extension functions completely offline
+- **No Telemetry**: No data collection or tracking
 - **Strict CSP**: Content Security Policy prevents external resource loading
 - **No Runtime Downloads**: Everything needed is in the extension package
+- **Complete Independence**: Works without VS Code Marketplace connection
+
+### ✅ Autosave & Session Management
+- **Automatic Saving**: 750ms debounce after changes stop
+- **Smart Triggers**: Save on:
+  - Editor blur (loses focus)
+  - Tab hidden
+  - File close
+  - Window focus lost
+- **Content Hashing**: Prevents unnecessary saves if no changes made
+- **No Confirmation**: Seamless auto-save without dialogs
+- **Preserves State**: Undo/redo history maintained during save
+
+### ✅ File Handling
+- **Markdown Format**: Always saved as standard Markdown (`.md`)
+- **Round-Trip Preservation**: Open and save without edits = identical file
+- **Syntax Preservation**: All original Markdown syntax preserved exactly
+- **No Formatting**: No unwanted reformatting or style changes
+- **Relative Paths**: Image and link paths handled correctly
+- **UTF-8**: Full Unicode support including:
+  - Hebrew
+  - Arabic
+  - Chinese
+  - Japanese
+  - Emojis
+  - Special characters
+
+### ✅ Editor Experience
+- **WYSIWYG**: What-You-See-Is-What-You-Get editing
+- **Toolbar**: Comprehensive formatting toolbar with visual feedback
+- **Standard Shortcuts**: All VS Code keyboard shortcuts work:
+  - Ctrl+Z (Undo)
+  - Ctrl+Shift+Z (Redo)
+  - Ctrl+A (Select All)
+  - Ctrl+C/V (Copy/Paste)
+  - And more...
+- **Context Menus**: Right-click context menu support
+- **Selection Formatting**: Apply formatting to selected text
+- **Cursor Positioning**: Precise cursor control
+- **Line Numbers**: Optional line numbering
+- **Scroll Behavior**: Smooth scrolling and view management
 
 ## Installation
 

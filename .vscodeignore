@@ -1,6 +1,12 @@
 out
-dist
 node_modules
 .vscode-test/
 *.vsix
-media/*.bundle.js*
+src/
+media/*.ts
+media/icons/
+media/*.svg
+.git
+.github
+esbuild.config.js
+tsconfig.json

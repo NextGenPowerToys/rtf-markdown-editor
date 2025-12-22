@@ -3,6 +3,11 @@
   "displayName": "RTF Markdown Editor",
   "description": "Word-like WYSIWYG Markdown Editor (RTL-first, Azure DevOps Mermaid, Autosave, FULLY OFFLINE)",
   "version": "0.0.1",
+  "publisher": "NGPowerToys",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NextGenPowerToys/rtf-markdown-editor"
+  },
   "engines": {
     "vscode": "^1.85.0"
   },
