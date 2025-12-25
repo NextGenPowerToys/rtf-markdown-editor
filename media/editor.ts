@@ -15,6 +15,7 @@ import { Node } from '@tiptap/core';
 
 import { MessageFromWebview, MessageToWebview, EditorConfig } from '../types';
 import { MathBlock, MathInline, renderMathBlocks, convertMarkdownMath } from './mathExtension';
+import { WebviewRTLService } from './rtlService';
 import mermaid from 'mermaid';
 import katex from 'katex';
 
@@ -101,28 +102,29 @@ mermaid.initialize({
 let editor: Editor | null = null;
 let mermaidSources: Record<string, string> = {};
 let currentMermaidEditId: string | null = null;
-let editorConfig: EditorConfig = {
-  rtl: true,
-  autoDetectRtl: true,
-};
+let editorConfig: EditorConfig = WebviewRTLService.getDefaultConfig();
 let contentHash = '';
-let systemIsRTL = false;
 let userChangesCount = 0; // Track real user changes
 let isLoadingContent = false; // Flag to prevent counting initial load as changes
+let editorInitialized = false; // Flag to ensure editor is only initialized once with correct RTL config
 
-// Detect system language direction
-function detectSystemDirection(): boolean {
-  const userLang = navigator.language || navigator.languages?.[0] || 'en';
-  const rtlLanguages = ['ar', 'he', 'fa', 'ur', 'yi', 'ji', 'iw', 'ps', 'sd'];
-  const langCode = userLang.toLowerCase().split('-')[0];
-  return rtlLanguages.includes(langCode);
-}
+// Setup message listener FIRST before anything else
+window.addEventListener('message', (event) => {
+  const message = event.data as MessageToWebview;
 
-systemIsRTL = detectSystemDirection();
+  // Intercept setContent to ensure editor initializes with correct config
+  if (message.type === 'setContent' && !editorInitialized && message.config) {
+    editorConfig = message.config;
+    WebviewRTLService.applyConfig(editorConfig);
+    // Now initialize editor with correct RTL settings
+    initializeEditor();
+    editorInitialized = true;
+  }
+  handleMessageFromExtension(message);
+});
 
-// Initialize editor when DOM is ready
+// Initialize UI when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-  initializeEditor();
   setupUIHandlers();
   notifyReady();
 });
@@ -142,7 +144,7 @@ function initializeEditor() {
       TextAlign.configure({
         types: ['heading', 'paragraph'],
         alignments: ['left', 'center', 'right', 'justify'],
-        defaultAlignment: editorConfig.rtl ? 'right' : 'left',
+        defaultAlignment: WebviewRTLService.getDefaultAlignment(editorConfig.rtl),
       }),
       Underline,
       Link.configure({
@@ -574,10 +576,10 @@ function attachToolbarEventListeners() {
   // RTL toggle
   document.getElementById('rtl-btn')?.addEventListener('click', () => {
     editorConfig.rtl = !editorConfig.rtl;
-    document.documentElement.dir = editorConfig.rtl ? 'rtl' : 'ltr';
-    document.getElementById('rtl-btn')?.classList.toggle('active');
+    WebviewRTLService.applyToDocument(editorConfig.rtl);
+    WebviewRTLService.updateButtonUI(editorConfig.rtl);
     
-    const alignment = editorConfig.rtl ? 'right' : 'left';
+    const alignment = WebviewRTLService.getDefaultAlignment(editorConfig.rtl);
     editor!.chain().focus().setTextAlign(alignment).run();
   });
 }
@@ -1072,15 +1074,12 @@ function detectRTLContent() {
   if (!editor) return;
 
   const text = editor.getJSON();
-  const rtlPattern = /[\u0590-\u05FF\u0600-\u06FF\u0700-\u074F\u0750-\u077F]/;
-  
-  // Simple check on visible text
-  const hasRTL = JSON.stringify(text).match(rtlPattern) !== null;
+  const hasRTL = WebviewRTLService.hasRTLContent(text);
   
   if (hasRTL && !editorConfig.rtl) {
     editorConfig.rtl = true;
-    document.documentElement.dir = 'rtl';
-    document.getElementById('rtl-btn')?.classList.add('active');
+    WebviewRTLService.applyToDocument(true);
+    WebviewRTLService.updateButtonUI(true);
   }
 }
 
@@ -1280,9 +1279,7 @@ function notifyReady() {
 }
 
 // Handle messages from extension
-window.addEventListener('message', (event) => {
-  const message = event.data as MessageToWebview;
-
+function handleMessageFromExtension(message: MessageToWebview) {
   switch (message.type) {
     case 'setContent':
       if (editor && message.html) {
@@ -1311,11 +1308,7 @@ window.addEventListener('message', (event) => {
       }
       if (message.config) {
         editorConfig = message.config;
-        document.documentElement.dir = editorConfig.rtl ? 'rtl' : 'ltr';
-        const rtlBtn = document.getElementById('rtl-btn');
-        if (rtlBtn) {
-          rtlBtn.classList.toggle('active', editorConfig.rtl);
-        }
+        WebviewRTLService.applyConfig(editorConfig);
       }
       setupMermaidHandlers();
       // Delay to ensure DOM is fully rendered by TipTap
@@ -1325,7 +1318,7 @@ window.addEventListener('message', (event) => {
     case 'setConfig':
       if (message.config) {
         editorConfig = message.config;
-        document.documentElement.dir = editorConfig.rtl ? 'rtl' : 'ltr';
+        WebviewRTLService.applyConfig(editorConfig);
       }
       break;
 
@@ -1384,7 +1377,7 @@ window.addEventListener('message', (event) => {
       }
       break;
   }
-});
+}
 
 function renderMermaidDiagrams() {
   if (typeof mermaid === 'undefined') {

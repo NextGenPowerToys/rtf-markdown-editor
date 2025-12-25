@@ -4,6 +4,7 @@ import * as path from 'path';
 import { MessageFromWebview, MessageToWebview, EditorConfig } from '../types';
 import { markdownToHtml, detectRTLCharacters } from '../utils/markdownProcessor';
 import { htmlToMarkdown, hashContent } from '../utils/htmlProcessor';
+import { RTLService } from '../services/RTLService';
 
 export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
   private readonly context: vscode.ExtensionContext;
@@ -159,7 +160,9 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
   private sendInitialContent(document: WebviewDocument, panel: vscode.WebviewPanel) {
     const content = document.getContent();
     let { html, mermaidSources } = markdownToHtml(content);
-    const rtl = detectRTLCharacters(content);
+    
+    // Use RTLService to create config
+    const config = RTLService.createConfig(content, true);
 
     // Convert image paths to webview URIs
     html = this.convertImagePathsToWebviewUris(html, document.uri, panel.webview);
@@ -168,10 +171,7 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
       type: 'setContent',
       html,
       mermaidSources,
-      config: {
-        rtl,
-        autoDetectRtl: true,
-      },
+      config,
     } as MessageToWebview);
   }
 
@@ -305,7 +305,7 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
     const nonce = getNonce();
 
     return `<!DOCTYPE html>
-<html lang="en" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />

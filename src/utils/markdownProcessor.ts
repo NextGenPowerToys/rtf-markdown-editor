@@ -1,5 +1,6 @@
 import MarkdownIt from 'markdown-it';
 import { MermaidBlock } from '../types';
+import { RTLService } from '../services/RTLService';
 
 const md = new MarkdownIt({
   html: true,
@@ -80,10 +81,10 @@ const MERMAID_CLOSE_PATTERN = /^```\s*$/;
 
 /**
  * Detects Hebrew/Arabic RTL characters in text
+ * @deprecated Use RTLService.detectRTLCharacters() instead
  */
 export function detectRTLCharacters(text: string): boolean {
-  const rtlPattern = /[\u0590-\u05FF\u0600-\u06FF\u0700-\u074F\u0750-\u077F]/;
-  return rtlPattern.test(text);
+  return RTLService.detectRTLCharacters(text);
 }
 
 /**
