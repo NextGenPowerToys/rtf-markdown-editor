@@ -4,7 +4,7 @@ node_modules
 *.vsix
 src/
 media/*.ts
-media/icons/
+media/icons/*.svg
 media/*.svg
 .git
 .github

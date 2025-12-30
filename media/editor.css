@@ -300,17 +300,78 @@ html[dir="rtl"] .ProseMirror blockquote {
 .ProseMirror ul,
 .ProseMirror ol {
   margin: 1em 0;
-  padding-left: 2em;
+  padding-left: 2.5em;
+  list-style-position: outside;
+}
+
+.ProseMirror ul {
+  list-style-type: disc !important;
+}
+
+.ProseMirror ol {
+  list-style-type: decimal !important;
 }
 
 html[dir="rtl"] .ProseMirror ul,
 html[dir="rtl"] .ProseMirror ol {
   padding-left: 0;
-  padding-right: 2em;
+  padding-right: 2.5em;
 }
 
 .ProseMirror li {
   margin: 0.5em 0;
+  display: list-item !important;
+  list-style: inherit;
+}
+
+.ProseMirror ul > li {
+  list-style-type: disc !important;
+}
+
+.ProseMirror ol > li {
+  list-style-type: decimal !important;
+}
+
+.ProseMirror li p {
+  margin: 0;
+  display: inline;
+}
+
+/* Nested lists */
+.ProseMirror ul ul {
+  list-style-type: circle !important;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.ProseMirror ul ul > li {
+  list-style-type: circle !important;
+}
+
+.ProseMirror ul ul ul {
+  list-style-type: square !important;
+}
+
+.ProseMirror ul ul ul > li {
+  list-style-type: square !important;
+}
+
+.ProseMirror ol ol {
+  list-style-type: lower-alpha !important;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.ProseMirror ol ol > li {
+  list-style-type: lower-alpha !important;
+}
+
+.ProseMirror ol ol ol {
+  list-style-type: lower-roman !important;
+}
+
+.ProseMirror ol ol ol > li {
+  list-style-type: lower-roman !important;
 }
 
 .ProseMirror table {
@@ -843,7 +904,8 @@ html[dir="rtl"] .math-inline {
 }
 
 /* Prevent wrapping in list items with math */
-li {
+li:has(.math-inline),
+li:has(.math-block) {
   display: flex;
   align-items: center;
   flex-wrap: nowrap;

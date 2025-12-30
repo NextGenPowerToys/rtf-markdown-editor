@@ -230,6 +230,9 @@ function initializeEditor() {
       // Process code blocks for language detection and copy buttons
       processCodeBlocks();
       
+      // Add IDs to headings for anchor links
+      addHeadingIds();
+      
       // Render Mermaid diagrams after content updates
       setTimeout(() => renderMermaidDiagrams(), 100);
       
@@ -240,6 +243,9 @@ function initializeEditor() {
       saveContent();
     },
   });
+
+  // Attach toolbar event listeners now that editor is initialized
+  attachToolbarEventListeners();
 
   // Handle mermaid diagram clicks
   setupMermaidHandlers();
@@ -355,8 +361,6 @@ function createToolbar(container: HTMLElement) {
     <button class="toolbar-btn ${editorConfig.rtl ? 'active' : ''}" id="rtl-btn" title="Toggle RTL/LTR">${icons.rtl}</button>
   `;
   container.appendChild(rtlGroup);
-
-  attachToolbarEventListeners();
 }
 
 function attachToolbarEventListeners() {
@@ -609,6 +613,29 @@ function setupLinkClickHandler() {
     if (link) {
       e.preventDefault();
       let url = link.getAttribute('href') || '';
+      
+      // Handle anchor links (internal page navigation)
+      if (url.startsWith('#')) {
+        const anchorId = decodeURIComponent(url.substring(1));
+        // Try to find the element by ID
+        const targetElement = document.getElementById(anchorId);
+        if (targetElement) {
+          targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+          // If not found by ID, try to find heading with matching text
+          const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+          for (const heading of headings) {
+            const headingText = heading.textContent?.trim() || '';
+            // Try exact match first
+            if (headingText === anchorId || 
+                headingText.toLowerCase().replace(/\s+/g, '-') === anchorId.toLowerCase()) {
+              heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              break;
+            }
+          }
+        }
+        return;
+      }
       
       // Prepend https:// if URL doesn't start with http(s):// or other protocol
       if (url && !url.match(/^[a-z]+:\/\//i)) {
@@ -1456,6 +1483,52 @@ function renderMermaidDiagrams() {
       console.error(`[Mermaid] Error processing diagram ${mermaidId}:`, error);
       element.innerHTML = `<div style="color: #d13438; padding: 12px; background: #fff4f4; border: 1px solid #f0adac; border-radius: 4px; font-size: 12px;">Error: ${error instanceof Error ? error.message : String(error)}</div>`;
     }
+  });
+}
+
+/**
+ * Generate a slug from heading text for use as an ID
+ */
+function generateHeadingSlug(text: string): string {
+  return text
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w\u0590-\u05FF\u0600-\u06FF\-]/g, '') // Keep Hebrew, Arabic, and basic chars
+    .replace(/\-\-+/g, '-')
+    .replace(/^-+/, '')
+    .replace(/-+$/, '');
+}
+
+/**
+ * Add IDs to headings for anchor link navigation
+ */
+function addHeadingIds() {
+  if (!editor) return;
+  
+  const editorElement = document.querySelector('.ProseMirror');
+  if (!editorElement) return;
+  
+  const headings = editorElement.querySelectorAll('h1, h2, h3, h4, h5, h6');
+  const usedIds = new Set<string>();
+  
+  headings.forEach((heading) => {
+    const text = heading.textContent?.trim() || '';
+    if (!text) return;
+    
+    let id = generateHeadingSlug(text);
+    
+    // Handle duplicate IDs by appending a number
+    if (usedIds.has(id)) {
+      let counter = 1;
+      while (usedIds.has(`${id}-${counter}`)) {
+        counter++;
+      }
+      id = `${id}-${counter}`;
+    }
+    
+    usedIds.add(id);
+    heading.id = id;
   });
 }
 

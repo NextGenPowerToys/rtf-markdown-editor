@@ -1,5 +1,6 @@
 import { MermaidBlock } from '../types';
 import * as path from 'path';
+import * as he from 'he';
 
 /**
  * Convert HTML back to Markdown
@@ -38,14 +39,14 @@ export function htmlToMarkdown(html: string, mermaidSources: Record<string, stri
 
   // Convert code blocks FIRST (before other replacements)
   markdown = markdown.replace(/<pre[^>]*><code[^>]*>([\s\S]*?)<\/code><\/pre>/gi, (match, code) => {
-    // Decode HTML entities in code
-    const decoded = decodeHtmlEntities(code);
+    // Decode HTML entities in code using he library (RFC 7763 compliant)
+    const decoded = he.decode(code);
     return '```\n' + decoded + '\n```\n';
   });
 
   // Convert inline code
   markdown = markdown.replace(/<code[^>]*>(.*?)<\/code>/gi, (match, code) => {
-    const decoded = decodeHtmlEntities(code);
+    const decoded = he.decode(code);
     return '`' + decoded + '`';
   });
 
@@ -300,27 +301,6 @@ function convertToRelativePath(src: string, documentPath?: string): string {
   } catch (e) {
     return src;
   }
-}
-
-/**
- * Decode HTML entities
- */
-function decodeHtmlEntities(text: string): string {
-  const entities: { [key: string]: string } = {
-    '&amp;': '&',
-    '&lt;': '<',
-    '&gt;': '>',
-    '&quot;': '"',
-    '&#39;': "'",
-    '&nbsp;': ' ',
-    '&apos;': "'",
-  };
-  
-  let decoded = text;
-  for (const [entity, char] of Object.entries(entities)) {
-    decoded = decoded.replace(new RegExp(entity, 'g'), char);
-  }
-  return decoded;
 }
 
 /**

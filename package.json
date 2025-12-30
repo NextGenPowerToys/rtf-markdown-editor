@@ -2,8 +2,9 @@
   "name": "rtf-markdown-editor",
   "displayName": "RTF Markdown Editor",
   "description": "Word-like WYSIWYG Markdown Editor (RTL-first, Azure DevOps Mermaid, Autosave, FULLY OFFLINE)",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "publisher": "NGPowerToys",
+  "icon": "media/icons/RTFMD.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/NextGenPowerToys/rtf-markdown-editor"
@@ -27,6 +28,9 @@
         "selector": [
           {
             "filenamePattern": "*.md"
+          },
+          {
+            "filenamePattern": "*.markdown"
           }
         ],
         "priority": "option"
@@ -36,7 +40,7 @@
       "explorer/context": [
         {
           "command": "rtf-markdown-editor.openEditor",
-          "when": "resourceExtname == .md",
+          "when": "resourceExtname == .md || resourceExtname == .markdown",
           "group": "1_modification"
         }
       ]
@@ -47,7 +51,52 @@
         "title": "Edit with RTF Markdown Editor",
         "category": "RTF Markdown"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "RTF Markdown Editor",
+      "properties": {
+        "rtf-markdown-editor.defaultCharset": {
+          "type": "string",
+          "default": "UTF-8",
+          "enum": ["UTF-8", "UTF-16LE", "UTF-16BE", "ISO-8859-1", "Windows-1252"],
+          "enumDescriptions": [
+            "Unicode UTF-8 (recommended, universal)",
+            "Unicode UTF-16 Little Endian",
+            "Unicode UTF-16 Big Endian",
+            "Latin-1 (Western European)",
+            "Windows Latin-1 (Western European with extensions)"
+          ],
+          "description": "Default character encoding for new markdown files (RFC 7763 charset parameter)"
+        },
+        "rtf-markdown-editor.defaultVariant": {
+          "type": "string",
+          "default": "GFM",
+          "enum": ["Original", "CommonMark", "GFM", "MultiMarkdown"],
+          "enumDescriptions": [
+            "Original Markdown (Gruber 2004)",
+            "CommonMark (standardized specification)",
+            "GitHub-Flavored Markdown (GFM) - recommended",
+            "MultiMarkdown (extended features)"
+          ],
+          "description": "Default markdown variant/flavor (RFC 7763 variant parameter)"
+        },
+        "rtf-markdown-editor.detectCharsetAutomatically": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically detect file encoding when opening files"
+        },
+        "rtf-markdown-editor.showCharsetInStatusBar": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show character encoding in status bar"
+        },
+        "rtf-markdown-editor.showVariantInStatusBar": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show markdown variant in status bar"
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run esbuild-base -- --minify",
@@ -103,6 +152,9 @@
     "@tiptap/starter-kit": "^2.1.0",
     "markdown-it": "^13.0.0",
     "markdown-it-front-matter": "^0.2.4",
-    "mermaid": "^10.6.0"
+    "mermaid": "^10.6.0",
+    "chardet": "^1.6.0",
+    "iconv-lite": "^0.6.3",
+    "he": "^1.2.0"
   }
 }
