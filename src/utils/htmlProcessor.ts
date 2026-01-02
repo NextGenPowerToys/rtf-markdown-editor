@@ -57,32 +57,41 @@ export function htmlToMarkdown(html: string, mermaidSources: Record<string, stri
   
   console.log('[htmlToMarkdown] Mermaid sources received:', Object.keys(mermaidSources));
   
-  // Match mermaid divs - match both attribute orders: data-id first or data-mdwe first
-  // Pattern matches: <div ... data-id="MERMAID_X" ... data-mdwe="mermaid" ...>...</div>
-  markdown = markdown.replace(/<div\s+[^>]*data-id=["']([^"']+)["'][^>]*data-mdwe=["']mermaid["'][^>]*>[\s\S]*?<\/div>/gi, (match, mermaidId) => {
-    console.log('[htmlToMarkdown] Found mermaid div (data-id first):', mermaidId);
+  // Match mermaid divs - more flexible pattern that matches attributes in any order
+  // Matches: <div ... data-mdwe="mermaid" ... >...</div> with data-id and data-fence-type somewhere in attributes
+  markdown = markdown.replace(/<div\s+[^>]*data-mdwe=["']mermaid["'][^>]*>[\s\S]*?<\/div>/gi, (match) => {
+    console.log('[htmlToMarkdown] Found mermaid div:', match.substring(0, 200));
+    
+    // Extract data-id attribute
+    const idMatch = match.match(/data-id=["']([^"']+)["']/);
+    if (!idMatch) {
+      console.log('[htmlToMarkdown] No data-id found in mermaid div');
+      return match;
+    }
+    
+    const mermaidId = idMatch[1];
     const source = mermaidSources[mermaidId];
     if (source) {
       console.log('[htmlToMarkdown] Found source for', mermaidId, 'source length:', source.length);
-      const mermaidBlock = '```mermaid\n' + source + '\n```';
+      
+      // Extract fence type from the div attributes
+      const fenceTypeMatch = match.match(/data-fence-type=["']([^"']+)["']/);
+      const fenceType = fenceTypeMatch ? fenceTypeMatch[1] : 'backtick';
+      
+      console.log('[htmlToMarkdown] Fence type:', fenceType);
+      
+      let mermaidBlock: string;
+      if (fenceType === 'colon') {
+        mermaidBlock = ':::: mermaid\n' + source + '\n::::';
+      } else {
+        mermaidBlock = '```mermaid\n' + source + '\n```';
+      }
+      
       const index = mermaidReplacements.length;
       mermaidReplacements.push(mermaidBlock);
       return `${MERMAID_PLACEHOLDER}${index}${MERMAID_PLACEHOLDER}`;
     }
-    return match;
-  });
-  
-  // Also match the reverse order: data-mdwe first, then data-id
-  markdown = markdown.replace(/<div\s+[^>]*data-mdwe=["']mermaid["'][^>]*data-id=["']([^"']+)["'][^>]*>[\s\S]*?<\/div>/gi, (match, mermaidId) => {
-    console.log('[htmlToMarkdown] Found mermaid div (data-mdwe first):', mermaidId);
-    const source = mermaidSources[mermaidId];
-    if (source) {
-      console.log('[htmlToMarkdown] Found source for', mermaidId, 'source length:', source.length);
-      const mermaidBlock = '```mermaid\n' + source + '\n```';
-      const index = mermaidReplacements.length;
-      mermaidReplacements.push(mermaidBlock);
-      return `${MERMAID_PLACEHOLDER}${index}${MERMAID_PLACEHOLDER}`;
-    }
+    console.log('[htmlToMarkdown] No source found for', mermaidId);
     return match;
   });
   

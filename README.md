@@ -70,7 +70,7 @@ A rich text editor extension for VS Code that provides a Microsoft Word / Google
   - User journey diagrams
   - Git graphs
   - Pie charts
-- **Syntax**: Standard `:::: mermaid` blocks (Azure DevOps compatible)
+- **Syntax**: Standard `\`\`\`mermaid` blocks (GitHub compatible) and `:::: mermaid` blocks (Azure DevOps compatible)
 - **Live Editing**: Click diagram to open editor modal
 - **Bundled Renderer**: No CDN required, fully offline
 
@@ -188,22 +188,34 @@ A rich text editor extension for VS Code that provides a Microsoft Word / Google
 
 ### Mermaid Diagrams
 
-To insert a Mermaid diagram using standard Markdown syntax:
+The editor supports **both** standard Markdown and Azure DevOps Wiki syntax for Mermaid diagrams:
 
+**Standard Markdown (Triple Backticks):**
 ```markdown
-```mermaid
+\`\`\`mermaid
 graph TD
   A[Start] --> B[Process]
   B --> C[End]
+\`\`\`
 ```
+
+**Azure DevOps Wiki (Triple/Quad Colons):**
+```markdown
+:::: mermaid
+graph TD
+  A[Start] --> B[Process]
+  B --> C[End]
+::::
 ```
+
+**Format Preservation:** The editor automatically preserves the original fence format when you save. If you use backticks, it saves as backticks. If you use colons, it saves as colons.
 
 **To edit a diagram:**
 1. Click on the diagram placeholder
 2. Edit the Mermaid source in the modal
 3. Click **Save**
 
-The diagram is automatically saved in your Markdown file.
+The diagram is automatically saved in your Markdown file using the original fence format.
 
 ### Math Formulas (Partially Supported)
 

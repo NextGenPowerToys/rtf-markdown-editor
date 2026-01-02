@@ -63,6 +63,7 @@ const MermaidPlaceholder = Node.create({
           if (typeof element === 'string') return false;
           return {
             'data-id': element.getAttribute('data-id') || '',
+            'data-fence-type': element.getAttribute('data-fence-type') || 'backtick',
           };
         },
       },
@@ -70,7 +71,7 @@ const MermaidPlaceholder = Node.create({
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ['div', { ...HTMLAttributes, 'data-mdwe': 'mermaid', class: 'mermaid-placeholder' }];
+    return ['div', { ...HTMLAttributes, 'data-mdwe': 'mermaid', 'data-fence-type': HTMLAttributes['data-fence-type'] || 'backtick', class: 'mermaid-placeholder' }];
   },
 
   parseDOM: [

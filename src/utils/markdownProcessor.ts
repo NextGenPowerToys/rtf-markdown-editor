@@ -75,9 +75,11 @@ md.renderer.rules.math_inline = (tokens, idx) => {
   return `<span class="math-inline">$${content}$</span>`;
 };
 
-// Mermaid fence patterns - ONLY standard backtick syntax
-const MERMAID_FENCE_PATTERN = /^```\s*mermaid\s*$/i;
-const MERMAID_CLOSE_PATTERN = /^```\s*$/;
+// Mermaid fence patterns - Support both standard backtick and Azure DevOps colon syntax
+const MERMAID_BACKTICK_FENCE_PATTERN = /^```\s*mermaid\s*$/i;
+const MERMAID_BACKTICK_CLOSE_PATTERN = /^```\s*$/;
+const MERMAID_COLON_FENCE_PATTERN = /^:::+\s*mermaid\s*$/i;
+const MERMAID_COLON_CLOSE_PATTERN = /^:::+\s*$/;
 
 /**
  * Detects Hebrew/Arabic RTL characters in text
@@ -106,29 +108,56 @@ export function extractMermaidBlocks(markdown: string): {
 
   while (i < lines.length) {
     const line = lines[i];
+    const trimmedLine = line.trim();
 
-    if (MERMAID_FENCE_PATTERN.test(line.trim())) {
+    // Check for backtick fence
+    if (MERMAID_BACKTICK_FENCE_PATTERN.test(trimmedLine)) {
       const startLine = i;
       const mermaidId = `MERMAID_${mermaidCounter++}`;
       const mermaidContent: string[] = [];
 
       i++;
       // Collect content until closing fence
-      while (i < lines.length && !MERMAID_CLOSE_PATTERN.test(lines[i].trim())) {
+      while (i < lines.length && !MERMAID_BACKTICK_CLOSE_PATTERN.test(lines[i].trim())) {
         mermaidContent.push(lines[i]);
         i++;
       }
 
       // Consume closing fence
-      if (i < lines.length && MERMAID_CLOSE_PATTERN.test(lines[i].trim())) {
+      if (i < lines.length && MERMAID_BACKTICK_CLOSE_PATTERN.test(lines[i].trim())) {
         i++;
       }
 
       const source = mermaidContent.join('\n').trim();
       if (source) {
-        mermaidBlocks.push({ id: mermaidId, source, startLine, endLine: i - 1 });
+        mermaidBlocks.push({ id: mermaidId, source, startLine, endLine: i - 1, fenceType: 'backtick' });
         mermaidSources[mermaidId] = source;
-        result.push(`<div data-mdwe="mermaid" data-id="${mermaidId}"></div>`);
+        result.push(`<div data-mdwe="mermaid" data-id="${mermaidId}" data-fence-type="backtick"></div>`);
+      }
+    }
+    // Check for colon fence (Azure DevOps syntax)
+    else if (MERMAID_COLON_FENCE_PATTERN.test(trimmedLine)) {
+      const startLine = i;
+      const mermaidId = `MERMAID_${mermaidCounter++}`;
+      const mermaidContent: string[] = [];
+
+      i++;
+      // Collect content until closing fence
+      while (i < lines.length && !MERMAID_COLON_CLOSE_PATTERN.test(lines[i].trim())) {
+        mermaidContent.push(lines[i]);
+        i++;
+      }
+
+      // Consume closing fence
+      if (i < lines.length && MERMAID_COLON_CLOSE_PATTERN.test(lines[i].trim())) {
+        i++;
+      }
+
+      const source = mermaidContent.join('\n').trim();
+      if (source) {
+        mermaidBlocks.push({ id: mermaidId, source, startLine, endLine: i - 1, fenceType: 'colon' });
+        mermaidSources[mermaidId] = source;
+        result.push(`<div data-mdwe="mermaid" data-id="${mermaidId}" data-fence-type="colon"></div>`);
       }
     } else {
       result.push(line);

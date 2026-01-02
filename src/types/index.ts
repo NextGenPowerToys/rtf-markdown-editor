@@ -60,4 +60,5 @@ export interface MermaidBlock {
   source: string;
   startLine: number;
   endLine: number;
+  fenceType: 'backtick' | 'colon'; // Stores the original fence format
 }

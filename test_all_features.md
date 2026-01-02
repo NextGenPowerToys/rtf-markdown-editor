@@ -103,7 +103,10 @@ cx + dy
 \end{bmatrix}
 
 ## Mermaid Diagrams
-### Flowchart
+
+**Note:** This editor supports both standard Markdown (` ``` `) and Azure DevOps (`::::`) syntax.
+
+### Flowchart (Standard Syntax)
 
 ```mermaid
 graph TD
@@ -114,7 +117,7 @@ graph TD
     C --> E[End]
 ```
 
-### Sequence Diagram
+### Sequence Diagram (Standard Syntax)
 
 ```mermaid
 sequenceDiagram
@@ -127,9 +130,9 @@ sequenceDiagram
     Editor-->>User: Show success
 ```
 
-### Gantt Chart
+### Gantt Chart (Azure DevOps Syntax)
 
-```mermaid
+:::: mermaid
 gantt
     title Project Timeline
     dateFormat  YYYY-MM-DD
@@ -139,7 +142,7 @@ gantt
     section Phase 2
     Task 3           :2025-02-01, 25d
     Task 4           :2025-02-15, 15d
-```
+::::
 
 ## RTL Text Support
 This is Left-to-Right (LTR) text in English.
