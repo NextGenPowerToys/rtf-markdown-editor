@@ -568,6 +568,22 @@ function attachToolbarEventListeners() {
 
   document.getElementById('table-btn')?.addEventListener('click', () => {
     editor!.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+    
+    // Apply RTL alignment to all table cells if in RTL mode
+    if (editorConfig.rtl) {
+      setTimeout(() => {
+        const alignment = 'right'; // RTL alignment
+        // Select the first cell and then traverse all cells in the table
+        editor!.chain()
+          .focus()
+          .goToNextCell() // Move to first cell
+          .setTextAlign(alignment)
+          .goToPreviousCell()
+          .selectTable() // Select entire table
+          .setTextAlign(alignment)
+          .run();
+      }, 100);
+    }
   });
 
   document.getElementById('math-btn')?.addEventListener('click', () => {
