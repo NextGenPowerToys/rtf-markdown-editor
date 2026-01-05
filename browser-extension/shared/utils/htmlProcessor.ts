@@ -197,7 +197,16 @@ export function htmlToMarkdown(html: string, mermaidSources: Record<string, stri
       .replace(/<b[^>]*>(.*?)<\/b>/gi, '**$1**')
       .replace(/<em[^>]*>(.*?)<\/em>/gi, '*$1*')
       .replace(/<i[^>]*>(.*?)<\/i>/gi, '*$1*')
-      .replace(/<[^>]*>/g, ''); // Remove remaining tags
+      .replace(/<s[^>]*>(.*?)<\/s>/gi, '~~$1~~')
+      .replace(/<strike[^>]*>(.*?)<\/strike>/gi, '~~$1~~')
+      // Keep <u> tags as-is for underline
+      .replace(/<[^>]*>/g, (tag) => {
+        // Preserve <u> tags, remove others
+        if (tag.match(/<\/?u[^>]*>/i)) {
+          return tag;
+        }
+        return '';
+      });
     
     // Split by newlines and prefix each line with >
     const lines = blockContent.split('\n').filter((line: string) => line.trim());
@@ -216,7 +225,6 @@ export function htmlToMarkdown(html: string, mermaidSources: Record<string, stri
     .replace(/<b[^>]*>(.*?)<\/b>/gi, '**$1**')
     .replace(/<em[^>]*>(.*?)<\/em>/gi, '*$1*')
     .replace(/<i[^>]*>(.*?)<\/i>/gi, '*$1*')
-    .replace(/<u[^>]*>(.*?)<\/u>/gi, '_$1_')
     .replace(/<s[^>]*>(.*?)<\/s>/gi, '~~$1~~')
     .replace(/<strike[^>]*>(.*?)<\/strike>/gi, '~~$1~~')
     .replace(/<br\s*\/?>/gi, '\n')
@@ -228,7 +236,13 @@ export function htmlToMarkdown(html: string, mermaidSources: Record<string, stri
     .replace(/<\/ul>/gi, '')
     .replace(/<ol[^>]*>/gi, '')
     .replace(/<\/ol>/gi, '')
-    .replace(/<[^>]*>/g, ''); // Remove any remaining HTML tags
+    .replace(/<[^>]*>/g, (tag) => {
+      // Preserve <u> and </u> tags for underline (markdown doesn't support underline natively)
+      if (tag.match(/<\/?u[^>]*>/i)) {
+        return tag;
+      }
+      return ''; // Remove all other tags
+    });
 
   // Restore image placeholders
   imageReplacements.forEach((img, index) => {

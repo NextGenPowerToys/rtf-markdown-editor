@@ -32,6 +32,19 @@ body {
   gap: 4px;
   align-items: center;
   padding: 0 8px;
+  flex-wrap: wrap;
+}
+
+.toolbar-group {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  padding: 0 4px;
+  border-right: 1px solid #d0d0d0;
+}
+
+.toolbar-group:last-child {
+  border-right: none;
 }
 
 .toolbar-btn {
@@ -64,6 +77,25 @@ body {
 .toolbar-btn svg {
   width: 20px;
   height: 20px;
+}
+
+.toolbar-select {
+  padding: 4px 8px;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  background: white;
+  font-size: 12px;
+  cursor: pointer;
+  min-width: 100px;
+}
+
+.toolbar-select:hover {
+  border-color: #b0b0b0;
+}
+
+.toolbar-select:focus {
+  outline: none;
+  border-color: #007acc;
 }
 
 .file-path {
