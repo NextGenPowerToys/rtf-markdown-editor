@@ -114,6 +114,12 @@ async function initializeEditor() {
   console.log('[Editor] Got file context:', context);
   currentFileContext = context;
   
+  // Reset state for fresh load
+  isDirty = false;
+  isClosing = false;
+  currentFileSha = '';
+  mermaidSources = {};
+  
   // Clean up the context from storage
   chrome.storage.local.remove([contextKey]);
   
@@ -163,6 +169,8 @@ async function loadFile() {
   
   updateStatus('loading');
   
+  console.log('[Editor] Loading fresh file content from GitHub...');
+  
   try {
     const token = await getGitHubToken();
     if (!token) {
@@ -180,7 +188,7 @@ async function loadFile() {
       currentFileContext.branch
     );
     
-    console.log('[Editor] File loaded, SHA:', fileData.sha);
+    console.log('[Editor] File loaded from remote, SHA:', fileData.sha, 'Content length:', fileData.content.length);
     
     currentFileSha = fileData.sha;
     

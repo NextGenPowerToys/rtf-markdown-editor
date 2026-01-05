@@ -28,13 +28,18 @@ export class GitHubProvider {
   }
   
   async getFile(owner: string, repo: string, path: string, branch: string): Promise<FileContent> {
-    const url = `${this.apiUrl}/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
+    // Add timestamp to prevent caching
+    const timestamp = Date.now();
+    const url = `${this.apiUrl}/repos/${owner}/${repo}/contents/${path}?ref=${branch}&t=${timestamp}`;
     
     const response = await fetch(url, {
       headers: {
         'Authorization': `Bearer ${this.token}`,
-        'Accept': 'application/vnd.github.v3+json'
-      }
+        'Accept': 'application/vnd.github.v3+json',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache'
+      },
+      cache: 'no-store'
     });
     
     if (!response.ok) {
