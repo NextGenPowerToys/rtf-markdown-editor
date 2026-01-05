@@ -43,7 +43,14 @@ export class GitHubProvider {
     }
     
     const data = await response.json();
-    const decodedContent = atob(data.content.replace(/\n/g, ''));
+    // Properly decode Base64 to UTF-8 to handle multi-byte characters (emojis, etc.)
+    const base64Content = data.content.replace(/\n/g, '');
+    const binaryString = atob(base64Content);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    const decodedContent = new TextDecoder('utf-8').decode(bytes);
     
     return {
       content: decodedContent,
@@ -79,7 +86,14 @@ export class GitHubProvider {
       console.error('[GitHub] Failed to check SHA:', error);
     }
     
-    const encodedContent = btoa(unescape(encodeURIComponent(content)));
+    // Properly encode UTF-8 to Base64 to handle multi-byte characters (emojis, etc.)
+    const encoder = new TextEncoder();
+    const utf8Bytes = encoder.encode(content);
+    let binaryString = '';
+    for (let i = 0; i < utf8Bytes.length; i++) {
+      binaryString += String.fromCharCode(utf8Bytes[i]);
+    }
+    const encodedContent = btoa(binaryString);
     const url = `${this.apiUrl}/repos/${owner}/${repo}/contents/${path}`;
     
     const response = await fetch(url, {

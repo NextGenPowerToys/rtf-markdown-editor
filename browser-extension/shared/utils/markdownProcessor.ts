@@ -11,6 +11,7 @@ md.renderer.rules.html_block = (tokens, idx) => tokens[idx].content;
 md.renderer.rules.html_inline = (tokens, idx) => tokens[idx].content;
 
 // Add a custom rule for math expressions to preserve them with special markup
+// This allows them to be styled and potentially rendered by KaTeX later
 md.inline.ruler.before('text', 'math', (state, silent) => {
   let pos = state.pos;
   const maximum = state.posMax;
@@ -21,6 +22,7 @@ md.inline.ruler.before('text', 'math', (state, silent) => {
     while (searchPos < maximum) {
       if (state.src[searchPos] === '$' && state.src[searchPos + 1] === '$' && 
           (searchPos === pos + 2 || state.src[searchPos - 1] !== '\\')) {
+        // Found closing $$
         const content = state.src.slice(pos + 2, searchPos);
         if (content && !silent) {
           const token = state.push('math_block', 'div', 0);
@@ -40,6 +42,7 @@ md.inline.ruler.before('text', 'math', (state, silent) => {
     let searchPos = pos + 1;
     while (searchPos < maximum) {
       if (state.src[searchPos] === '$' && state.src[searchPos - 1] !== '\\') {
+        // Found closing $
         const content = state.src.slice(pos + 1, searchPos);
         if (content && !silent) {
           const token = state.push('math_inline', 'span', 0);
@@ -70,7 +73,7 @@ md.renderer.rules.math_inline = (tokens, idx) => {
   return `<span class="math-inline">$${content}$</span>`;
 };
 
-// Mermaid fence patterns
+// Mermaid fence patterns - Support both standard backtick and Azure DevOps colon syntax
 const MERMAID_BACKTICK_FENCE_PATTERN = /^```\s*mermaid\s*$/i;
 const MERMAID_BACKTICK_CLOSE_PATTERN = /^```\s*$/;
 const MERMAID_COLON_FENCE_PATTERN = /^:::+\s*mermaid\s*$/i;
@@ -85,7 +88,17 @@ export interface MermaidBlock {
 }
 
 /**
+ * Detects Hebrew/Arabic RTL characters in text
+ */
+export function detectRTLCharacters(text: string): boolean {
+  // Unicode ranges for RTL languages
+  const RTL_CHAR_PATTERN = /[\u0590-\u05FF\u0600-\u06FF\u0700-\u074F\u0750-\u077F]/;
+  return RTL_CHAR_PATTERN.test(text);
+}
+
+/**
  * Extract Mermaid blocks from markdown
+ * Replaces them with placeholders and stores mapping
  */
 export function extractMermaidBlocks(markdown: string): {
   markdown: string;
@@ -104,17 +117,20 @@ export function extractMermaidBlocks(markdown: string): {
     const line = lines[i];
     const trimmedLine = line.trim();
 
+    // Check for backtick fence
     if (MERMAID_BACKTICK_FENCE_PATTERN.test(trimmedLine)) {
       const startLine = i;
       const mermaidId = `MERMAID_${mermaidCounter++}`;
       const mermaidContent: string[] = [];
 
       i++;
+      // Collect content until closing fence
       while (i < lines.length && !MERMAID_BACKTICK_CLOSE_PATTERN.test(lines[i].trim())) {
         mermaidContent.push(lines[i]);
         i++;
       }
 
+      // Consume closing fence
       if (i < lines.length && MERMAID_BACKTICK_CLOSE_PATTERN.test(lines[i].trim())) {
         i++;
       }
@@ -125,6 +141,21 @@ export function extractMermaidBlocks(markdown: string): {
         mermaidSources[mermaidId] = source;
         result.push(`<div data-mdwe="mermaid" data-id="${mermaidId}" data-fence-type="backtick"></div>`);
       }
+    }
+    // Check for colon fence (Azure DevOps syntax)
+    else if (MERMAID_COLON_FENCE_PATTERN.test(trimmedLine)) {
+      const startLine = i;
+      const mermaidId = `MERMAID_${mermaidCounter++}`;
+      const mermaidContent: string[] = [];
+
+      i++;
+      // Collect content until closing fence
+      while (i < lines.length && !MERMAID_COLON_CLOSE_PATTERN.test(lines[i].trim())) {
+        mermaidContent.push(lines[i]);
+        i++;
+      }
+
+      // Consume closing fence      }
     } else if (MERMAID_COLON_FENCE_PATTERN.test(trimmedLine)) {
       const startLine = i;
       const mermaidId = `MERMAID_${mermaidCounter++}`;
@@ -169,4 +200,20 @@ export function markdownToHtml(markdown: string): {
   const { markdown: cleanMarkdown, mermaidSources } = extractMermaidBlocks(markdown);
   const html = md.render(cleanMarkdown);
   return { html, mermaidSources };
+}
+
+/**
+ * Re-inject Mermaid blocks back into markdown
+ */
+export function rejectMermaidBlocks(markdown: string, mermaidSources: Record<string, string>): string {
+  let result = markdown;
+
+  for (const [mermaidId, source] of Object.entries(mermaidSources)) {
+    const placeholder = `<p><div data-mdwe="mermaid" data-id="${mermaidId}"></div></p>`;
+    const mermaidBlock = `\`\`\`mermaid\n${source}\n\`\`\``;
+
+    result = result.replace(placeholder, mermaidBlock);
+  }
+
+  return result;
 }
