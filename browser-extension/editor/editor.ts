@@ -85,7 +85,7 @@ let mermaidSources: Record<string, string> = {};
 let currentFileContext: FileContext | null = null;
 let currentFileSha: string = '';
 let isDirty = false;
-let saveTimeout: number | null = null;
+let isClosing = false;
 let editorConfig: RTLConfig = RTLService.getDefaultConfig();
 
 async function initializeEditor() {
@@ -219,7 +219,6 @@ async function loadFile() {
         editor?.on('update', () => {
           isDirty = true;
           updateStatus('modified');
-          scheduleAutosave();
         });
         console.log('[Editor] Change tracking enabled');
       }, 200);
@@ -263,21 +262,16 @@ async function saveFile(commitMessage: string) {
       isDirty = false;
       updateStatus('saved');
       hideModal('commit-modal');
+      
+      // Close window if save was triggered by close button
+      if (isClosing) {
+        setTimeout(() => window.close(), 100);
+      }
     }
   } catch (error) {
     console.error('[Editor] Save error:', error);
     showError(`Failed to save file: ${error instanceof Error ? error.message : String(error)}`);
   }
-}
-
-function scheduleAutosave() {
-  if (saveTimeout) clearTimeout(saveTimeout);
-  
-  saveTimeout = setTimeout(() => {
-    if (isDirty) {
-      showModal('commit-modal');
-    }
-  }, 2000);
 }
 
 async function getGitHubToken(): Promise<string | null> {
@@ -549,7 +543,12 @@ function setupUIHandlers() {
   
   const closeBtn = document.getElementById('close-btn');
   closeBtn?.addEventListener('click', () => {
-    window.close();
+    if (isDirty) {
+      isClosing = true;
+      showModal('commit-modal');
+    } else {
+      window.close();
+    }
   });
   
   const commitConfirmBtn = document.getElementById('commit-confirm-btn');
@@ -568,6 +567,7 @@ function setupUIHandlers() {
   
   const commitCancelBtn = document.getElementById('commit-cancel-btn');
   commitCancelBtn?.addEventListener('click', () => {
+    isClosing = false;
     hideModal('commit-modal');
   });
 }
