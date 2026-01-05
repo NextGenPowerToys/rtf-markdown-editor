@@ -495,6 +495,18 @@ function attachToolbarEventListeners() {
 
   document.getElementById('table-btn')?.addEventListener('click', () => {
     editor!.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+    
+    // Apply RTL alignment to table cells if in RTL mode
+    if (editorConfig.rtl) {
+      setTimeout(() => {
+        // Apply text alignment to the newly inserted table
+        const alignment = RTLService.getDefaultAlignment(true);
+        editor!.chain()
+          .focus()
+          .setTextAlign(alignment)
+          .run();
+      }, 100);
+    }
   });
 
   document.getElementById('hr-btn')?.addEventListener('click', () => {
