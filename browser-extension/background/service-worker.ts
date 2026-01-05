@@ -126,23 +126,20 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   
   console.log('[RTF Editor] Parsed context:', context);
   
-  // Store context synchronously
+  // Store context with a unique key
+  const contextKey = `fileContext_${Date.now()}`;
   chrome.storage.local.set({
-    [`fileContext_${tab.id}`]: context
+    [contextKey]: context
   });
   
-  // Open side panel immediately
-  if (chrome.sidePanel && chrome.sidePanel.open) {
-    chrome.sidePanel.open({ tabId: tab.id })
-      .then(() => {
-        console.log('[RTF Editor] Side panel opened');
-      })
-      .catch(error => {
-        console.error('[RTF Editor] Error opening side panel:', error);
-      });
-  } else {
-    console.error('[RTF Editor] Side panel API not available');
-  }
+  // Open editor in a new tab
+  chrome.tabs.create({
+    url: `editor/editor.html?context=${contextKey}`
+  }).then(newTab => {
+    console.log('[RTF Editor] Editor tab opened:', newTab.id);
+  }).catch(error => {
+    console.error('[RTF Editor] Error opening editor tab:', error);
+  });
 });
 
 function parseGitHubUrlSync(url: string): FileContext | null {

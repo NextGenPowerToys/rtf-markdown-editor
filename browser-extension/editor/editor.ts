@@ -15,6 +15,7 @@ import mermaid from 'mermaid';
 import { markdownToHtml } from '../shared/utils/markdownProcessor';
 import { htmlToMarkdown } from '../shared/utils/htmlProcessor';
 import { GitHubProvider, FileContent, CommitResult } from '../shared/git-providers/github';
+import { RTLService, RTLConfig } from '../shared/utils/rtlService';
 
 // Mermaid placeholder extension
 const MermaidPlaceholder = Node.create({
@@ -67,49 +68,45 @@ let currentFileContext: FileContext | null = null;
 let currentFileSha: string = '';
 let isDirty = false;
 let saveTimeout: number | null = null;
+let editorConfig: RTLConfig = RTLService.getDefaultConfig();
 
 async function initializeEditor() {
   console.log('[Editor] Initializing...');
   
-  // Get current tab ID
-  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-  const currentTabId = tabs[0]?.id;
+  // Get context key from URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const contextKey = urlParams.get('context');
   
-  if (!currentTabId) {
-    showError('Could not determine current tab');
+  if (!contextKey) {
+    showError('No context key provided');
     return;
   }
   
-  console.log('[Editor] Current tab ID:', currentTabId);
+  console.log('[Editor] Context key:', contextKey);
   
-  // Wait for file context (poll with timeout)
-  let attempts = 0;
-  const maxAttempts = 50; // 5 seconds max
+  // Get file context from storage
+  const result = await chrome.storage.local.get([contextKey]);
+  const context = result[contextKey];
   
-  while (attempts < maxAttempts) {
-    const result = await chrome.storage.local.get([`fileContext_${currentTabId}`]);
-    const context = result[`fileContext_${currentTabId}`];
-    
-    if (context) {
-      console.log('[Editor] Got file context:', context);
-      currentFileContext = context;
-      break;
-    }
-    
-    console.log('[Editor] Waiting for file context... attempt', attempts + 1);
-    await new Promise(resolve => setTimeout(resolve, 100));
-    attempts++;
-  }
-  
-  if (!currentFileContext) {
-    showError('No file context available. Please try again.');
+  if (!context) {
+    showError('File context not found. Please try again.');
     return;
   }
+  
+  console.log('[Editor] Got file context:', context);
+  currentFileContext = context;
+  
+  // Clean up the context from storage
+  chrome.storage.local.remove([contextKey]);
   
   updateFileInfo();
   
-  // Initialize TipTap editor FIRST
+  // Initialize TipTap editor FIRST (without onUpdate to avoid false dirty flag during load)
   console.log('[Editor] Creating TipTap editor...');
+  
+  // Apply RTL config before creating editor
+  RTLService.applyConfig(editorConfig);
+  
   editor = new Editor({
     element: document.getElementById('editor')!,
     extensions: [
@@ -117,6 +114,7 @@ async function initializeEditor() {
       TextAlign.configure({
         types: ['heading', 'paragraph'],
         alignments: ['left', 'center', 'right', 'justify'],
+        defaultAlignment: RTLService.getDefaultAlignment(editorConfig.rtl),
       }),
       Underline,
       Link,
@@ -127,11 +125,7 @@ async function initializeEditor() {
       TableCell,
       MermaidPlaceholder,
     ],
-    onUpdate: () => {
-      isDirty = true;
-      updateStatus('modified');
-      scheduleAutosave();
-    },
+    // onUpdate will be attached after content is fully loaded
   });
   
   console.log('[Editor] TipTap editor created');
@@ -168,6 +162,18 @@ async function loadFile() {
     console.log('[Editor] File loaded, SHA:', fileData.sha);
     
     currentFileSha = fileData.sha;
+    
+    // Detect RTL from markdown content BEFORE converting
+    if (editorConfig.autoDetectRtl) {
+      const hasRTL = RTLService.hasRTLContent(fileData.content);
+      if (hasRTL) {
+        console.log('[Editor] RTL content detected, applying RTL layout');
+        editorConfig.rtl = true;
+        RTLService.applyToDocument(true);
+        RTLService.updateButtonUI(true);
+      }
+    }
+    
     const { html, mermaidSources: sources } = markdownToHtml(fileData.content);
     mermaidSources = sources;
     
@@ -178,6 +184,24 @@ async function loadFile() {
       isDirty = false;
       updateStatus('saved');
       console.log('[Editor] Content set in editor');
+      
+      // If RTL, apply text alignment to all content
+      if (editorConfig.rtl) {
+        const alignment = RTLService.getDefaultAlignment(editorConfig.rtl);
+        editor.commands.selectAll();
+        editor.commands.setTextAlign(alignment);
+        editor.commands.setTextSelection(0); // Clear selection
+      }
+      
+      // Now that content is fully loaded and formatted, attach the change handler
+      setTimeout(() => {
+        editor?.on('update', () => {
+          isDirty = true;
+          updateStatus('modified');
+          scheduleAutosave();
+        });
+        console.log('[Editor] Change tracking enabled');
+      }, 200);
     } else {
       console.error('[Editor] Editor not initialized!');
     }
@@ -327,6 +351,23 @@ function renderMermaidDiagrams() {
   });
 }
 
+function detectRTLContent() {
+  if (!editor) return;
+
+  const text = editor.getJSON();
+  const hasRTL = RTLService.hasRTLContent(text);
+  
+  if (hasRTL && !editorConfig.rtl) {
+    editorConfig.rtl = true;
+    RTLService.applyToDocument(true);
+    RTLService.updateButtonUI(true);
+    
+    // Update editor alignment
+    const alignment = RTLService.getDefaultAlignment(editorConfig.rtl);
+    editor.commands.setTextAlign(alignment);
+  }
+}
+
 // UI event handlers
 function setupUIHandlers() {
   const saveBtn = document.getElementById('save-btn');
@@ -356,6 +397,20 @@ function setupUIHandlers() {
   const commitCancelBtn = document.getElementById('commit-cancel-btn');
   commitCancelBtn?.addEventListener('click', () => {
     hideModal('commit-modal');
+  });
+  
+  // RTL toggle button
+  const rtlBtn = document.getElementById('rtl-btn');
+  rtlBtn?.addEventListener('click', () => {
+    if (!editor) return;
+    
+    editorConfig.rtl = !editorConfig.rtl;
+    RTLService.applyToDocument(editorConfig.rtl);
+    RTLService.updateButtonUI(editorConfig.rtl);
+    
+    // Update editor alignment
+    const alignment = RTLService.getDefaultAlignment(editorConfig.rtl);
+    editor.commands.setTextAlign(alignment);
   });
 }
 

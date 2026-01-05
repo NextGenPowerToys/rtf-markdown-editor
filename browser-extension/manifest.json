@@ -6,7 +6,6 @@
   "permissions": [
     "contextMenus",
     "storage",
-    "sidePanel",
     "activeTab",
     "tabs",
     "scripting"
@@ -19,10 +18,6 @@
     "service_worker": "background.js",
     "type": "module"
   },
-  "side_panel": {
-    "default_path": "editor/editor.html"
-  },
-  
   "options_page": "options/options.html",
   "content_scripts": [
     {
