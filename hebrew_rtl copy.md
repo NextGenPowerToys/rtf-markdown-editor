@@ -54,11 +54,10 @@ english עם עברית
 | רב-שפתיות | תמיכה בעברית ואנגלית | ✓ פעיל |
 
 ## טבלה ידנית
-
 | כגדד | כגקכ | כקר |
 | --- | --- | --- |
 | כדגשקכקשכקכק |  |  |
-|  |  |  |
+| fsdfsdgsdgsdsdgsdfasdfasdfasdfasffasfas |  |  |
 
 ![](https://avatars.githubusercontent.com/u/37502402?v=4)
 ## דוגמאות
