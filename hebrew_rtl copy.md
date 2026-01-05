@@ -1,5 +1,5 @@
 # שלום עולם - Hebrew RTL Markdown
-## קובץ תיעוד בעברית jhk fdgg fgfdgfdgfd jjjdasfasdfas שלום **חברים**
+## קובץ תיעוד בעברית jhk fdgg jjjdasfasdfas שלום **חברים**
 זהו קובץ markdown שמסביר על איך עובדים עם Cobol עעע עם תמיכה מלאה בעברית וכיווניות RTL (מימין לשמאל).
 fff
 ## תוכן העניינים
