@@ -27,8 +27,11 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["assets/*", "editor.html"],
+      "resources": ["editor/editor.html", "options/options.html", "assets/*"],
       "matches": ["<all_urls>"]
     }
-  ]
+  ],
+  "action": {
+    "default_title": "RTF Markdown Editor"
+  }
 }

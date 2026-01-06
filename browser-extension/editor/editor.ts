@@ -136,7 +136,7 @@ async function initializeEditor() {
     extensions: [
       StarterKit,
       TextAlign.configure({
-        types: ['heading', 'paragraph'],
+        types: ['heading', 'paragraph', 'table_cell', 'table_header'],
         alignments: ['left', 'center', 'right', 'justify'],
         defaultAlignment: RTLService.getDefaultAlignment(editorConfig.rtl),
       }),
@@ -492,24 +492,45 @@ function attachToolbarEventListeners() {
       editor!.chain().focus().setImage({ src: url }).run();
     }
   });
-
   document.getElementById('table-btn')?.addEventListener('click', () => {
     editor!.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
     
     // Apply RTL alignment to all table cells if in RTL mode
     if (editorConfig.rtl) {
       setTimeout(() => {
-        const alignment = 'right'; // RTL alignment
-        // Select the first cell and then traverse all cells in the table
-        editor!.chain()
-          .focus()
-          .goToNextCell() // Move to first cell
-          .setTextAlign(alignment)
-          .goToPreviousCell()
-          .selectTable() // Select entire table
-          .setTextAlign(alignment)
-          .run();
-      }, 100);
+        // Navigate to each cell in the newly inserted table and apply RTL alignment
+        const alignment = 'right';
+        let cellCount = 0;
+        
+        // Find the table we just inserted
+        const { $from } = editor!.state.selection;
+        let tablePos = $from.before(-1);
+        
+        // Try to find the table by going up the node hierarchy
+        let depth = $from.depth;
+        while (depth > 0) {
+          const node = $from.node(depth);
+          if (node.type.name === 'table') {
+            tablePos = $from.before(depth);
+            break;
+          }
+          depth--;
+        }
+        
+        // Apply alignment to all cells by navigating through them
+        let chain = editor!.chain().focus();
+        
+        // Move to first cell and apply alignment to each cell
+        for (let i = 0; i < 9; i++) { // 3x3 table = 9 cells
+          chain = chain.setTextAlign(alignment);
+          if (i < 8) {
+            chain = chain.goToNextCell();
+          }
+        }
+        
+        chain.run();
+        console.log('[Editor] Applied RTL alignment to all table cells');
+      }, 50);
     }
   });
 
@@ -538,6 +559,33 @@ function attachToolbarEventListeners() {
     // Update editor alignment
     const alignment = RTLService.getDefaultAlignment(editorConfig.rtl);
     editor.commands.setTextAlign(alignment);
+    
+    // Update all table cells alignment
+    updateTableAlignments(editorConfig.rtl);
+  });
+}
+
+function updateTableAlignments(rtl: boolean) {
+  if (!editor) return;
+  
+  const alignment = rtl ? 'right' : 'left';
+  const { doc } = editor.state;
+  
+  // Find all tables in the document and update their cell alignments
+  doc.descendants((node, pos) => {
+    if (node.type.name === 'table') {
+      // For each table, apply alignment to all cells
+      const tableStartPos = pos + 1;
+      node.descendants((cellNode, cellPos) => {
+        if (cellNode.type.name === 'table_cell' || cellNode.type.name === 'table_header') {
+          // Update the cell alignment
+          const absolutePos = tableStartPos + cellPos;
+          editor!.chain()
+            .setNodeMarkup(absolutePos, null, { ...cellNode.attrs, align: alignment })
+            .run();
+        }
+      });
+    }
   });
 }
 

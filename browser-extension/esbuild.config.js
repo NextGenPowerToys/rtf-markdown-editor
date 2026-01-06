@@ -16,7 +16,8 @@ async function build() {
       platform: 'browser',
       target: 'chrome120',
       minify: production,
-      sourcemap: !production
+      sourcemap: !production,
+      external: ['punycode']
     }),
     
     // Content script
@@ -28,10 +29,11 @@ async function build() {
       platform: 'browser',
       target: 'chrome120',
       minify: production,
-      sourcemap: !production
+      sourcemap: !production,
+      external: ['punycode']
     }),
     
-    // Editor page
+    // Editor page - bundles punycode
     esbuild.context({
       entryPoints: ['editor/editor.ts'],
       bundle: true,
@@ -43,7 +45,7 @@ async function build() {
       sourcemap: !production
     }),
     
-    // Options page
+    // Options page - bundles punycode
     esbuild.context({
       entryPoints: ['options/options.ts'],
       bundle: true,

@@ -254,11 +254,23 @@ body {
 .ProseMirror table td, .ProseMirror table th {
   border: 1px solid #ddd;
   padding: 8px;
+  text-align: inherit;
 }
 
 .ProseMirror table th {
   background: #f3f3f3;
   font-weight: 600;
+}
+
+/* RTL table styles */
+[dir="rtl"] .ProseMirror table td, 
+[dir="rtl"] .ProseMirror table th {
+  text-align: right;
+}
+
+[dir="ltr"] .ProseMirror table td, 
+[dir="ltr"] .ProseMirror table th {
+  text-align: left;
 }
 
 /* Modal Styles */

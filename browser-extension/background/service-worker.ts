@@ -45,101 +45,126 @@ const DEFAULT_PROVIDERS: ProviderConfig[] = [
 ];
 
 chrome.runtime.onInstalled.addListener(async () => {
-  const settings = await chrome.storage.sync.get(['providers']);
-  if (!settings.providers) {
-    await chrome.storage.sync.set({ providers: DEFAULT_PROVIDERS });
+  try {
+    console.log('[RTF Editor] Extension installed/updated');
+    const settings = await chrome.storage.sync.get(['providers']);
+    if (!settings.providers) {
+      await chrome.storage.sync.set({ providers: DEFAULT_PROVIDERS });
+    }
+    
+    await rebuildContextMenus();
+  } catch (error) {
+    console.error('[RTF Editor] Error on install:', error);
   }
-  
-  await rebuildContextMenus();
 });
 
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === 'sync' && changes.providers) {
+    console.log('[RTF Editor] Providers changed, rebuilding context menus');
     rebuildContextMenus();
   }
 });
 
+// Also rebuild on startup (in case context menu was cleared)
+rebuildContextMenus().catch(error => {
+  console.error('[RTF Editor] Error rebuilding context menus on startup:', error);
+});
+
 async function rebuildContextMenus() {
-  await chrome.contextMenus.removeAll();
-  
-  const { providers } = await chrome.storage.sync.get(['providers']);
-  
-  if (!providers || providers.length === 0) {
-    console.log('[RTF Editor] No providers configured, using defaults');
-    await chrome.storage.sync.set({ providers: DEFAULT_PROVIDERS });
-    await rebuildContextMenus();
-    return;
-  }
-  
-  const enabledProviders = providers.filter((p: ProviderConfig) => p.enabled);
-  
-  if (enabledProviders.length === 0) {
-    console.log('[RTF Editor] No enabled providers');
-    return;
-  }
-  
-  // Create context menu without URL restrictions - we'll check in the click handler
-  chrome.contextMenus.create({
-    id: 'rtf-edit-markdown',
-    title: 'Edit with RTF Markdown Editor',
-    contexts: ['page'],
-  }, () => {
-    if (chrome.runtime.lastError) {
-      console.error('[RTF Editor] Context menu error:', chrome.runtime.lastError);
-    } else {
-      console.log('[RTF Editor] Context menu created successfully');
+  try {
+    await chrome.contextMenus.removeAll();
+    console.log('[RTF Editor] Cleared existing context menus');
+    
+    // Create context menu only for GitHub markdown files
+    try {
+      await chrome.contextMenus.create({
+        id: 'rtf-edit-markdown',
+        title: 'Edit with RTF Markdown Editor',
+        contexts: ['page'],
+        documentUrlPatterns: [
+          'https://github.com/*/blob/*/*.md',
+          'https://dev.azure.com/*/*/_git/*path=*.md*',
+          'https://*.visualstudio.com/*/*/_git/*path=*.md*'
+        ]
+      });
+      console.log('[RTF Editor] Context menu created with URL patterns');
+    } catch (error) {
+      console.error('[RTF Editor] Error creating context menu:', error);
+      // Fallback: create without patterns for broader support
+      try {
+        await chrome.contextMenus.create({
+          id: 'rtf-edit-markdown',
+          title: 'Edit with RTF Markdown Editor',
+          contexts: ['page']
+        });
+        console.log('[RTF Editor] Context menu created (fallback, no patterns)');
+      } catch (fallbackError) {
+        console.error('[RTF Editor] Fallback context menu also failed:', fallbackError);
+      }
     }
-  });
+  } catch (error) {
+    console.error('[RTF Editor] Error in rebuildContextMenus:', error);
+  }
 }
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
-  console.log('[RTF Editor] Context menu clicked', { info, tab });
-  
-  if (info.menuItemId !== 'rtf-edit-markdown') {
-    console.log('[RTF Editor] Wrong menu item ID:', info.menuItemId);
-    return;
+  try {
+    console.log('[RTF Editor] Context menu clicked', { info, tab });
+    
+    if (info.menuItemId !== 'rtf-edit-markdown') {
+      console.log('[RTF Editor] Wrong menu item ID:', info.menuItemId);
+      return;
+    }
+    
+    if (!tab?.id) {
+      console.error('[RTF Editor] No tab ID available');
+      return;
+    }
+    
+    const url = info.pageUrl || info.linkUrl;
+    if (!url) {
+      console.error('[RTF Editor] No URL available');
+      return;
+    }
+    
+    console.log('[RTF Editor] Processing URL:', url);
+    
+    // Parse GitHub URL synchronously
+    const context = parseGitHubUrlSync(url);
+    if (!context) {
+      console.error('[RTF Editor] URL does not match markdown file pattern:', url);
+      chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: () => alert('This extension only works with markdown (.md) files on GitHub.')
+      }).catch(e => console.error('[RTF Editor] Could not show alert:', e));
+      return;
+    }
+    
+    console.log('[RTF Editor] Parsed context:', context);
+    
+    // Store context with a unique key
+    const contextKey = `fileContext_${Date.now()}`;
+    chrome.storage.local.set({
+      [contextKey]: context
+    }, () => {
+      if (chrome.runtime.lastError) {
+        console.error('[RTF Editor] Error storing context:', chrome.runtime.lastError);
+        return;
+      }
+      console.log('[RTF Editor] Context stored with key:', contextKey);
+      
+      // Open editor in a new tab
+      chrome.tabs.create({
+        url: `editor/editor.html?context=${contextKey}`
+      }).then(newTab => {
+        console.log('[RTF Editor] Editor tab opened:', newTab.id);
+      }).catch(error => {
+        console.error('[RTF Editor] Error opening editor tab:', error);
+      });
+    });
+  } catch (error) {
+    console.error('[RTF Editor] Error in context menu click handler:', error);
   }
-  
-  if (!tab?.id) {
-    console.error('[RTF Editor] No tab ID available');
-    return;
-  }
-  
-  const url = info.pageUrl || info.linkUrl;
-  if (!url) {
-    console.error('[RTF Editor] No URL available');
-    return;
-  }
-  
-  console.log('[RTF Editor] Processing URL:', url);
-  
-  // Parse GitHub URL synchronously
-  const context = parseGitHubUrlSync(url);
-  if (!context) {
-    console.error('[RTF Editor] URL does not match markdown file pattern:', url);
-    chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      func: () => alert('This extension only works with markdown (.md) files on GitHub.')
-    }).catch(e => console.error('[RTF Editor] Could not show alert:', e));
-    return;
-  }
-  
-  console.log('[RTF Editor] Parsed context:', context);
-  
-  // Store context with a unique key
-  const contextKey = `fileContext_${Date.now()}`;
-  chrome.storage.local.set({
-    [contextKey]: context
-  });
-  
-  // Open editor in a new tab
-  chrome.tabs.create({
-    url: `editor/editor.html?context=${contextKey}`
-  }).then(newTab => {
-    console.log('[RTF Editor] Editor tab opened:', newTab.id);
-  }).catch(error => {
-    console.error('[RTF Editor] Error opening editor tab:', error);
-  });
 });
 
 function parseGitHubUrlSync(url: string): FileContext | null {
@@ -201,14 +226,29 @@ function escapeRegex(str: string): string {
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'getFileContext') {
-    chrome.storage.local.get([`fileContext_${sender.tab?.id}`]).then(result => {
-      sendResponse(result[`fileContext_${sender.tab?.id}`]);
+    const contextKey = message.contextKey;
+    if (!contextKey) {
+      console.error('[RTF Editor] No context key provided');
+      sendResponse(null);
+      return false;
+    }
+    
+    chrome.storage.local.get([contextKey]).then(result => {
+      const context = result[contextKey];
+      console.log('[RTF Editor] Retrieved context:', context);
+      sendResponse(context || null);
+    }).catch(error => {
+      console.error('[RTF Editor] Error retrieving context:', error);
+      sendResponse(null);
     });
     return true;
   }
   
   if (message.type === 'clearFileContext') {
-    chrome.storage.local.remove([`fileContext_${sender.tab?.id}`]);
+    const contextKey = message.contextKey;
+    if (contextKey) {
+      chrome.storage.local.remove([contextKey]);
+    }
   }
 });
 
