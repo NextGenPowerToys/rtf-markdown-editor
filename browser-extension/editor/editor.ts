@@ -14,6 +14,7 @@ import mermaid from 'mermaid';
 
 import { markdownToHtml } from '../shared/utils/markdownProcessor';
 import { htmlToMarkdown } from '../shared/utils/htmlProcessor';
+import { exportToHTML } from '../shared/utils/htmlExporter';
 import { GitHubProvider, FileContent, CommitResult } from '../shared/git-providers/github';
 import { RTLService, RTLConfig } from '../shared/utils/rtlService';
 
@@ -608,6 +609,42 @@ function detectRTLContent() {
 
 // UI event handlers
 function setupUIHandlers() {
+  const exportBtn = document.getElementById('export-btn');
+  exportBtn?.addEventListener('click', async () => {
+    if (!editor) return;
+    
+    try {
+      const html = editor.getHTML();
+      const markdown = htmlToMarkdown(html, mermaidSources);
+      const fileName = currentFileContext?.path.split('/').pop() || 'document';
+      const title = fileName.replace(/\.(md|markdown)$/, '');
+      
+      // Generate HTML
+      const exportedHtml = await exportToHTML(markdown, {
+        title,
+        includeStyles: true,
+        includeScripts: true,
+        standalone: true,
+      });
+      
+      // Create blob and download
+      const blob = new Blob([exportedHtml], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${title}.html`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      alert('HTML exported successfully!');
+    } catch (error) {
+      console.error('[Export] Error:', error);
+      alert(`Failed to export HTML: ${error}`);
+    }
+  });
+
   const saveBtn = document.getElementById('save-btn');
   saveBtn?.addEventListener('click', () => {
     showModal('commit-modal');

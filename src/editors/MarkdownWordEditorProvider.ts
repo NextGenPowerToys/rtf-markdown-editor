@@ -7,6 +7,7 @@ import { MessageFromWebview, MessageToWebview, EditorConfig, MarkdownMetadata } 
 import { markdownToHtml, detectRTLCharacters } from '../utils/markdownProcessor';
 import { htmlToMarkdown, hashContent } from '../utils/htmlProcessor';
 import { RTLService } from '../services/RTLService';
+import { exportToHTML, ExportOptions } from '../utils/htmlExporter';
 
 export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
   private readonly context: vscode.ExtensionContext;
@@ -175,6 +176,10 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
           } as MessageToWebview);
         }
         break;
+
+      case 'exportHTML':
+        this.handleExportHTML(document, message.options, panel);
+        break;
     }
   }
 
@@ -294,6 +299,37 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
     const relativePath = `.attachments/.${docBaseName}/${finalFileName}`;
     console.log('[Image Save] Returning relative path:', relativePath);
     return relativePath;
+  }
+
+  private async handleExportHTML(
+    document: WebviewDocument,
+    options: ExportOptions = {},
+    panel: vscode.WebviewPanel
+  ) {
+    try {
+      const markdown = document.getContent();
+      const docName = path.basename(document.uri.fsPath, path.extname(document.uri.fsPath));
+
+      // Generate HTML
+      const html = await exportToHTML(markdown, {
+        ...options,
+        title: docName,
+      });
+
+      // Ask user where to save
+      const uri = await vscode.window.showSaveDialog({
+        defaultUri: vscode.Uri.file(path.join(path.dirname(document.uri.fsPath), `${docName}.html`)),
+        filters: { 'HTML Files': ['html'] },
+      });
+
+      if (uri) {
+        // Write the HTML file
+        fs.writeFileSync(uri.fsPath, html, 'utf8');
+        vscode.window.showInformationMessage(`HTML exported to ${path.basename(uri.fsPath)}`);
+      }
+    } catch (error) {
+      vscode.window.showErrorMessage(`Failed to export HTML: ${error}`);
+    }
   }
 
   private convertImagePathsToWebviewUris(html: string, documentUri: vscode.Uri, webview: vscode.Webview): string {
