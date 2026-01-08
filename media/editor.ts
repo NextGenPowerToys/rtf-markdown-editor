@@ -1310,6 +1310,9 @@ function saveContent() {
 
   const html = editor.getHTML();
   
+  // LOG THE FULL HTML FOR DEBUGGING
+  console.log('[SaveContent] Full HTML being sent to extension:', html);
+  
   // Check if content is empty - if so, try to redo to restore content
   const textContent = editor.state.doc.textContent.trim();
   if (!textContent || html === '<p></p>' || html === '<p style="text-align: right;"></p>') {

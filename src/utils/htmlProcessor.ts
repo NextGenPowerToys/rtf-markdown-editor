@@ -8,6 +8,65 @@ import * as he from 'he';
  */
 export function htmlToMarkdown(html: string, mermaidSources: Record<string, string>, documentPath?: string): string {
   let markdown = html;
+  
+  console.log('[htmlToMarkdown] Input HTML length:', html.length);
+  console.log('[htmlToMarkdown] First 500 chars:', html.substring(0, 500));
+  
+  // Check for <pre> tags
+  const preMatches = html.match(/<pre[^>]*>/gi);
+  console.log('[htmlToMarkdown] <pre> tags found:', preMatches ? preMatches.length : 0);
+  if (preMatches) {
+    preMatches.slice(0, 3).forEach((m, i) => {
+      console.log(`[htmlToMarkdown] <pre> tag ${i}: ${m}`);
+    });
+  }
+
+  // ===== CRITICAL: EXTRACT ALL CODE BLOCKS FIRST =====
+  // This MUST be done before ANY other processing to prevent regex conflicts
+  const codeBlockReplacements: string[] = [];
+  const CODE_BLOCK_MARKER = '__CODE_BLOCK_';
+  
+  // Check for code blocks in input HTML
+  const preCodeMatch = html.match(/<pre[^>]*><code[^>]*>/g);
+  console.log('[htmlToMarkdown] Code block tags found in input HTML:', preCodeMatch ? preCodeMatch.length : 0);
+  if (preCodeMatch) {
+    preCodeMatch.forEach((match, i) => {
+      console.log(`[htmlToMarkdown] Match ${i}: ${match}`);
+    });
+  }
+  
+  // Find ALL <pre><code>...</code></pre> blocks FIRST
+  let codeBlockIndex = 0;
+  const beforeReplacement = markdown;
+  markdown = markdown.replace(/<pre[^>]*><code[^>]*>([\s\S]*?)<\/code><\/pre>/g, (fullMatch, codeContent) => {
+    console.log(`[htmlToMarkdown] Found code block ${codeBlockIndex}, match length: ${fullMatch.length}`);
+    
+    // Extract language from class attribute
+    const langMatch = fullMatch.match(/class=["']([^"']*)["']/);
+    let language = '';
+    if (langMatch && langMatch[1]) {
+      const match = langMatch[1].match(/language-([a-z0-9-]+)/i);
+      if (match && match[1]) {
+        language = match[1];
+      }
+    }
+    
+    // Use the captured group directly (codeContent parameter)
+    // This is already the content between <code> and </code>
+    const decoded = he.decode(codeContent);
+    console.log(`[htmlToMarkdown] Block ${codeBlockIndex}: language="${language}", decoded length=${decoded.length}`);
+    
+    const mdCodeBlock = '```' + language + '\n' + decoded + '\n```\n';
+    codeBlockReplacements[codeBlockIndex] = mdCodeBlock;
+    
+    const marker = CODE_BLOCK_MARKER + codeBlockIndex + '__';
+    console.log(`[htmlToMarkdown] Replaced block ${codeBlockIndex} with marker: ${marker}`);
+    codeBlockIndex++;
+    
+    return marker;
+  });
+  
+  console.log(`[htmlToMarkdown] Total code blocks extracted: ${codeBlockIndex}, markdown changed: ${beforeReplacement !== markdown}`);
 
   // Preserve math expressions FIRST (before any other processing)
   // Convert math divs and spans back to raw syntax
@@ -37,14 +96,7 @@ export function htmlToMarkdown(html: string, mermaidSources: Record<string, stri
   
   // This is handled by the HTML preservation - math should come through as text with $ signs
 
-  // Convert code blocks FIRST (before other replacements)
-  markdown = markdown.replace(/<pre[^>]*><code[^>]*>([\s\S]*?)<\/code><\/pre>/gi, (match, code) => {
-    // Decode HTML entities in code using he library (RFC 7763 compliant)
-    const decoded = he.decode(code);
-    return '```\n' + decoded + '\n```\n';
-  });
-
-  // Convert inline code
+  // Convert inline code (only <code> NOT inside <pre> - those were already extracted)
   markdown = markdown.replace(/<code[^>]*>(.*?)<\/code>/gi, (match, code) => {
     const decoded = he.decode(code);
     return '`' + decoded + '`';
@@ -242,10 +294,23 @@ export function htmlToMarkdown(html: string, mermaidSources: Record<string, stri
     markdown = markdown.replace(`${MERMAID_PLACEHOLDER}${index}${MERMAID_PLACEHOLDER}`, '\n' + mermaid + '\n\n');
   });
 
+  // ===== RESTORE CODE BLOCKS FROM MARKERS =====
+  // Replace all code block markers with actual markdown code blocks
+  console.log('[htmlToMarkdown] About to restore code blocks. Array length:', codeBlockReplacements.length);
+  codeBlockReplacements.forEach((replacement, index) => {
+    const marker = CODE_BLOCK_MARKER + index + '__';
+    console.log(`[htmlToMarkdown] Restoring block ${index}, marker: "${marker}", replacement length: ${replacement.length}`);
+    markdown = markdown.replace(marker, replacement);
+    console.log(`[htmlToMarkdown] Restored code block ${index} from marker`);
+  });
+
   // Clean up extra whitespace
   markdown = markdown
     .replace(/\n{3,}/g, '\n\n')
     .trim();
+
+  console.log('[htmlToMarkdown] Final markdown length:', markdown.length);
+  console.log('[htmlToMarkdown] First 500 chars of output:', markdown.substring(0, 500));
 
   return markdown;
 }

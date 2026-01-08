@@ -539,6 +539,16 @@ class WebviewDocument extends vscode.Disposable implements vscode.CustomDocument
 
   updateContent(html: string, mermaidSources: Record<string, string>) {
     this._mermaidSources = mermaidSources;
+    
+    // DEBUG: Log the HTML we're about to convert
+    console.log('[updateContent] Received HTML length:', html.length);
+    console.log('[updateContent] First 300 chars of HTML:', html.substring(0, 300));
+    const codeBlockMatch = html.match(/<pre[^>]*><code[^>]*>([\s\S]*?)<\/code><\/pre>/);
+    if (codeBlockMatch) {
+      console.log('[updateContent] Found code block, length:', codeBlockMatch[0].length);
+      console.log('[updateContent] Code block HTML:', codeBlockMatch[0].substring(0, 200));
+    }
+    
     const markdown = htmlToMarkdown(html, mermaidSources, this._uri.fsPath);
     console.log('[DEBUG] updateContent - markdown preview:', markdown.substring(0, 500));
     const newHash = hashContent(markdown);

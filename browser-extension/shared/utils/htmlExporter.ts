@@ -368,7 +368,18 @@ export async function exportToHTML(
   } = options;
 
   // Convert markdown to HTML
-  const { html, mermaidSources } = markdownToHtml(markdown);
+  let { html, mermaidSources } = markdownToHtml(markdown);
+
+  // Inject mermaid source code into the placeholder divs
+  for (const [mermaidId, source] of Object.entries(mermaidSources)) {
+    const placeholder = `<div data-mdwe="mermaid" data-id="${mermaidId}"`;
+    const replacement = `<div class="mermaid" data-mdwe="mermaid" data-id="${mermaidId}"`;
+    html = html.replace(placeholder, replacement);
+    
+    // Find and replace the empty div with one containing the source
+    const emptyDivPattern = new RegExp(`<div class="mermaid" data-mdwe="mermaid" data-id="${mermaidId}"[^>]*></div>`, 'g');
+    html = html.replace(emptyDivPattern, `<div class="mermaid" data-mdwe="mermaid" data-id="${mermaidId}">${escapeHtml(source)}</div>`);
+  }
 
   // Detect RTL if not explicitly specified
   const isRTL = explicitRTL !== undefined ? explicitRTL : RTLService.hasRTLContent(markdown);
@@ -412,6 +423,16 @@ export async function exportToHTMLFragment(
   options: ExportOptions = {}
 ): Promise<string> {
   return exportToHTML(markdown, { ...options, standalone: false });
+}
+
+/**
+ * Escape text for use in HTML content
+ */
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 }
 
 /**

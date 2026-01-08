@@ -117,6 +117,18 @@ A rich text editor extension for VS Code that provides a Microsoft Word / Google
   - Emojis
   - Special characters
 
+### ✅ Export to HTML
+- **One-Click Export**: Export markdown to standalone HTML file
+- **Fully Styled**: Exported HTML includes all editor CSS styling
+- **Mermaid Support**: Diagrams render correctly with bundled Mermaid.js
+- **Math Formulas**: KaTeX formulas render properly
+- **RTL Preservation**: RTL/LTR direction is detected and preserved
+- **Offline Ready**: Exported HTML works without internet connection
+- **CDN Integration**: Uses CDN for Mermaid and KaTeX for smaller file sizes
+- **Standalone Files**: Each exported HTML is a complete, self-contained document
+- **Export Button**: Click the download icon in the toolbar or use Command Palette
+- **Command**: "Export as HTML" (via VS Code Command Palette)
+
 ### ✅ Editor Experience
 - **WYSIWYG**: What-You-See-Is-What-You-Get editing
 - **Toolbar**: Comprehensive formatting toolbar with visual feedback
@@ -146,6 +158,19 @@ A rich text editor extension for VS Code that provides a Microsoft Word / Google
 1. Right-click a `.md` file in the Explorer
 2. Select **"Edit with RTF Markdown Editor"**
 3. The file opens in a custom editor tab
+
+### Exporting to HTML
+
+1. Open a `.md` file in the RTF Markdown Editor
+2. Click the **download icon** (↓) in the toolbar, OR
+3. Open Command Palette (Ctrl+Shift+P) and run **"Export as HTML"**
+4. Choose save location and filename
+5. The exported HTML includes:
+   - All styling and formatting
+   - Mermaid diagrams (rendered via CDN)
+   - Math formulas (rendered via KaTeX CDN)
+   - RTL/LTR direction preserved
+   - Fully functional offline (after initial CDN load)
 
 ### Toolbar Controls
 
@@ -217,6 +242,11 @@ graph TD
 
 The diagram is automatically saved in your Markdown file using the original fence format.
 
+**Export Support:** When you export to HTML, Mermaid diagrams are included with:
+- The diagram source code embedded in the HTML
+- Mermaid.js loaded from CDN for client-side rendering
+- Full diagram interactivity preserved
+
 ### Math Formulas (Partially Supported)
 
 The editor supports LaTeX math formulas using KaTeX:
@@ -260,9 +290,17 @@ Alignment controls work correctly in both modes:
 ### Code Formatting
 
 **Important:** All code (inline and code blocks) always uses left alignment, regardless of RTL/LTR mode:
-- Inline code: `text-align: left`
-- Code blocks: `text-align: left`
-- This ensures code readability across all languages (code is language-neutral and follows universal programming conventions)
+- **Inline code**: `text-align: left` with `direction: ltr`
+- **Code blocks**: `text-align: left` with `direction: ltr`
+- **Rationale**: Code is language-neutral and follows universal programming conventions where:
+  - Variables, functions, and operators read left-to-right
+  - Indentation and alignment are critical for readability
+  - Mixing RTL with code would break syntax highlighting and formatting
+- **RTL Documents**: Even in RTL mode, code remains left-aligned for proper rendering
+- **Applies To**:
+  - Inline code spans (\`code\`)
+  - Fenced code blocks (\`\`\`language)
+  - All programming languages (JavaScript, Python, TypeScript, etc.)
 
 ## File Format
 
