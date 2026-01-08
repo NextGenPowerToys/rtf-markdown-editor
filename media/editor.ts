@@ -36,6 +36,7 @@ const icons = {
   image: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M3 4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1H3zm0 1h14v7.586l-2.293-2.293a1 1 0 0 0-1.414 0L10 13.586l-2.293-2.293a1 1 0 0 0-1.414 0L3 14.586V5zm3.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/></svg>',
   table: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M3 4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1H3zm0 1h14v3h-3V5H9v3H3V5zm0 4h5v3H3V9zm6 0h3v3H9V9zm4 0h4v3h-4V9zM3 13h5v2H3v-2zm6 0h3v2H9v-2zm4 0h4v2h-4v-2z"/></svg>',
   hr: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M2 9.5h16v1H2v-1z"/></svg>',
+  download: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a.5.5 0 0 1 .5.5v10.086l2.793-2.793a.5.5 0 1 1 .707.707l-4 4a.5.5 0 0 1-.707 0l-4-4a.5.5 0 1 1 .707-.707L9.5 12.586V2.5A.5.5 0 0 1 10 2zm-6 14h12v1H4v-1z"/></svg>',
   rtl: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M3 4.5h14v1H3v-1zm0 5h10v1H3v-1zm0 5h14v1H3v-1z"/><path d="M14.5 9.5l2.5 2.5-2.5 2.5v-1.5h-4v-2h4v-1.5z"/></svg>',
   math: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M2 5h1v10H2V5zm3.5 0c-.276 0-.5.224-.5.5v3.414L3.793 7.207a.5.5 0 1 0-.707.707L4.293 10l-1.207 1.207a.5.5 0 1 0 .707.707L5.5 11.086V14.5c0 .276.224.5.5.5s.5-.224.5-.5v-3.414l1.207 1.207a.5.5 0 1 0 .707-.707L6.707 10l1.207-1.207a.5.5 0 0 0-.707-.707L6.5 8.914V5.5c0-.276-.224-.5-.5-.5zm7 0h3.5c1.381 0 2.5 1.119 2.5 2.5v5c0 1.381-1.119 2.5-2.5 2.5h-3.5c-.276 0-.5-.224-.5-.5s.224-.5.5-.5h3.5c.829 0 1.5-.671 1.5-1.5v-5c0-.829-.671-1.5-1.5-1.5h-3.5c-.276 0-.5-.224-.5-.5s.224-.5.5-.5zm9 0h1v10h-1V5z"/></svg>',
 };
@@ -355,10 +356,11 @@ function createToolbar(container: HTMLElement) {
   `;
   container.appendChild(insertGroup);
 
-  // RTL/LTR toggle
+  // RTL/LTR toggle and Export group
   const rtlGroup = document.createElement('div');
   rtlGroup.className = 'toolbar-group';
   rtlGroup.innerHTML = `
+    <button class="toolbar-btn" id="export-btn" title="Export as HTML">${icons.download}</button>
     <button class="toolbar-btn ${editorConfig.rtl ? 'active' : ''}" id="rtl-btn" title="Toggle RTL/LTR">${icons.rtl}</button>
   `;
   container.appendChild(rtlGroup);
@@ -592,6 +594,22 @@ function attachToolbarEventListeners() {
 
   document.getElementById('hr-btn')?.addEventListener('click', () => {
     editor!.chain().focus().setHorizontalRule().run();
+  });
+
+  // Export HTML
+  document.getElementById('export-btn')?.addEventListener('click', () => {
+    if (!editor) return;
+    
+    const html = editor.getHTML();
+    vscode.postMessage({
+      type: 'exportHTML',
+      options: {
+        title: 'Document',
+        includeStyles: true,
+        includeScripts: true,
+        standalone: true,
+      },
+    });
   });
 
   // RTL toggle
