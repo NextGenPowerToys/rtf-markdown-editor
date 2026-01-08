@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RTF Markdown Editor</title>
+  <link rel="stylesheet" href="../assets/katex.css">
+  <link rel="stylesheet" href="editor.css">
+</head>
+<body>
+  <div class="editor-header">
+    <div class="file-info">
+      <span class="file-path" id="file-path">Loading...</span>
+      <span class="file-status" id="file-status"></span>
+    </div>
+    <div id="toolbar" class="toolbar"></div>
+    <div class="editor-actions">
+      <button id="save-btn" class="btn btn-primary" disabled>
+        <span class="btn-icon">💾</span>
+        <span class="btn-text">Save</span>
+      </button>
+      <button id="close-btn" class="btn btn-secondary">
+        <span class="btn-icon">✕</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="editor-container">
+    <div id="editor"></div>
+  </div>
+
+  <div id="commit-modal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Commit Changes</h3>
+      <div class="form-group">
+        <label for="commit-message">Commit Message:</label>
+        <textarea id="commit-message" rows="3" placeholder="Update documentation"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button id="commit-confirm-btn" class="btn btn-primary">Commit</button>
+        <button id="commit-cancel-btn" class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="conflict-modal" class="modal hidden">
+    <div class="modal-content">
+      <h3>⚠️ Merge Conflict Detected</h3>
+      <p>The file has been modified by someone else. Choose an action:</p>
+      <div class="modal-actions">
+        <button id="conflict-overwrite-btn" class="btn btn-danger">Overwrite Remote</button>
+        <button id="conflict-reload-btn" class="btn btn-primary">Reload File</button>
+        <button id="conflict-cancel-btn" class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="editor.js"></script>
+</body>
+</html>

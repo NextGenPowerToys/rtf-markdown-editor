@@ -1,0 +1,35 @@
+{
+  "name": "rtf-markdown-editor-browser",
+  "version": "1.0.0",
+  "description": "Browser extension for editing Git markdown files",
+  "scripts": {
+    "build": "node esbuild.config.js",
+    "watch": "node esbuild.config.js --watch",
+    "package": "npm run build -- --production"
+  },
+  "dependencies": {
+    "@tiptap/core": "^2.1.0",
+    "@tiptap/extension-color": "^2.1.0",
+    "@tiptap/extension-highlight": "^2.1.0",
+    "@tiptap/extension-image": "^2.1.0",
+    "@tiptap/extension-link": "^2.1.0",
+    "@tiptap/extension-table": "^2.1.0",
+    "@tiptap/extension-table-cell": "^2.1.0",
+    "@tiptap/extension-table-header": "^2.1.0",
+    "@tiptap/extension-table-row": "^2.1.0",
+    "@tiptap/extension-text-align": "^2.1.0",
+    "@tiptap/extension-underline": "^2.1.0",
+    "@tiptap/starter-kit": "^2.1.0",
+    "he": "^1.2.0",
+    "katex": "^0.16.0",
+    "markdown-it": "^13.0.0",
+    "mermaid": "^10.6.0",
+    "punycode": "^2.3.1"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.254",
+    "@types/markdown-it": "^13.0.0",
+    "esbuild": "^0.19.0",
+    "typescript": "^5.3.0"
+  }
+}

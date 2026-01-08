@@ -1,0 +1,37 @@
+﻿{
+  "manifest_version": 3,
+  "name": "RTF Markdown Editor for Git",
+  "version": "1.0.0",
+  "description": "Word-like WYSIWYG Markdown Editor with RTL support for Git repositories",
+  "permissions": [
+    "contextMenus",
+    "storage",
+    "activeTab",
+    "tabs",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://*/*",
+    "http://*/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "options_page": "options/options.html",
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["editor/editor.html", "options/options.html", "assets/*"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "action": {
+    "default_title": "RTF Markdown Editor"
+  }
+}

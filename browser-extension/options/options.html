@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RTF Markdown Editor - Options</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="options-container">
+    <header>
+      <h1>RTF Markdown Editor - Settings</h1>
+    </header>
+
+    <section class="settings-section">
+      <h2>GitHub Configuration</h2>
+      <div class="form-group">
+        <label for="github-token">Personal Access Token:</label>
+        <input type="password" id="github-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+        <div class="help-text">
+          Create a token at <a href="https://github.com/settings/tokens" target="_blank">github.com/settings/tokens</a> with 'repo' scope
+        </div>
+      </div>
+      <div class="form-actions">
+        <button id="test-connection-btn" class="btn btn-secondary">Test Connection</button>
+        <button id="save-token-btn" class="btn btn-primary">Save Token</button>
+      </div>
+      <div id="connection-status" class="status-message"></div>
+    </section>
+
+    <section class="settings-section">
+      <h2>Git Providers</h2>
+      <div class="providers-list" id="providers-list"></div>
+      <button id="add-provider-btn" class="btn btn-secondary">+ Add Provider</button>
+    </section>
+
+    <div id="provider-modal" class="modal hidden">
+      <div class="modal-content">
+        <h3 id="modal-title">Add Git Provider</h3>
+        <div class="form-group">
+          <label for="provider-name">Name:</label>
+          <input type="text" id="provider-name" placeholder="GitHub Enterprise">
+        </div>
+        <div class="form-group">
+          <label for="provider-type">Type:</label>
+          <select id="provider-type">
+            <option value="github">GitHub</option>
+            <option value="azure-devops">Azure DevOps</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="provider-base-url">Base URL:</label>
+          <input type="text" id="provider-base-url" placeholder="https://github.example.com">
+        </div>
+        <div class="form-group">
+          <label for="provider-api-url">API URL:</label>
+          <input type="text" id="provider-api-url" placeholder="https://github.example.com/api/v3">
+        </div>
+        <div class="form-group">
+          <label for="provider-url-pattern">URL Pattern:</label>
+          <input type="text" id="provider-url-pattern" placeholder="*/blob/*/*.md">
+          <div class="help-text">Use * as wildcard for matching URLs</div>
+        </div>
+        <div class="modal-actions">
+          <button id="provider-save-btn" class="btn btn-primary">Save</button>
+          <button id="provider-cancel-btn" class="btn btn-secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="options.js"></script>
+</body>
+</html>
