@@ -67,7 +67,7 @@ Quick reference for what's implemented:
 - [x] **WYSIWYG editing** — Word-like interface
 - [x] **RTL support** — Hebrew/Arabic with auto-detection
 - [x] **Rich toolbar** — All common formatting tools
-- [x] **Mermaid diagrams** — `:::: mermaid` syntax, click-to-edit
+- [x] **Mermaid diagrams** — `::: mermaid` syntax, click-to-edit
 - [x] **Autosave** — 750ms debounce
 - [x] **100% offline** — No CDN, fully bundled
 - [x] **Security** — Strict CSP, no eval

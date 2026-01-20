@@ -70,7 +70,7 @@ A rich text editor extension for VS Code that provides a Microsoft Word / Google
   - User journey diagrams
   - Git graphs
   - Pie charts
-- **Syntax**: Standard `\`\`\`mermaid` blocks (GitHub compatible) and `:::: mermaid` blocks (Azure DevOps compatible)
+- **Syntax**: Standard `\`\`\`mermaid` blocks (GitHub compatible) and `::: mermaid` blocks (Azure DevOps compatible)
 - **Live Editing**: Click diagram to open editor modal
 - **Bundled Renderer**: No CDN required, fully offline
 
@@ -309,7 +309,7 @@ Files are always saved in **Markdown** format. The editor:
 2. Edits as WYSIWYG HTML
 3. Converts HTML → Markdown when saving
 4. Preserves all original Markdown syntax
-5. Preserves Mermaid `:::: mermaid` blocks exactly
+5. Preserves Mermaid `::: mermaid` blocks exactly
 
 ### Round-Trip Stability
 
@@ -361,7 +361,7 @@ This extension is designed to work completely offline:
 
 ### Mermaid diagrams not showing
 - Check the Mermaid syntax using the official [Mermaid documentation](https://mermaid.js.org/)
-- Ensure you're using `:::: mermaid` syntax (not ` ``` mermaid`)
+- Ensure you're using `::: mermaid` syntax (not ` ``` mermaid`)
 - Try clicking the diagram to edit and re-save
 
 ### RTL text not displaying correctly

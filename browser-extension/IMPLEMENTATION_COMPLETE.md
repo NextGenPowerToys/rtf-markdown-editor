@@ -41,7 +41,7 @@
    - `htmlProcessor.ts` - Converts HTML → Markdown
    - **Dual Mermaid Syntax Support**:
      - Standard backtick: \`\`\`mermaid
-     - Azure DevOps colon: :::: mermaid
+     - Azure DevOps colon: ::: mermaid
      - Fence type preservation through data attributes
    - Math expression support ($inline$ and $$display$$)
    - Image handling with alignment and sizing
@@ -106,7 +106,7 @@ dist/
 ### 1. Dual Mermaid Syntax (Main User Request)
 ✅ Supports both:
 - Standard: \`\`\`mermaid ... \`\`\`
-- Azure DevOps: :::: mermaid ... ::::
+- Azure DevOps: ::: mermaid ... :::
 - **Preserves original fence type on save**
 - Uses data-fence-type attribute through entire pipeline
 

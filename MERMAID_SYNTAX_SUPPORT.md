@@ -12,20 +12,20 @@ graph TD
     B -->|Yes| C[End]
 ```
 
-### Azure DevOps Wiki (Triple/Quad Colons)
+### Azure DevOps Wiki (Triple Colons)
 
-:::: mermaid
+::: mermaid
 graph TD
     A[Start] --> B{Decision}
     B -->|Yes| C[End]
-::::
+:::
 
 ## Format Preservation
 
 **Important**: The editor preserves the original fence format when you save the document.
 
 - If you use ` ```mermaid `, it will be saved as ` ```mermaid `
-- If you use `:::: mermaid`, it will be saved as `:::: mermaid`
+- If you use `::: mermaid`, it will be saved as `::: mermaid`
 
 This ensures compatibility with:
 - GitHub Markdown (uses backticks)
@@ -45,7 +45,7 @@ This ensures compatibility with:
 ### Technical Changes
 
 - **Type Definition**: `MermaidBlock` interface now includes `fenceType` property
-- **Markdown Processor**: Recognizes both `^```\s*mermaid` and `^:::+\s*mermaid` patterns
+- **Markdown Processor**: Recognizes both `^```\s*mermaid` and `^:::\s*mermaid` patterns
 - **HTML Processor**: Stores fence type in `data-fence-type` attribute on div elements
 - **Editor**: Preserves `data-fence-type` attribute through edit cycles
 
@@ -63,7 +63,7 @@ Use [test_mermaid_formats.md](test_mermaid_formats.md) to verify:
 
 - **Existing Documents**: All existing mermaid blocks will continue to work
 - **Default Format**: New blocks created via the editor use backticks (standard format)
-- **Azure DevOps**: Documents with `::::` syntax will preserve that format
+- **Azure DevOps**: Documents with `:::` syntax will preserve that format
 - **No Breaking Changes**: The change is fully backward compatible
 
 ## Examples

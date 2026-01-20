@@ -60,7 +60,7 @@ All notable changes to the RTF Markdown Editor extension will be documented in t
   - Inline styles preserved
   - Block formatting
   - Table support
-- **Azure DevOps Mermaid** — `:::: mermaid` block support
+- **Azure DevOps Mermaid** — `::: mermaid` block support
   - Locally bundled Mermaid renderer
   - Click-to-edit diagrams
   - Modal editor for diagram source

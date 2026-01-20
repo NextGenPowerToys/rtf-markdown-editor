@@ -59,12 +59,12 @@ Full support for Hebrew, Arabic, and other RTL languages:
 - **Proper text alignment** defaults
 
 ### 5. **Azure DevOps Mermaid Support**
-Support for `:::: mermaid` diagram blocks:
+Support for `::: mermaid` diagram blocks:
 - **Extraction & preservation** — Blocks survive editing
 - **Click-to-edit modal** — Edit diagram source
 - **Bundled Mermaid** — No CDN, fully local
 - **Rendering** — Diagrams display in editor
-- **Round-trip** — Blocks save back as `:::: mermaid` syntax
+- **Round-trip** — Blocks save back as `::: mermaid` syntax
 
 ### 6. **Autosave with Conflict Detection**
 - **750ms debounce** on edits
@@ -191,7 +191,7 @@ Support for `:::: mermaid` diagram blocks:
 - [x] Horizontal dividers
 
 ### Mermaid Diagrams
-- [x] `:::: mermaid` syntax support
+- [x] `::: mermaid` syntax support
 - [x] Click-to-edit modal
 - [x] Source editing interface
 - [x] Diagram rendering
@@ -404,7 +404,7 @@ npm run vscode:prepublish
 - Check webview URI paths
 
 **Mermaid not rendering:**
-- Verify `:::: mermaid` syntax (not ` ``` mermaid`)
+- Verify `::: mermaid` syntax (not ` ``` mermaid`)
 - Check Mermaid syntax is valid
 - Try refreshing editor (Ctrl+R)
 

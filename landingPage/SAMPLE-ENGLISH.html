@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SAMPLE-ENGLISH</title>
+  <style>
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: auto;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: #ffffff;
+  color: #000000;
+}
+
+/* Content wrapper for exported HTML */
+.editor-content {
+  padding: 20px;
+  max-width: 900px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+  margin-top: 24px;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+h1 {
+  font-size: 2em;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 0.3em;
+}
+
+h2 {
+  font-size: 1.5em;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.3em;
+}
+
+h3 {
+  font-size: 1.25em;
+}
+
+h4 {
+  font-size: 1em;
+}
+
+h5 {
+  font-size: 0.875em;
+}
+
+h6 {
+  font-size: 0.85em;
+  color: #6a737d;
+}
+
+/* Paragraphs */
+p {
+  margin: 0 0 16px 0;
+}
+
+/* Links */
+a {
+  color: #0969da;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Lists */
+ul, ol {
+  margin: 0 0 16px 0;
+  padding-left: 2em;
+}
+
+li {
+  margin-bottom: 4px;
+}
+
+/* Code */
+code {
+  background-color: #f6f8fa;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.875em;
+}
+
+pre {
+  background-color: #f6f8fa;
+  border: 1px solid #e1e4e8;
+  border-radius: 6px;
+  padding: 16px;
+  overflow-x: auto;
+  margin: 0 0 16px 0;
+}
+
+pre code {
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
+  font-size: 0.875em;
+}
+
+/* Blockquotes */
+blockquote {
+  border-left: 4px solid #ddd;
+  color: #6a737d;
+  padding: 0 15px;
+  margin: 0 0 16px 0;
+}
+
+blockquote p {
+  margin: 0;
+}
+
+/* Tables */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0 0 16px 0;
+}
+
+table thead {
+  background-color: #f6f8fa;
+}
+
+table th, table td {
+  border: 1px solid #d0d7de;
+  padding: 12px;
+  text-align: left;
+}
+
+table th {
+  font-weight: 600;
+}
+
+table tbody tr:nth-child(even) {
+  background-color: #f6f8fa;
+}
+
+/* Images */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 16px 0;
+  border-radius: 6px;
+  border: 1px solid #d0d7de;
+}
+
+img.align-left {
+  float: left;
+  margin-right: 16px;
+  margin-bottom: 8px;
+}
+
+img.align-center {
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+}
+
+img.align-right {
+  float: right;
+  margin-left: 16px;
+  margin-bottom: 8px;
+}
+
+/* Horizontal rule */
+hr {
+  border: none;
+  border-top: 2px solid #ddd;
+  margin: 24px 0;
+}
+
+/* Strong and emphasis */
+strong {
+  font-weight: 600;
+}
+
+em {
+  font-style: italic;
+}
+
+/* Strikethrough */
+del {
+  text-decoration: line-through;
+  color: #6a737d;
+}
+
+/* Math display */
+.math-display {
+  display: block;
+  overflow-x: auto;
+  margin: 16px 0;
+  padding: 12px;
+  background-color: #f6f8fa;
+  border-radius: 6px;
+}
+
+.math-inline {
+  display: inline;
+}
+
+/* Mermaid diagram */
+[data-mdwe="mermaid"] {
+  display: block;
+  margin: 16px 0;
+  text-align: center;
+}
+
+/* RTL Support */
+html[dir="rtl"],
+html[dir="RTL"] {
+  direction: rtl;
+  text-align: right;
+}
+
+html[dir="rtl"] h1,
+html[dir="rtL"] h2,
+html[dir="rtl"] h3,
+html[dir="rtl"] h4,
+html[dir="rtl"] h5,
+html[dir="rtl"] h6 {
+  text-align: right;
+}
+
+html[dir="rtl"] ul,
+html[dir="rtl"] ol {
+  padding-left: 0;
+  padding-right: 2em;
+}
+
+html[dir="rtl"] blockquote {
+  border-left: none;
+  border-right: 4px solid #ddd;
+  padding-left: 0;
+  padding-right: 15px;
+}
+
+html[dir="rtl"] img.align-left {
+  float: right;
+  margin-right: 0;
+  margin-left: 16px;
+}
+
+html[dir="rtl"] img.align-right {
+  float: left;
+  margin-left: 0;
+  margin-right: 16px;
+}
+
+/* Print styles */
+@media print {
+  body {
+    background-color: #fff;
+  }
+  
+  .editor-content {
+    padding: 0;
+  }
+  
+  a {
+    color: #0969da;
+  }
+  
+  img {
+    max-width: 100%;
+  }
+}
+
+/* KaTeX CSS */
+.katex { font-size: 1.21em; font-style: italic; }
+.katex .katex-mathml { display: none; }
+.katex .mord { position: relative; }
+.katex .sizing.reset-size1.size1, .katex button.size1 { font-size: 1em; }
+.katex .fontsize-ensurer { display: inline; font-size: 1em; }
+.katex .mathrm { font-style: normal; }
+.katex .mathit { font-style: italic; }
+.katex .mathbf { font-weight: bold; }
+.katex .boldsymbol { font-weight: bold; font-style: italic; }
+
+</style>
+</head>
+<body>
+  <div class="editor-content"><h1>RTF Markdown Editor - Complete Feature Showcase</h1>
+<p>Welcome to the <strong>RTF Markdown Editor</strong> for VS Code! This document demonstrates every feature supported by the editor. Edit it directly in VS Code using the custom editor provider.</p>
+<hr>
+<h2>Text Formatting</h2>
+<h3>Basic Formatting</h3>
+<p>This paragraph includes <strong>bold text</strong>, <em>italic text</em>, <em><strong>bold and italic</strong></em>, <strong>underline</strong>, <s>strikethrough</s>, and <code>inline code</code>.<br>
+You can also apply <strong>text color</strong> using the color picker in the toolbar, and highlight text with background colors for emphasis.</p>
+<h3>Font Selection</h3>
+<p>You can change the font family using the font dropdown in the toolbar. Supported fonts include system fonts optimized for your platform.</p>
+<h2>Heading Levels</h2>
+<h1>Heading 1 (H1)</h1>
+<h2>Heading 2 (H2)</h2>
+<h3>Heading 3 (H3)</h3>
+<h4>Heading 4 (H4)</h4>
+<h5>Heading 5 (H5)</h5>
+<h6>Heading 6 (H6)</h6>
+<h2>Text Alignment</h2>
+<p>This paragraph is <strong>left-aligned</strong> (default).<br>
+This paragraph is <strong>center-aligned</strong> using the alignment toolbar button.<br>
+This paragraph is <strong>right-aligned</strong>.<br>
+This paragraph is <strong>justified</strong>, meaning it stretches to fill the full width of the container.</p>
+<h2>RTL (Right-to-Left) Support</h2>
+<p>The editor includes full support for Hebrew, Arabic, and other RTL languages. Click the <strong>RTL/LTR toggle</strong> in the toolbar to switch text direction.<br>
+Example in English first, then you can toggle RTL mode to edit Hebrew or Arabic text seamlessly.<br>
+<strong>Features:</strong></p>
+<ul>
+<li>
+<p>Auto-detection of RTL characters</p>
+</li>
+<li>
+<p>Manual RTL/LTR toggle button in toolbar</p>
+</li>
+<li>
+<p>Direction-aware alignment controls</p>
+</li>
+<li>
+<p>Proper spacing and border adjustments for RTL layout</p>
+</li>
+</ul>
+<h2>Lists</h2>
+<h3>Unordered List (Bulleted)</h3>
+<ul>
+<li>
+<p><strong>First item</strong> in the list</p>
+</li>
+<li>
+<p>Nested item level 2</p>
+</li>
+<li>
+<p>Nested item level 3</p>
+</li>
+<li>
+<p>Back to level 2</p>
+</li>
+<li>
+<p><strong>Second item</strong> in the list</p>
+</li>
+<li>
+<p><strong>Third item</strong> in the list</p>
+</li>
+</ul>
+<h3>Ordered List (Numbered)</h3>
+<ul>
+<li>
+<p><strong>First step</strong> - Description of the first step</p>
+</li>
+<li>
+<p>Sub-step A</p>
+</li>
+<li>
+<p>Sub-step B</p>
+</li>
+<li>
+<p><strong>Second step</strong> - Description of the second step</p>
+</li>
+<li>
+<p>Sub-step A</p>
+</li>
+<li>
+<p><strong>Third step</strong> - Description of the third step</p>
+</li>
+</ul>
+<h2>Block Elements</h2>
+<h3>Block Quote</h3>
+<blockquote>
+<p>This is a blockquote. Use it to highlight important information or citations.</p>
+<p>You can have multiple paragraphs in a blockquote by adding a <code>&gt;</code> on each line.</p>
+</blockquote>
+<h3>Code Block</h3>
+<pre><code class="language-javascript">// Example JavaScript code block
+function fibonacci(n) {
+  if (n &lt;= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+console.log(fibonacci(10)); // Output: 55
+</code></pre>
+<p>You can specify the language for syntax highlighting: javascript, python, typescript, html, css, etc.</p>
+<h3>Horizontal Rule</h3>
+<hr>
+<p>Another horizontal rule:</p>
+<hr>
+<h2>Tables</h2>
+<h3>Product Comparison Table</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>RTF Editor</th>
+<th>Standard Editor</th>
+<th>Web Editor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>WYSIWYG Editing</td>
+<td>✓</td>
+<td>✗</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>Offline Support</td>
+<td>✓</td>
+<td>✓</td>
+<td>✗</td>
+</tr>
+<tr>
+<td>RTL Support</td>
+<td>✓</td>
+<td>✗</td>
+<td>✗</td>
+</tr>
+<tr>
+<td>Mermaid Diagrams</td>
+<td>✓</td>
+<td>✗</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>Autosave</td>
+<td>✓</td>
+<td>✗</td>
+<td>✓</td>
+</tr>
+</tbody>
+</table>
+<h3>Data Table</h3>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Email</th>
+<th>Organization</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Alice Johnson</td>
+<td><a href="mailto:alice@example.com">alice@example.com</a></td>
+<td>TechCorp</td>
+<td>Active</td>
+</tr>
+<tr>
+<td>Bob Smith</td>
+<td><a href="mailto:bob@example.com">bob@example.com</a></td>
+<td>DevStudio</td>
+<td>Active</td>
+</tr>
+<tr>
+<td>Carol White</td>
+<td><a href="mailto:carol@example.com">carol@example.com</a></td>
+<td>WebDev Inc</td>
+<td>Inactive</td>
+</tr>
+</tbody>
+</table>
+<h2>Links and Images</h2>
+<h3>External Links</h3>
+<p>Visit the <a href="https://marketplace.visualstudio.com">VS Code Marketplace</a> to find and install extensions.<br>
+Learn more about <a href="https://www.markdownguide.org/">Markdown syntax</a> for better documentation.</p>
+<h3>Local Files and Relative Paths</h3>
+<p>You can link to files: <a href="../README.md">../README.md</a><br>
+You can embed images with relative paths:</p>
+<p><img src="assets/RTFMD.png" alt="Editor Icon"></p>
+<h2>Mermaid Diagrams</h2>
+<h3>Flowchart Example</h3>
+<div class="mermaid" data-mdwe="mermaid" data-id="MERMAID_0">graph TD
+    A[Start] --&gt; B{Decision}
+    B --&gt;|Yes| C[Process A]
+    B --&gt;|No| D[Process B]
+    C --&gt; E[End]
+    D --&gt; E</div>
+<h3>Sequence Diagram</h3>
+<div class="mermaid" data-mdwe="mermaid" data-id="MERMAID_1">sequenceDiagram
+    participant User
+    participant Editor
+    participant FileSystem
+    
+    User-&gt;&gt;Editor: Click Save
+    Editor-&gt;&gt;FileSystem: Write file
+    FileSystem--&gt;&gt;Editor: Confirm save
+    Editor--&gt;&gt;User: Show success message</div>
+<h3>Gantt Chart</h3>
+<div class="mermaid" data-mdwe="mermaid" data-id="MERMAID_2">gantt
+    title Project Timeline
+    dateFormat YYYY-MM-DD
+    
+    section Planning
+    Requirements :req, 2026-01-08, 10d
+    Design :des, 2026-01-18, 15d
+    
+    section Development
+    Backend :crit, dev_b, 2026-02-02, 20d
+    Frontend :dev_f, 2026-02-02, 20d
+    
+    section Testing
+    QA :qa, 2026-02-22, 10d
+    Release :rel, 2026-03-04, 5d</div>
+<h3>Class Diagram</h3>
+<div class="mermaid" data-mdwe="mermaid" data-id="MERMAID_3">classDiagram
+    class Editor {
+        -content: string
+        -isDirty: boolean
+        +save()
+        +undo()
+        +redo()
+    }
+    
+    class Formatter {
+        +bold(text)
+        +italic(text)
+        +code(text)
+    }
+    
+    Editor --&gt; Formatter</div>
+<h3>State Diagram</h3>
+<div class="mermaid" data-mdwe="mermaid" data-id="MERMAID_4">stateDiagram-v2
+    [*] --&gt; Idle
+    Idle --&gt; Editing: User starts typing
+    Editing --&gt; Autosave: 750ms debounce
+    Autosave --&gt; Editing: Continue editing
+    Autosave --&gt; Idle: No changes
+    Idle --&gt; [*]</div>
+<p><strong>Click on any Mermaid diagram above to edit it!</strong> The editor opens a modal where you can modify the diagram source and see real-time rendering.</p>
+<hr>
+<h2>Mathematical Formulas</h2>
+<h3>Inline Formulas</h3>
+<p>The Pythagorean theorem states that <span class="math-inline">$a^2 + b^2 = c^2$</span> for right triangles.</p>
+<p>Einstein's famous equation is <span class="math-inline">$E = mc^2$</span>.</p>
+<h3>Block Formulas</h3>
+<p>The quadratic formula is:</p>
+<p><div class="math-display">$$x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$$</div>
+</p>
+<p>Integral calculus:</p>
+<p><div class="math-display">$$\int_0^{\infty} e^{-x^2} dx = \frac{\sqrt{\pi}}{2}$$</div>
+</p>
+<p>Matrix notation:</p>
+<p><div class="math-display">$$\begin{pmatrix} a & b \\ c & d \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix} = \begin{pmatrix} ax + by \\ cx + dy \end{pmatrix}$$</div>
+</p>
+<h2>Editor Features</h2>
+<h3>Autosave</h3>
+<p>This document autosaves every <strong>750ms</strong> as you edit. There's no need to manually save—changes are written to disk automatically.</p>
+<p><strong>Autosave triggers on:</strong></p>
+<ul>
+<li>Content changes (750ms debounce)</li>
+<li>Editor blur (when you click away)</li>
+<li>Tab hidden (when you switch windows)</li>
+<li>File close</li>
+</ul>
+<h3>Undo / Redo</h3>
+<p>Use <strong>Ctrl+Z</strong> to undo and <strong>Ctrl+Y</strong> or <strong>Ctrl+Shift+Z</strong> to redo. The editor maintains full history of all edits.</p>
+<h3>Copy / Paste</h3>
+<p>Standard clipboard support works seamlessly. Copy formatted text and paste it anywhere—the editor preserves formatting.</p>
+<h3>Selection and Formatting</h3>
+<ul>
+<li>Select text with mouse or keyboard</li>
+<li>Use toolbar buttons or keyboard shortcuts to apply formatting</li>
+<li><strong>Ctrl+B</strong> for bold</li>
+<li><strong>Ctrl+I</strong> for italic</li>
+<li><strong>Ctrl+U</strong> for underline</li>
+</ul>
+<hr>
+<h2>Keyboard Shortcuts</h2>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Windows/Linux</th>
+<th>macOS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bold</td>
+<td>Ctrl+B</td>
+<td>Cmd+B</td>
+</tr>
+<tr>
+<td>Italic</td>
+<td>Ctrl+I</td>
+<td>Cmd+I</td>
+</tr>
+<tr>
+<td>Underline</td>
+<td>Ctrl+U</td>
+<td>Cmd+U</td>
+</tr>
+<tr>
+<td>Code</td>
+<td>Ctrl+`</td>
+<td>Cmd+`</td>
+</tr>
+<tr>
+<td>Undo</td>
+<td>Ctrl+Z</td>
+<td>Cmd+Z</td>
+</tr>
+<tr>
+<td>Redo</td>
+<td>Ctrl+Y</td>
+<td>Cmd+Shift+Z</td>
+</tr>
+<tr>
+<td>Save</td>
+<td>Ctrl+S</td>
+<td>Cmd+S</td>
+</tr>
+<tr>
+<td>Find</td>
+<td>Ctrl+F</td>
+<td>Cmd+F</td>
+</tr>
+</tbody>
+</table>
+<h2>Editor Toolbar Controls</h2>
+<p><strong>Text Formatting:</strong></p>
+<ul>
+<li>Bold, Italic, Underline, Strikethrough</li>
+<li>Inline Code</li>
+<li>Text Color Picker</li>
+<li>Background/Highlight Color</li>
+</ul>
+<p><strong>Paragraph Styles:</strong></p>
+<ul>
+<li>Heading dropdown (H1–H6)</li>
+<li>Paragraph style selector</li>
+</ul>
+<p><strong>Alignment:</strong></p>
+<ul>
+<li>Left Align</li>
+<li>Center Align</li>
+<li>Right Align</li>
+<li>Justify</li>
+</ul>
+<p><strong>Lists &amp; Blocks:</strong></p>
+<ul>
+<li>Bullet List</li>
+<li>Ordered List</li>
+<li>Blockquote</li>
+<li>Code Block</li>
+</ul>
+<p><strong>Insert:</strong></p>
+<ul>
+<li>Link (with URL dialog)</li>
+<li>Image (with path input)</li>
+<li>Table (configurable rows/columns)</li>
+<li>Horizontal Rule</li>
+</ul>
+<p><strong>Direction:</strong></p>
+<ul>
+<li>RTL/LTR Toggle</li>
+<li>Auto-detection indicator</li>
+</ul>
+<hr>
+<h2>Document Metadata</h2>
+<p><strong>Created</strong>: January 2026<br>
+<strong>Format</strong>: Markdown<br>
+<strong>Editor</strong>: RTF Markdown Editor 1.1.1<br>
+<strong>Status</strong>: Production Ready<br>
+<strong>License</strong>: See LICENSE file</p>
+<hr>
+<h2>Tips and Best Practices</h2>
+<ol>
+<li><strong>Use Mermaid diagrams</strong> for flowcharts, sequence diagrams, and timelines</li>
+<li><strong>Leverage RTL support</strong> for multilingual documentation</li>
+<li><strong>Apply colors strategically</strong> to highlight important information</li>
+<li><strong>Nest lists carefully</strong> to maintain readability</li>
+<li><strong>Use code blocks</strong> with language syntax for technical documentation</li>
+<li><strong>Trust autosave</strong>—work without worrying about manual saves</li>
+<li><strong>Keep diagrams updated</strong> by clicking and editing them inline</li>
+</ol>
+<hr>
+<h2>Additional Resources</h2>
+<ul>
+<li><a href="https://marketplace.visualstudio.com/">VS Code Extension Marketplace</a></li>
+<li><a href="https://www.markdownguide.org/">Markdown Guide</a></li>
+<li><a href="https://mermaid.js.org/">Mermaid Documentation</a></li>
+<li><a href="https://katex.org/">KaTeX Math Reference</a></li>
+</ul>
+<hr>
+<p><strong>Happy writing!</strong> The RTF Markdown Editor is designed to make documentation and content creation seamless and enjoyable.</p>
+</div>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+  if (typeof mermaid !== 'undefined') {
+    mermaid.initialize({ startOnLoad: true, theme: 'default' });
+    mermaid.contentLoaded();
+  }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.js"></script>
+<script>
+  if (typeof katex !== 'undefined') {
+    document.querySelectorAll('.math-display, .math-inline').forEach(function(el) {
+      const isDisplay = el.classList.contains('math-display');
+      const content = el.textContent;
+      try {
+        katex.render(content, el, { displayMode: isDisplay, throwOnError: false });
+      } catch (e) {
+        console.warn('KaTeX rendering error:', e);
+      }
+    });
+  }
+</script>
+</body>
+</html>

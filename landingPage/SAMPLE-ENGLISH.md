@@ -112,17 +112,17 @@ You can embed images with relative paths:
 ## Mermaid Diagrams
 
 ### Flowchart Example
-:::: mermaid
+::: mermaid
 graph TD
     A[Start] --> B{Decision}
     B -->|Yes| C[Process A]
     B -->|No| D[Process B]
     C --> E[End]
     D --> E
-::::
+:::
 
 ### Sequence Diagram
-:::: mermaid
+::: mermaid
 sequenceDiagram
     participant User
     participant Editor
@@ -132,10 +132,10 @@ sequenceDiagram
     Editor->>FileSystem: Write file
     FileSystem-->>Editor: Confirm save
     Editor-->>User: Show success message
-::::
+:::
 
 ### Gantt Chart
-:::: mermaid
+::: mermaid
 gantt
     title Project Timeline
     dateFormat YYYY-MM-DD
@@ -151,10 +151,10 @@ gantt
     section Testing
     QA :qa, 2026-02-22, 10d
     Release :rel, 2026-03-04, 5d
-::::
+:::
 
 ### Class Diagram
-:::: mermaid
+::: mermaid
 classDiagram
     class Editor {
         -content: string
@@ -171,10 +171,10 @@ classDiagram
     }
     
     Editor --> Formatter
-::::
+:::
 
 ### State Diagram
-:::: mermaid
+::: mermaid
 stateDiagram-v2
     [*] --> Idle
     Idle --> Editing: User starts typing
@@ -182,7 +182,7 @@ stateDiagram-v2
     Autosave --> Editing: Continue editing
     Autosave --> Idle: No changes
     Idle --> [*]
-::::
+:::
 
 **Click on any Mermaid diagram above to edit it!** The editor opens a modal where you can modify the diagram source and see real-time rendering.
 

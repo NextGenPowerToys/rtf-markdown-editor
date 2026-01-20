@@ -134,7 +134,7 @@ export function htmlToMarkdown(html: string, mermaidSources: Record<string, stri
       
       let mermaidBlock: string;
       if (fenceType === 'colon') {
-        mermaidBlock = ':::: mermaid\n' + source + '\n::::';
+        mermaidBlock = '::: mermaid\n' + source + '\n:::';
       } else {
         mermaidBlock = '```mermaid\n' + source + '\n```';
       }

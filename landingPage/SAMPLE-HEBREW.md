@@ -138,17 +138,17 @@ print(fibonacci(10))  # Output: 55
 ## Mermaid Diagrams
 
 ### דוגמה Flowchart
-:::: mermaid
+::: mermaid
 graph TD
     A[התחלה] --> B{החלטה}
     B -->|כן| C[Process A]
     B -->|לא| D[Process B]
     C --> E[סוף]
     D --> E
-::::
+:::
 
 ### Sequence Diagram
-:::: mermaid
+::: mermaid
 sequenceDiagram
     participant User
     participant Editor
@@ -158,10 +158,10 @@ sequenceDiagram
     Editor->>FileSystem: כתוב קובץ
     FileSystem-->>Editor: אשר שמירה
     Editor-->>User: הצג הודעת הצלחה
-::::
+:::
 
 ### Gantt Chart
-:::: mermaid
+::: mermaid
 gantt
     title Project Timeline
     dateFormat YYYY-MM-DD
@@ -177,10 +177,10 @@ gantt
     section Testing
     QA :qa, 2026-02-22, 10d
     Release :rel, 2026-03-04, 5d
-::::
+:::
 
 ### Class Diagram
-:::: mermaid
+::: mermaid
 classDiagram
     class Editor {
         -content: string
@@ -197,10 +197,10 @@ classDiagram
     }
     
     Editor --> Formatter
-::::
+:::
 
 ### State Diagram
-:::: mermaid
+::: mermaid
 stateDiagram-v2
     [*] --> Idle
     Idle --> Editing: User starts typing
@@ -208,7 +208,7 @@ stateDiagram-v2
     Autosave --> Editing: Continue editing
     Autosave --> Idle: No changes
     Idle --> [*]
-::::
+:::
 
 **לחץ על כל Mermaid diagram למעלה כדי לערוך אותו!** העורך פותח modal כאשר באפשרותך לשנות את ה-source של ה-diagram ולראות rendering בזמן אמת.
 

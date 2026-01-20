@@ -58,7 +58,7 @@ This creates a `dist/` folder with all necessary files.
 
 ### ✅ Mermaid Diagrams
 - [ ] Standard backtick syntax: \`\`\`mermaid
-- [ ] Azure DevOps colon syntax: :::: mermaid
+- [ ] Azure DevOps colon syntax: ::: mermaid
 - [ ] Fence type preservation on save
 
 ### ✅ Math Expressions
