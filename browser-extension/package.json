@@ -1,6 +1,6 @@
 {
   "name": "rtf-markdown-editor-browser",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Browser extension for editing Git markdown files",
   "scripts": {
     "build": "node esbuild.config.js",

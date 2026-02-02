@@ -1,7 +1,7 @@
 ﻿{
   "manifest_version": 3,
   "name": "RTF Markdown Editor for Git",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Word-like WYSIWYG Markdown Editor with RTL support for Git repositories",
   "permissions": [
     "contextMenus",

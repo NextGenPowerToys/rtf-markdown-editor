@@ -99,6 +99,14 @@ mermaid.initialize({
   theme: 'default',
   securityLevel: 'loose',
   maxTextSize: 50000,
+  // Configure flowchart for better text handling
+  flowchart: {
+    htmlLabels: false,  // Disable HTML labels, use plain text wrapping instead
+    useMaxWidth: true,
+    padding: 15,
+    nodeSpacing: 50,
+    rankSpacing: 50,
+  },
 });
 
 let editor: Editor | null = null;
@@ -1477,7 +1485,11 @@ function renderMermaidDiagrams() {
     try {
       const diagramId = `mermaid-${mermaidId}`;
       
-      mermaid.render(diagramId, source)
+      // Preprocess source: convert <br/> tags to escaped newlines for plain text mode
+      // Since htmlLabels is disabled, <br/> won't render as HTML, but newlines will wrap text
+      const processedSource = source.replace(/<br\s*\/?>/gi, '\n');
+      
+      mermaid.render(diagramId, processedSource)
         .then(({ svg }) => {
           console.log(`[Mermaid] Got SVG for ${mermaidId}, length: ${svg.length}`);
           // Clear element and insert SVG
@@ -1486,29 +1498,40 @@ function renderMermaidDiagrams() {
           console.log(`[Mermaid] Injected SVG into ${mermaidId}`);
           
           // Fix SVG display issues by ensuring it has proper dimensions
+          // This is critical for diagrams with HTML tags like <br/> in component labels
           const injectedSvg = element.querySelector('svg');
           if (injectedSvg) {
-            // Remove any inline width/height attributes to let CSS handle sizing
-            injectedSvg.removeAttribute('width');
-            injectedSvg.removeAttribute('height');
-            
-            // Ensure we have a viewBox for proper scaling
-            if (!injectedSvg.getAttribute('viewBox')) {
-              // If no viewBox, try to set one based on width/height if they existed
-              const width = injectedSvg.getAttribute('width') || '800';
-              const height = injectedSvg.getAttribute('height') || '600';
-              injectedSvg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-            }
-            
-            // Let CSS handle the sizing - svg will be max-width: 100%, height: auto
-            injectedSvg.style.width = '100%';
-            injectedSvg.style.height = 'auto';
-            
-            console.log(`[Mermaid] SVG element found in DOM for ${mermaidId}`, {
-              viewBox: injectedSvg.getAttribute('viewBox'),
-              computedWidth: injectedSvg.getBoundingClientRect().width,
-              computedHeight: injectedSvg.getBoundingClientRect().height,
-            });
+            // Wait for text content to fully render before applying styles
+            setTimeout(() => {
+              try {
+                // Remove inline width/height to let viewBox and CSS handle sizing
+                injectedSvg.removeAttribute('width');
+                injectedSvg.removeAttribute('height');
+                
+                // Apply CSS for responsive sizing
+                // Trust Mermaid's viewBox calculation
+                injectedSvg.style.width = '100%';
+                injectedSvg.style.height = 'auto';
+                injectedSvg.style.display = 'block';
+                injectedSvg.style.overflow = 'visible';
+                
+                // Ensure container allows natural sizing
+                element.style.overflow = 'visible';
+                element.style.width = 'auto';
+                element.style.height = 'auto';
+                
+                console.log(`[Mermaid] Finalized ${mermaidId}:`, {
+                  viewBox: injectedSvg.getAttribute('viewBox'),
+                  style: {
+                    width: injectedSvg.style.width,
+                    height: injectedSvg.style.height,
+                    overflow: injectedSvg.style.overflow,
+                  }
+                });
+              } catch (err) {
+                console.error(`[Mermaid] Error finalizing SVG for ${mermaidId}:`, err);
+              }
+            }, 100);
           } else {
             console.warn(`[Mermaid] SVG element NOT found in DOM after injection for ${mermaidId}`);
           }
