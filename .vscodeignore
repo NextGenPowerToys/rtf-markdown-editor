@@ -10,3 +10,5 @@ media/*.svg
 .github
 esbuild.config.js
 tsconfig.json
+browser-extension/dist.pem
+browser-extension/**/*.pem
