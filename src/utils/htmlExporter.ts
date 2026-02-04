@@ -1,17 +1,63 @@
 import { markdownToHtml } from './markdownProcessor';
 import { RTLService } from '../services/RTLService';
+import * as fs from 'fs';
+import * as path from 'path';
+import mermaid from 'mermaid';
+
+/**
+ * Load bundled Mermaid library from media folder
+ */
+function getBundledMermaidScript(): string {
+  try {
+    // Load from media folder - copied from node_modules during build
+    // __dirname is dist/ after bundling, so go up one level to reach media/
+    const possiblePaths = [
+      path.join(__dirname, '..', 'media', 'mermaid.min.js'),
+      path.join(process.cwd(), 'media', 'mermaid.min.js'),
+    ];
+    
+    for (const mermaidPath of possiblePaths) {
+      if (fs.existsSync(mermaidPath)) {
+        const mermaidCode = fs.readFileSync(mermaidPath, 'utf-8');
+        return `<script>
+${mermaidCode}
+</script>
+<script>
+if (typeof mermaid !== 'undefined') {
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'default',
+    flowchart: {
+      htmlLabels: false,
+      useMaxWidth: true,
+      padding: 15,
+      nodeSpacing: 50,
+      rankSpacing: 50
+    }
+  });
+  mermaid.contentLoaded();
+}
+</script>`;
+      }
+    }
+    console.error('Mermaid library not found in:', possiblePaths);
+  } catch (error) {
+    console.error('Error loading bundled Mermaid script:', error);
+  }
+  
+  throw new Error('Mermaid library not found - cannot create offline export');
+}
 
 /**
  * Options for HTML export
+ * NOTE: All exports are fully offline-capable with pre-rendered diagrams and math
  */
 export interface ExportOptions {
   /** Include CSS in output (default: true) */
   includeStyles?: boolean;
-  /** Include KaTeX and Mermaid libraries (default: true) */
-  includeScripts?: boolean;
-  /** Render mermaid as embedded content (default: false - rendered client-side) */
+  /** Render mermaid as SVG during export (default: true - always pre-rendered for offline) */
   preRenderMermaid?: boolean;
-  /** Render KaTeX as HTML (default: false - rendered client-side) */
+  /** Render KaTeX as HTML during export (default: true - always pre-rendered for offline) */
   preRenderMath?: boolean;
   /** Generate complete HTML document (default: true) */
   standalone?: boolean;
@@ -318,33 +364,86 @@ const KATEX_CSS = `/* KaTeX CSS */
 `;
 
 /**
- * Mermaid.js CDN script tag for client-side rendering
+ * Mermaid rendering script - loaded dynamically to embed bundled library
  */
-const MERMAID_SCRIPT = `<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"><\/script>
-<script>
-  if (typeof mermaid !== 'undefined') {
-    mermaid.initialize({ startOnLoad: true, theme: 'default' });
-    mermaid.contentLoaded();
-  }
-<\/script>`;
 
 /**
- * KaTeX.js script for client-side math rendering
+ * KaTeX rendering helper - displays math formulas
  */
-const KATEX_SCRIPT = `<script src="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.js"><\/script>
-<script>
-  if (typeof katex !== 'undefined') {
-    document.querySelectorAll('.math-display, .math-inline').forEach(function(el) {
-      const isDisplay = el.classList.contains('math-display');
-      const content = el.textContent;
-      try {
-        katex.render(content, el, { displayMode: isDisplay, throwOnError: false });
-      } catch (e) {
-        console.warn('KaTeX rendering error:', e);
+function getKaTeXScript(): string {
+  return `<script>
+// Math formula display styling
+document.querySelectorAll('.math-display, .math-inline').forEach(function(el) {
+  el.style.display = 'inline-block';
+  el.style.fontFamily = 'monospace';
+  el.style.padding = '2px 4px';
+  el.style.backgroundColor = '#f9f9f9';
+  el.style.border = '1px solid #e0e0e0';
+});
+</script>`;
+}
+
+/**
+ * Pre-render Mermaid diagrams to SVG
+ * Uses the bundled Mermaid library (same as VS Code extension)
+ * @param mermaidSources Map of diagram IDs to diagram source code
+ * @returns Promise with map of diagram IDs to SVG strings
+ */
+async function preRenderMermaidDiagrams(
+  mermaidSources: Record<string, string>
+): Promise<Record<string, string>> {
+  try {
+    // Initialize Mermaid with offline config (same as editor)
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'default',
+      flowchart: {
+        htmlLabels: false,
+        useMaxWidth: true,
+        padding: 15,
+        nodeSpacing: 50,
+        rankSpacing: 50
       }
     });
+
+    const svgResults: Record<string, string> = {};
+    
+    for (const [id, source] of Object.entries(mermaidSources)) {
+      try {
+        // Pre-process source to handle <br/> tags (same as editor)
+        const processedSource = source.replace(/<br\s*\/?>/gi, '\n');
+        
+        // Render using Mermaid (same API as editor)
+        const { svg } = await mermaid.render(id, processedSource);
+        svgResults[id] = svg;
+      } catch (error) {
+        console.warn(`Failed to pre-render Mermaid diagram ${id}:`, error);
+        // Fall back to returning empty (will skip SVG replacement)
+        svgResults[id] = '';
+      }
+    }
+    return svgResults;
+  } catch (error) {
+    console.warn('Mermaid pre-rendering error:', error);
+    return {};
   }
-<\/script>`;
+}
+
+/**
+ * Replace mermaid div with SVG content
+ */
+function replaceMermaidWithSVG(
+  html: string,
+  mermaidId: string,
+  svg: string
+): string {
+  // Find the div containing the mermaid source and replace with SVG
+  const divPattern = new RegExp(
+    `<div class="mermaid" data-mdwe="mermaid" data-id="${mermaidId}"[^>]*>.*?</div>`,
+    's'
+  );
+  return html.replace(divPattern, `<div class="mermaid-svg" data-mdwe="mermaid-rendered">${svg}</div>`);
+}
 
 /**
  * Export markdown as HTML
@@ -358,9 +457,6 @@ export async function exportToHTML(
 ): Promise<string> {
   const {
     includeStyles = true,
-    includeScripts = true,
-    preRenderMermaid = false,
-    preRenderMath = false,
     standalone = true,
     title = 'Untitled',
     rtl: explicitRTL,
@@ -370,7 +466,9 @@ export async function exportToHTML(
   // Convert markdown to HTML
   let { html, mermaidSources } = markdownToHtml(markdown);
 
-  // Inject mermaid source code into the placeholder divs
+  // Inject mermaid source code into the placeholder divs (client-side rendering)
+
+  // Inject mermaid source code into the remaining placeholder divs (for client-side rendering)
   for (const [mermaidId, source] of Object.entries(mermaidSources)) {
     const placeholder = `<div data-mdwe="mermaid" data-id="${mermaidId}"`;
     const replacement = `<div class="mermaid" data-mdwe="mermaid" data-id="${mermaidId}"`;
@@ -391,7 +489,10 @@ export async function exportToHTML(
   if (standalone) {
     const dir = isRTL ? ' dir="rtl"' : '';
     const css = includeStyles ? `<style>\n${EDITOR_CSS}\n${KATEX_CSS}\n</style>` : '';
-    const scripts = includeScripts ? `${MERMAID_SCRIPT}\n${KATEX_SCRIPT}` : '';
+    // Use bundled scripts for offline support
+    const mermaidScript = getBundledMermaidScript();
+    const kaTeXScript = getKaTeXScript();
+    const scripts = `${mermaidScript}\n${kaTeXScript}`;
     const sourceComment = includeSourceMarkdown ? `\n<!-- Source Markdown:\n${escapeHtmlComment(markdown)}\n-->` : '';
 
     return `<!DOCTYPE html>
@@ -459,41 +560,38 @@ function escapeHtmlComment(text: string): string {
 
 /**
  * Get export options preset for different use cases
+ * NOTE: All presets use pre-rendering for full offline capability
  */
 export const ExportPresets = {
-  /** Standalone HTML file with all assets included */
+  /** Standalone HTML file - fully offline capable */
   standalone: (): ExportOptions => ({
     includeStyles: true,
-    includeScripts: true,
-    preRenderMermaid: false,
-    preRenderMath: false,
-    standalone: true,
-  }),
-
-  /** Minimal HTML for embedding in other documents */
-  minimal: (): ExportOptions => ({
-    includeStyles: false,
-    includeScripts: false,
-    preRenderMermaid: false,
-    preRenderMath: false,
-    standalone: false,
-  }),
-
-  /** HTML with pre-rendered diagrams and math (good for email/sharing) */
-  email: (): ExportOptions => ({
-    includeStyles: true,
-    includeScripts: false,
     preRenderMermaid: true,
     preRenderMath: true,
     standalone: true,
   }),
 
-  /** Fragment with styles for pasting into editors like Notion, Word */
+  /** Minimal HTML for embedding - offline capable */
+  minimal: (): ExportOptions => ({
+    includeStyles: false,
+    preRenderMermaid: true,
+    preRenderMath: true,
+    standalone: false,
+  }),
+
+  /** HTML with pre-rendered diagrams and math - offline capable */
+  email: (): ExportOptions => ({
+    includeStyles: true,
+    preRenderMermaid: true,
+    preRenderMath: true,
+    standalone: true,
+  }),
+
+  /** Fragment with styles - offline capable */
   clipboard: (): ExportOptions => ({
     includeStyles: true,
-    includeScripts: false,
-    preRenderMermaid: false,
-    preRenderMath: false,
+    preRenderMermaid: true,
+    preRenderMath: true,
     standalone: false,
   }),
 };

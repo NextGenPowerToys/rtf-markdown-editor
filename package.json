@@ -2,7 +2,7 @@
   "name": "rtf-markdown-editor",
   "displayName": "RTF Markdown Editor",
   "description": "Word-like WYSIWYG Markdown Editor (RTL-first, Azure DevOps Mermaid, Autosave, FULLY OFFLINE)",
-  "version": "1.1.3",
+  "version": "1.1.5",
   "publisher": "NGPowerToys",
   "icon": "media/icons/RTFMD.png",
   "keywords": [
@@ -120,13 +120,14 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run esbuild-base -- --minify",
+    "vscode:prepublish": "npm run copy:mermaid && npm run esbuild-base -- --minify",
+    "copy:mermaid": "node -e \"require('fs').copyFileSync('node_modules/mermaid/dist/mermaid.min.js', 'media/mermaid.min.js')\"",
     "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node",
     "esbuild": "npm run esbuild-base -- --sourcemap",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
     "build:webview": "esbuild ./media/editor.ts --bundle --outfile=media/editor.bundle.js --format=iife --sourcemap",
     "build:webview-watch": "npm run build:webview -- --watch",
-    "build": "npm run esbuild && npm run build:webview",
+    "build": "npm run copy:mermaid && npm run esbuild && npm run build:webview",
     "watch": "concurrently \"npm run esbuild-watch\" \"npm run build:webview-watch\"",
     "compile": "tsc -p ./",
     "test": "jest",

@@ -1,17 +1,42 @@
 import { markdownToHtml } from './markdownProcessor';
 import { RTLService } from './rtlService';
+import mermaid from 'mermaid';
+
+/**
+ * Get Mermaid initialization script
+ * For browser extension, Mermaid is available globally in the webview
+ */
+function getBundledMermaidScript(): string {
+  // In browser extension context, Mermaid is already loaded
+  // We just need to initialize it for the exported content
+  return `<script>
+if (typeof mermaid !== 'undefined') {
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'default',
+    flowchart: {
+      htmlLabels: false,
+      useMaxWidth: true,
+      padding: 15,
+      nodeSpacing: 50,
+      rankSpacing: 50
+    }
+  });
+  mermaid.contentLoaded();
+}
+</script>`;
+}
 
 /**
  * Options for HTML export
+ * NOTE: All exports are fully offline-capable with pre-rendered diagrams and math
  */
 export interface ExportOptions {
   /** Include CSS in output (default: true) */
   includeStyles?: boolean;
-  /** Include KaTeX and Mermaid libraries (default: true) */
-  includeScripts?: boolean;
-  /** Render mermaid as embedded content (default: false - rendered client-side) */
+  /** Render mermaid as SVG during export (default: true - always pre-rendered for offline) */
   preRenderMermaid?: boolean;
-  /** Render KaTeX as HTML (default: false - rendered client-side) */
+  /** Render KaTeX as HTML during export (default: true - always pre-rendered for offline) */
   preRenderMath?: boolean;
   /** Generate complete HTML document (default: true) */
   standalone?: boolean;
@@ -316,35 +341,28 @@ const KATEX_CSS = `/* KaTeX CSS */
 .katex .mathbf { font-weight: bold; }
 .katex .boldsymbol { font-weight: bold; font-style: italic; }
 `;
+/**
+ * Mermaid rendering script for exported HTML
+ * Gets initialization code (Mermaid library is available in browser context)
+ */
+// Mermaid script is obtained dynamically via getBundledMermaidScript()
 
 /**
- * Mermaid.js CDN script tag for client-side rendering
+ * KaTeX rendering script for exported HTML
+ * Math rendering helper - displays formulas
  */
-const MERMAID_SCRIPT = `<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"><\/script>
-<script>
-  if (typeof mermaid !== 'undefined') {
-    mermaid.initialize({ startOnLoad: true, theme: 'default' });
-    mermaid.contentLoaded();
-  }
-<\/script>`;
-
-/**
- * KaTeX.js script for client-side math rendering
- */
-const KATEX_SCRIPT = `<script src="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.js"><\/script>
-<script>
-  if (typeof katex !== 'undefined') {
-    document.querySelectorAll('.math-display, .math-inline').forEach(function(el) {
-      const isDisplay = el.classList.contains('math-display');
-      const content = el.textContent;
-      try {
-        katex.render(content, el, { displayMode: isDisplay, throwOnError: false });
-      } catch (e) {
-        console.warn('KaTeX rendering error:', e);
-      }
-    });
-  }
-<\/script>`;
+function getKaTeXScript(): string {
+  return `<script>
+// Math formula display styling
+document.querySelectorAll('.math-display, .math-inline').forEach(function(el) {
+  el.style.display = 'inline-block';
+  el.style.fontFamily = 'monospace';
+  el.style.padding = '2px 4px';
+  el.style.backgroundColor = '#f9f9f9';
+  el.style.border = '1px solid #e0e0e0';
+});
+</script>`;
+}
 
 /**
  * Export markdown as HTML
@@ -358,9 +376,6 @@ export async function exportToHTML(
 ): Promise<string> {
   const {
     includeStyles = true,
-    includeScripts = true,
-    preRenderMermaid = false,
-    preRenderMath = false,
     standalone = true,
     title = 'Untitled',
     rtl: explicitRTL,
@@ -368,9 +383,10 @@ export async function exportToHTML(
   } = options;
 
   // Convert markdown to HTML
-  let { html, mermaidSources } = markdownToHtml(markdown);
+  const { html: rawHtml, mermaidSources } = markdownToHtml(markdown);
+  let html = rawHtml;
 
-  // Inject mermaid source code into the placeholder divs
+  // Inject mermaid source code into the placeholder divs (for client-side rendering)
   for (const [mermaidId, source] of Object.entries(mermaidSources)) {
     const placeholder = `<div data-mdwe="mermaid" data-id="${mermaidId}"`;
     const replacement = `<div class="mermaid" data-mdwe="mermaid" data-id="${mermaidId}"`;
@@ -391,7 +407,10 @@ export async function exportToHTML(
   if (standalone) {
     const dir = isRTL ? ' dir="rtl"' : '';
     const css = includeStyles ? `<style>\n${EDITOR_CSS}\n${KATEX_CSS}\n</style>` : '';
-    const scripts = includeScripts ? `${MERMAID_SCRIPT}\n${KATEX_SCRIPT}` : '';
+    // Get Mermaid initialization script and KaTeX helper
+    const mermaidScript = getBundledMermaidScript();
+    const kaTeXScript = getKaTeXScript();
+    const scripts = `${mermaidScript}\n${kaTeXScript}`;
     const sourceComment = includeSourceMarkdown ? `\n<!-- Source Markdown:\n${escapeHtmlComment(markdown)}\n-->` : '';
 
     return `<!DOCTYPE html>
@@ -461,39 +480,27 @@ function escapeHtmlComment(text: string): string {
  * Get export options preset for different use cases
  */
 export const ExportPresets = {
-  /** Standalone HTML file with all assets included */
+  /** Standalone HTML file */
   standalone: (): ExportOptions => ({
     includeStyles: true,
-    includeScripts: true,
-    preRenderMermaid: false,
-    preRenderMath: false,
     standalone: true,
   }),
 
-  /** Minimal HTML for embedding in other documents */
+  /** Minimal HTML for embedding */
   minimal: (): ExportOptions => ({
     includeStyles: false,
-    includeScripts: false,
-    preRenderMermaid: false,
-    preRenderMath: false,
     standalone: false,
   }),
 
-  /** HTML with pre-rendered diagrams and math (good for email/sharing) */
+  /** HTML for email */
   email: (): ExportOptions => ({
     includeStyles: true,
-    includeScripts: false,
-    preRenderMermaid: true,
-    preRenderMath: true,
     standalone: true,
   }),
 
-  /** Fragment with styles for pasting into editors like Notion, Word */
+  /** Fragment with styles */
   clipboard: (): ExportOptions => ({
     includeStyles: true,
-    includeScripts: false,
-    preRenderMermaid: false,
-    preRenderMath: false,
     standalone: false,
   }),
 };
