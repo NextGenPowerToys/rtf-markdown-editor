@@ -2,7 +2,7 @@
   "name": "rtf-markdown-editor",
   "displayName": "RTF Markdown Editor",
   "description": "Word-like WYSIWYG Markdown Editor (RTL-first, Azure DevOps Mermaid, Autosave, FULLY OFFLINE)",
-  "version": "1.1.5",
+  "version": "1.1.7",
   "publisher": "NGPowerToys",
   "icon": "media/icons/RTFMD.png",
   "keywords": [
@@ -79,7 +79,13 @@
         "rtf-markdown-editor.defaultCharset": {
           "type": "string",
           "default": "UTF-8",
-          "enum": ["UTF-8", "UTF-16LE", "UTF-16BE", "ISO-8859-1", "Windows-1252"],
+          "enum": [
+            "UTF-8",
+            "UTF-16LE",
+            "UTF-16BE",
+            "ISO-8859-1",
+            "Windows-1252"
+          ],
           "enumDescriptions": [
             "Unicode UTF-8 (recommended, universal)",
             "Unicode UTF-16 Little Endian",
@@ -92,7 +98,12 @@
         "rtf-markdown-editor.defaultVariant": {
           "type": "string",
           "default": "GFM",
-          "enum": ["Original", "CommonMark", "GFM", "MultiMarkdown"],
+          "enum": [
+            "Original",
+            "CommonMark",
+            "GFM",
+            "MultiMarkdown"
+          ],
           "enumDescriptions": [
             "Original Markdown (Gruber 2004)",
             "CommonMark (standardized specification)",

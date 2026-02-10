@@ -46,7 +46,7 @@ const MermaidPlaceholder = Node.create({
   name: 'mermaidPlaceholder',
   group: 'block',
   atom: true,
-  
+
   addAttributes() {
     return {
       'data-id': {
@@ -94,19 +94,29 @@ declare function acquireVsCodeApi(): VSCodeApi;
 const vscode = acquireVsCodeApi();
 
 // Initialize Mermaid (bundled locally, no CDN)
-mermaid.initialize({ 
+mermaid.initialize({
   startOnLoad: false,
   theme: 'default',
   securityLevel: 'loose',
   maxTextSize: 50000,
   // Configure flowchart for better text handling
   flowchart: {
-    htmlLabels: false,  // Disable HTML labels, use plain text wrapping instead
+    htmlLabels: false,
     useMaxWidth: true,
     padding: 15,
     nodeSpacing: 50,
     rankSpacing: 50,
   },
+  sequence: {
+    useMaxWidth: true,
+    showSequenceNumbers: false,
+    boxMargin: 10,
+    noteMargin: 10,
+    messageMargin: 35,
+    mirrorActors: true,
+    bottomMarginAdj: 1,
+    rightAngles: false,
+  }
 });
 
 let editor: Editor | null = null;
@@ -225,27 +235,27 @@ function initializeEditor() {
     onUpdate: ({ editor: e }) => {
       const html = e.getHTML();
       const newHash = hashContent(html);
-      
+
       if (newHash !== contentHash) {
         contentHash = newHash;
         debounceAutoSave(html);
-        
+
         // Track user changes (but not during initial content loading)
         if (!isLoadingContent) {
           userChangesCount++;
           console.log('[History] User change tracked. Count:', userChangesCount);
         }
       }
-      
+
       // Process code blocks for language detection and copy buttons
       processCodeBlocks();
-      
+
       // Add IDs to headings for anchor links
       addHeadingIds();
-      
+
       // Render Mermaid diagrams after content updates
       setTimeout(() => renderMermaidDiagrams(), 100);
-      
+
       // Render math blocks and inline math
       setTimeout(() => renderMathBlocks(), 150);
     },
@@ -430,20 +440,20 @@ function attachToolbarEventListeners() {
       console.error('[Link] Modal not found');
       return;
     }
-    
+
     const textInput = document.getElementById('link-text') as HTMLInputElement;
     const urlInput = document.getElementById('link-url') as HTMLInputElement;
     const modalContent = modal.querySelector('.modal-content') as HTMLElement;
-    
+
     // Set modal direction based on system language, not document direction
     if (modalContent) {
       modalContent.dir = systemIsRTL ? 'rtl' : 'ltr';
     }
-    
+
     // Clear previous values
     textInput.value = '';
     urlInput.value = '';
-    
+
     // If text is selected, pre-fill the text field
     const { from, to } = editor!.state.selection;
     if (from !== to) {
@@ -451,12 +461,12 @@ function attachToolbarEventListeners() {
       textInput.value = selectedText;
       console.log('[Link] Pre-filled text from selection:', selectedText);
     }
-    
+
     // Show modal
     modal.style.display = 'flex';
     urlInput.focus();
   });
-  
+
   // Link modal handlers
   document.getElementById('link-modal-close')?.addEventListener('click', () => {
     const modal = document.getElementById('link-modal') as HTMLDivElement;
@@ -467,7 +477,7 @@ function attachToolbarEventListeners() {
     if (errorDiv) errorDiv.style.display = 'none';
     if (saveBtn) saveBtn.disabled = false;
   });
-  
+
   document.getElementById('link-cancel')?.addEventListener('click', () => {
     const modal = document.getElementById('link-modal') as HTMLDivElement;
     const errorDiv = document.getElementById('link-url-error') as HTMLDivElement;
@@ -477,31 +487,31 @@ function attachToolbarEventListeners() {
     if (errorDiv) errorDiv.style.display = 'none';
     if (saveBtn) saveBtn.disabled = false;
   });
-  
+
   document.getElementById('link-save')?.addEventListener('click', () => {
     console.log('[Link] Save button clicked');
     const textInput = document.getElementById('link-text') as HTMLInputElement;
     const urlInput = document.getElementById('link-url') as HTMLInputElement;
     const modal = document.getElementById('link-modal') as HTMLDivElement;
-    
+
     const linkText = textInput.value.trim();
     const url = urlInput.value.trim();
-    
+
     if (!url) {
       alert('Please enter a URL');
       return;
     }
-    
+
     // Validate URL format
     if (!isValidUrl(url)) {
       alert('URL must start with a protocol (http://, https://, ftp://, etc.)');
       return;
     }
-    
+
     try {
       const { from, to } = editor!.state.selection;
       const hasSelection = from !== to;
-      
+
       if (hasSelection) {
         // If text is selected, apply link to the selection
         console.log('[Link] Applying link to selected text');
@@ -510,7 +520,7 @@ function attachToolbarEventListeners() {
         // If no text selected, insert text and apply link
         const displayText = linkText || url.replace(/^https?:\/\/(www\.)?/, '').split('/')[0] || url;
         console.log('[Link] Inserting new link with text:', displayText);
-        
+
         // Insert text first, then apply link mark to it
         editor!.chain()
           .focus()
@@ -519,14 +529,14 @@ function attachToolbarEventListeners() {
           .setLink({ href: url })
           .run();
       }
-      
+
       console.log('[Link] Link created successfully');
       modal.style.display = 'none';
     } catch (err) {
       console.error('[Link] Error creating link:', err);
     }
   });
-  
+
   // Allow Enter key to submit
   document.getElementById('link-url')?.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
@@ -545,18 +555,18 @@ function attachToolbarEventListeners() {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = 'image/png,image/jpeg,image/jpg,image/svg+xml,.png,.jpg,.jpeg,.svg';
-    
+
     fileInput.addEventListener('change', (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
-      
+
       // Validate file type
       const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml'];
       if (!validTypes.includes(file.type)) {
         alert('Please select a valid image file (PNG, JPG, or SVG)');
         return;
       }
-      
+
       // Read file as base64
       const reader = new FileReader();
       reader.onload = (event) => {
@@ -572,13 +582,13 @@ function attachToolbarEventListeners() {
       };
       reader.readAsDataURL(file);
     });
-    
+
     fileInput.click();
   });
 
   document.getElementById('table-btn')?.addEventListener('click', () => {
     editor!.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
-    
+
     // Apply RTL alignment to all table cells if in RTL mode
     if (editorConfig.rtl) {
       setTimeout(() => {
@@ -607,7 +617,7 @@ function attachToolbarEventListeners() {
   // Export HTML
   document.getElementById('export-btn')?.addEventListener('click', () => {
     if (!editor) return;
-    
+
     const html = editor.getHTML();
     vscode.postMessage({
       type: 'exportHTML',
@@ -625,7 +635,7 @@ function attachToolbarEventListeners() {
     editorConfig.rtl = !editorConfig.rtl;
     WebviewRTLService.applyToDocument(editorConfig.rtl);
     WebviewRTLService.updateButtonUI(editorConfig.rtl);
-    
+
     const alignment = WebviewRTLService.getDefaultAlignment(editorConfig.rtl);
     editor!.chain().focus().setTextAlign(alignment).run();
   });
@@ -652,11 +662,11 @@ function setupLinkClickHandler() {
   editorContainer.addEventListener('click', (e) => {
     const target = e.target as HTMLElement;
     const link = target.closest('a');
-    
+
     if (link) {
       e.preventDefault();
       let url = link.getAttribute('href') || '';
-      
+
       // Handle anchor links (internal page navigation)
       if (url.startsWith('#')) {
         const anchorId = decodeURIComponent(url.substring(1));
@@ -670,8 +680,8 @@ function setupLinkClickHandler() {
           for (const heading of headings) {
             const headingText = heading.textContent?.trim() || '';
             // Try exact match first
-            if (headingText === anchorId || 
-                headingText.toLowerCase().replace(/\s+/g, '-') === anchorId.toLowerCase()) {
+            if (headingText === anchorId ||
+              headingText.toLowerCase().replace(/\s+/g, '-') === anchorId.toLowerCase()) {
               heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
               break;
             }
@@ -679,12 +689,12 @@ function setupLinkClickHandler() {
         }
         return;
       }
-      
+
       // Prepend https:// if URL doesn't start with http(s):// or other protocol
       if (url && !url.match(/^[a-z]+:\/\//i)) {
         url = 'https://' + url;
       }
-      
+
       if (url) {
         window.open(url, '_blank');
       }
@@ -702,17 +712,17 @@ function isValidUrl(url: string): boolean {
 function updateLinkUrlError(url: string): void {
   const errorDiv = document.getElementById('link-url-error') as HTMLDivElement;
   const saveBtn = document.getElementById('link-save') as HTMLButtonElement;
-  
+
   if (!errorDiv || !saveBtn) return;
-  
+
   const trimmedUrl = url.trim();
-  
+
   if (!trimmedUrl) {
     errorDiv.style.display = 'none';
     saveBtn.disabled = false;
     return;
   }
-  
+
   if (!isValidUrl(trimmedUrl)) {
     errorDiv.style.display = 'block';
     errorDiv.textContent = '⚠ URL must start with a protocol (http://, https://, ftp://, etc.)';
@@ -740,12 +750,12 @@ function setupImageHandlers() {
   // Add click handler to select images
   editorContainer.addEventListener('click', (e) => {
     const target = e.target as HTMLElement;
-    
+
     // Ignore clicks on resize handles
     if (target.classList.contains('image-resize-handle')) {
       return;
     }
-    
+
     if (target.tagName === 'IMG' && target.classList.contains('editor-image')) {
       e.preventDefault();
       selectImage(target as HTMLImageElement);
@@ -758,19 +768,19 @@ function setupImageHandlers() {
     deselectImage();
     selectedImage = img;
     img.classList.add('image-selected');
-    
+
     // Create 4 corner resize handles positioned absolutely relative to viewport
     const rect = img.getBoundingClientRect();
     const handles = ['nw', 'ne', 'sw', 'se'];
     const handleElements: HTMLElement[] = [];
-    
+
     handles.forEach(handle => {
       const handleDiv = document.createElement('div');
       handleDiv.className = `image-resize-handle image-resize-handle-${handle}`;
       handleDiv.dataset.handle = handle;
       handleDiv.style.position = 'fixed';
       handleDiv.style.zIndex = '10000';
-      
+
       // Position based on image bounds
       const handleSize = 16;
       if (handle === 'nw') {
@@ -786,54 +796,54 @@ function setupImageHandlers() {
         handleDiv.style.left = `${rect.right - handleSize / 2}px`;
         handleDiv.style.top = `${rect.bottom - handleSize / 2}px`;
       }
-      
+
       document.body.appendChild(handleDiv);
       handleElements.push(handleDiv);
-      
+
       // Attach event listener
       handleDiv.addEventListener('mousedown', startResize);
     });
-    
+
     // Store handle elements for cleanup
     (img as any).__resizeHandles = handleElements;
-    
+
     console.log('[Image] Image selected, resize handles and alignment toolbar added');
   }
 
   function deselectImage() {
     if (!selectedImage) return;
-    
+
     selectedImage.classList.remove('image-selected');
-    
+
     // Remove handles from body
     const handles = (selectedImage as any).__resizeHandles as HTMLElement[];
     if (handles) {
       handles.forEach(handle => handle.remove());
       delete (selectedImage as any).__resizeHandles;
     }
-    
+
     selectedImage = null;
   }
-  
+
   function updateHandlePositions() {
     if (!selectedImage) return;
-    
+
     const rect = selectedImage.getBoundingClientRect();
     const handles = (selectedImage as any).__resizeHandles as HTMLElement[];
     if (!handles) return;
-    
+
     const handleSize = 16;
     handles.forEach(handle => {
       const type = handle.dataset.handle;
-        if (type === 'nw') {
-          handle.style.left = `${rect.left - handleSize / 2}px`;
-          handle.style.top = `${rect.top - handleSize / 2}px`;
-        } else if (type === 'ne') {
-          handle.style.left = `${rect.right - handleSize / 2}px`;
-          handle.style.top = `${rect.top - handleSize / 2}px`;
-        } else if (type === 'sw') {
-          handle.style.left = `${rect.left - handleSize / 2}px`;
-          handle.style.top = `${rect.bottom - handleSize / 2}px`;
+      if (type === 'nw') {
+        handle.style.left = `${rect.left - handleSize / 2}px`;
+        handle.style.top = `${rect.top - handleSize / 2}px`;
+      } else if (type === 'ne') {
+        handle.style.left = `${rect.right - handleSize / 2}px`;
+        handle.style.top = `${rect.top - handleSize / 2}px`;
+      } else if (type === 'sw') {
+        handle.style.left = `${rect.left - handleSize / 2}px`;
+        handle.style.top = `${rect.bottom - handleSize / 2}px`;
       } else if (type === 'se') {
         handle.style.left = `${rect.right - handleSize / 2}px`;
         handle.style.top = `${rect.bottom - handleSize / 2}px`;
@@ -845,79 +855,79 @@ function setupImageHandlers() {
     const mouseEvent = e as MouseEvent;
     mouseEvent.preventDefault();
     mouseEvent.stopPropagation();
-    
+
     if (!selectedImage) return;
-    
+
     const target = mouseEvent.target as HTMLElement;
     const handle = target.dataset.handle;
-    
+
     if (!handle) return;
-    
+
     console.log('[Image] Starting resize with handle:', handle);
-    
+
     isResizing = true;
     resizeHandle = handle as 'se' | 'sw' | 'ne' | 'nw';
     startX = mouseEvent.clientX;
     startY = mouseEvent.clientY;
     startWidth = selectedImage.offsetWidth;
     startHeight = selectedImage.offsetHeight;
-    
+
     document.addEventListener('mousemove', doResize);
     document.addEventListener('mouseup', stopResize);
   }
 
   function doResize(e: MouseEvent) {
     if (!isResizing || !selectedImage || !resizeHandle) return;
-    
+
     e.preventDefault();
-    
+
     const deltaX = e.clientX - startX;
     const deltaY = e.clientY - startY;
-    
+
     let newWidth = startWidth;
     let newHeight = startHeight;
-    
+
     // Calculate new dimensions based on handle
     if (resizeHandle.includes('e')) {
       newWidth = startWidth + deltaX;
     } else if (resizeHandle.includes('w')) {
       newWidth = startWidth - deltaX;
     }
-    
+
     // Maintain aspect ratio
     const aspectRatio = startWidth / startHeight;
     newHeight = newWidth / aspectRatio;
-    
+
     // Apply minimum size constraints
     if (newWidth < 50) newWidth = 50;
     if (newHeight < 50) newHeight = 50;
-    
+
     selectedImage.style.width = newWidth + 'px';
     selectedImage.style.height = newHeight + 'px';
     selectedImage.setAttribute('width', Math.round(newWidth).toString());
     selectedImage.setAttribute('height', Math.round(newHeight).toString());
-    
+
     // Update handle positions during resize
     updateHandlePositions();
   }
 
   function stopResize() {
     if (!isResizing) return;
-    
+
     console.log('[Image] Stopping resize');
-    
+
     isResizing = false;
     resizeHandle = null;
     document.removeEventListener('mousemove', doResize);
     document.removeEventListener('mouseup', stopResize);
-    
+
     // Update ProseMirror node with new dimensions
     if (editor && selectedImage) {
       const width = selectedImage.getAttribute('width');
       const height = selectedImage.getAttribute('height');
-      
+
       console.log('[Image] Updating node with width:', width, 'height:', height);
-      
+
       // Normalize URLs for comparison (decode both to handle %2B vs + differences)
       const normalizeUrl = (url: string) => {
         try {
@@ -926,16 +936,16 @@ function setupImageHandlers() {
           return url;
         }
       };
-      
+
       const selectedSrc = normalizeUrl(selectedImage.src);
       console.log('[Image] Selected image src (normalized):', selectedSrc);
-      
+
       // Find and update the image node in ProseMirror
       const { state } = editor;
       const { doc } = state;
       let nodePos: number | null = null;
       let foundNode: any = null;
-      
+
       doc.descendants((node, pos) => {
         if (node.type.name === 'image') {
           const nodeSrc = normalizeUrl(node.attrs.src);
@@ -947,7 +957,7 @@ function setupImageHandlers() {
           }
         }
       });
-      
+
       if (nodePos !== null && foundNode) {
         const newAttrs = { ...foundNode.attrs, width, height };
         console.log('[Image] Updating attributes to:', newAttrs);
@@ -1052,10 +1062,10 @@ function openMermaidModal(mermaidId: string) {
   if (textarea) {
     textarea.value = mermaidSources[mermaidId] || '';
     textarea.focus();
-    
+
     // Set up live preview on input
     textarea.addEventListener('input', updateMermaidPreview);
-    
+
     // Initial preview render
     setTimeout(() => updateMermaidPreview(), 50);
   }
@@ -1071,13 +1081,13 @@ function closeMermaidModal() {
   if (modal) {
     modal.style.display = 'none';
   }
-  
+
   // Clean up event listener
   const textarea = document.getElementById('mermaid-source') as HTMLTextAreaElement;
   if (textarea) {
     textarea.removeEventListener('input', updateMermaidPreview);
   }
-  
+
   currentMermaidEditId = null;
 }
 
@@ -1085,29 +1095,29 @@ function updateMermaidPreview() {
   const textarea = document.getElementById('mermaid-source') as HTMLTextAreaElement;
   const preview = document.getElementById('mermaid-preview');
   const errorDiv = document.getElementById('mermaid-error');
-  
+
   if (!textarea || !preview || !errorDiv) return;
-  
+
   const source = textarea.value.trim();
-  
+
   if (!source) {
     preview.innerHTML = '<div style="color: #999;">Diagram preview will appear here</div>';
     errorDiv.style.display = 'none';
     return;
   }
-  
+
   try {
     // Clear error
     errorDiv.style.display = 'none';
     errorDiv.innerHTML = '';
-    
+
     // Clear preview
     preview.innerHTML = '<div style="color: #999;">Rendering...</div>';
-    
+
     // Render Mermaid diagram
     const uniqueId = 'mermaid-preview-' + Date.now();
     preview.innerHTML = `<div id="${uniqueId}">${source}</div>`;
-    
+
     // Initialize Mermaid rendering
     if (typeof mermaid !== 'undefined' && mermaid.contentLoaded) {
       mermaid.contentLoaded();
@@ -1145,7 +1155,7 @@ function detectRTLContent() {
 
   const text = editor.getJSON();
   const hasRTL = WebviewRTLService.hasRTLContent(text);
-  
+
   if (hasRTL && !editorConfig.rtl) {
     editorConfig.rtl = true;
     WebviewRTLService.applyToDocument(true);
@@ -1160,26 +1170,26 @@ function openMathModal() {
   const modal = document.getElementById('math-modal');
   const textarea = document.getElementById('math-formula') as HTMLTextAreaElement;
   const typeSelect = document.getElementById('math-type') as HTMLSelectElement;
-  
+
   if (modal && textarea) {
     textarea.value = '';
     textarea.focus();
     typeSelect.value = 'block';
-    
+
     // Clear previous error
     const errorDiv = document.getElementById('math-error') as HTMLDivElement;
     if (errorDiv) {
       errorDiv.style.display = 'none';
       errorDiv.textContent = '';
     }
-    
+
     // Set up live preview on input
     textarea.addEventListener('input', updateMathPreview);
     typeSelect.addEventListener('change', updateMathPreview);
-    
+
     // Initial preview render
     setTimeout(() => updateMathPreview(), 50);
-    
+
     modal.style.display = 'flex';
   }
 
@@ -1201,11 +1211,11 @@ function closeMathModal() {
   // Clean up event listeners
   const textarea = document.getElementById('math-formula') as HTMLTextAreaElement;
   const typeSelect = document.getElementById('math-type') as HTMLSelectElement;
-  
+
   if (textarea) {
     textarea.removeEventListener('input', updateMathPreview);
   }
-  
+
   if (typeSelect) {
     typeSelect.removeEventListener('change', updateMathPreview);
   }
@@ -1219,7 +1229,7 @@ function updateMathPreview() {
   const preview = document.getElementById('math-preview');
   const errorDiv = document.getElementById('math-error') as HTMLDivElement;
   const typeSelect = document.getElementById('math-type') as HTMLSelectElement;
-  
+
   if (!textarea || !preview || !errorDiv) return;
 
   const formula = textarea.value.trim();
@@ -1260,7 +1270,7 @@ function updateMathPreview() {
 function saveMathFormula() {
   const textarea = document.getElementById('math-formula') as HTMLTextAreaElement;
   const typeSelect = document.getElementById('math-type') as HTMLSelectElement;
-  
+
   if (!textarea || !editor) return;
 
   const formula = textarea.value.trim();
@@ -1292,7 +1302,7 @@ function saveMathFormula() {
 
     closeMathModal();
     saveContent();
-    
+
     // Render the newly inserted math after a delay
     setTimeout(() => {
       console.log('[Math] Calling renderMathBlocks after insert');
@@ -1317,10 +1327,10 @@ function saveContent() {
   if (!editor) return;
 
   const html = editor.getHTML();
-  
+
   // LOG THE FULL HTML FOR DEBUGGING
   console.log('[SaveContent] Full HTML being sent to extension:', html);
-  
+
   // Check if content is empty - if so, try to redo to restore content
   const textContent = editor.state.doc.textContent.trim();
   if (!textContent || html === '<p></p>' || html === '<p style="text-align: right;"></p>') {
@@ -1328,7 +1338,7 @@ function saveContent() {
     editor.commands.redo();
     return; // Don't save empty content
   }
-  
+
   // Log image tags in the HTML
   const imgMatches = html.match(/<img[^>]*>/gi);
   if (imgMatches) {
@@ -1359,20 +1369,20 @@ function handleMessageFromExtension(message: MessageToWebview) {
         // Set loading flag to prevent counting as user changes
         isLoadingContent = true;
         userChangesCount = 0; // Reset counter
-        
+
         // Convert markdown math syntax to custom nodes BEFORE setting content
         const convertedHtml = convertMarkdownMath(message.html);
-        
+
         // Set content normally
         editor.commands.setContent(convertedHtml, false);
         contentHash = hashContent(convertedHtml);
-        
+
         // Re-enable tracking after a short delay
         setTimeout(() => {
           isLoadingContent = false;
           console.log('[History] Content loaded, tracking enabled');
         }, 50);
-        
+
         // Process code blocks after content is set
         setTimeout(() => processCodeBlocks(), 100);
       }
@@ -1400,7 +1410,7 @@ function handleMessageFromExtension(message: MessageToWebview) {
         // Set loading flag to prevent counting as user changes
         isLoadingContent = true;
         userChangesCount = 0; // Reset counter on external update
-        
+
         // Convert markdown math syntax to custom nodes BEFORE setting content
         const convertedHtml = convertMarkdownMath(message.html);
         editor.commands.setContent(convertedHtml, false);
@@ -1426,14 +1436,14 @@ function handleMessageFromExtension(message: MessageToWebview) {
         // Use imageUrl for display (webview URI), but store imagePath (relative path) in src attribute
         // Set width/height if available to force HTML format storage
         const attrs: any = { src: message.imagePath };
-        
+
         if (message.imageWidth && message.imageHeight) {
           attrs.width = message.imageWidth;
           attrs.height = message.imageHeight;
         }
-        
+
         editor.chain().focus().setImage(attrs).run();
-        
+
         // After insertion, update the img element to use webview URI for display
         // The resize system will handle saving the relative path
         if (message.imageUrl) {
@@ -1484,11 +1494,25 @@ function renderMermaidDiagrams() {
 
     try {
       const diagramId = `mermaid-${mermaidId}`;
-      
-      // Preprocess source: convert <br/> tags to escaped newlines for plain text mode
-      // Since htmlLabels is disabled, <br/> won't render as HTML, but newlines will wrap text
-      const processedSource = source.replace(/<br\s*\/?>/gi, '\n');
-      
+
+      // Preprocess source:
+      // 1. Sanitize participant aliases by quoting them if they contain special characters (like parentheses)
+      //    This fixes parsing errors where Mermaid misinterprets unquoted aliases.
+      let processedSource = source.replace(
+        /^[\t ]*participant\s+([a-zA-Z0-9_\-]+)\s+as\s+([^"\n]+?)(?:\s*)$/gm,
+        (match, id, alias) => {
+          const trimmedAlias = alias.trim();
+          // If already quoted, leave it alone
+          if (trimmedAlias.startsWith('"') && trimmedAlias.endsWith('"')) {
+            return match;
+          }
+          return `\tparticipant ${id} as "${trimmedAlias}"`;
+        }
+      );
+
+      // 2. Convert <br/> tags to escaped newlines for plain text mode (when htmlLabels: false)
+      processedSource = processedSource.replace(/<br\s*\/?>/gi, '\\n');
+
       mermaid.render(diagramId, processedSource)
         .then(({ svg }) => {
           console.log(`[Mermaid] Got SVG for ${mermaidId}, length: ${svg.length}`);
@@ -1496,7 +1520,7 @@ function renderMermaidDiagrams() {
           element.innerHTML = '';
           element.innerHTML = svg;
           console.log(`[Mermaid] Injected SVG into ${mermaidId}`);
-          
+
           // Fix SVG display issues by ensuring it has proper dimensions
           // This is critical for diagrams with HTML tags like <br/> in component labels
           const injectedSvg = element.querySelector('svg');
@@ -1507,19 +1531,19 @@ function renderMermaidDiagrams() {
                 // Remove inline width/height to let viewBox and CSS handle sizing
                 injectedSvg.removeAttribute('width');
                 injectedSvg.removeAttribute('height');
-                
+
                 // Apply CSS for responsive sizing
                 // Trust Mermaid's viewBox calculation
                 injectedSvg.style.width = '100%';
                 injectedSvg.style.height = 'auto';
                 injectedSvg.style.display = 'block';
                 injectedSvg.style.overflow = 'visible';
-                
+
                 // Ensure container allows natural sizing
                 element.style.overflow = 'visible';
                 element.style.width = 'auto';
                 element.style.height = 'auto';
-                
+
                 console.log(`[Mermaid] Finalized ${mermaidId}:`, {
                   viewBox: injectedSvg.getAttribute('viewBox'),
                   style: {
@@ -1566,19 +1590,19 @@ function generateHeadingSlug(text: string): string {
  */
 function addHeadingIds() {
   if (!editor) return;
-  
+
   const editorElement = document.querySelector('.ProseMirror');
   if (!editorElement) return;
-  
+
   const headings = editorElement.querySelectorAll('h1, h2, h3, h4, h5, h6');
   const usedIds = new Set<string>();
-  
+
   headings.forEach((heading) => {
     const text = heading.textContent?.trim() || '';
     if (!text) return;
-    
+
     let id = generateHeadingSlug(text);
-    
+
     // Handle duplicate IDs by appending a number
     if (usedIds.has(id)) {
       let counter = 1;
@@ -1587,7 +1611,7 @@ function addHeadingIds() {
       }
       id = `${id}-${counter}`;
     }
-    
+
     usedIds.add(id);
     heading.id = id;
   });
@@ -1598,24 +1622,24 @@ function addHeadingIds() {
  */
 function processCodeBlocks() {
   if (!editor) return;
-  
+
   const editorElement = document.querySelector('.ProseMirror');
   if (!editorElement) return;
-  
+
   const codeBlocks = editorElement.querySelectorAll('pre');
-  
+
   codeBlocks.forEach((pre) => {
     const codeElement = pre.querySelector('code');
     if (!codeElement) return;
-    
+
     // Extract language from class or data attribute
     const classes = codeElement.className || '';
     const languageMatch = classes.match(/language-(\w+)/);
     const language = languageMatch ? languageMatch[1].toUpperCase() : 'CODE';
-    
+
     // Set data-language attribute for CSS ::before
     pre.setAttribute('data-language', language);
-    
+
     // Add copy button functionality
     if (!pre.querySelector('.code-copy-button')) {
       const copyBtn = document.createElement('button');
@@ -1625,17 +1649,17 @@ function processCodeBlocks() {
       copyBtn.style.position = 'absolute';
       copyBtn.style.top = '8px';
       copyBtn.style.right = `${60 + language.length}px`;
-      
+
       copyBtn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        
+
         const text = codeElement.textContent || '';
         navigator.clipboard.writeText(text).then(() => {
           const originalText = copyBtn.textContent;
           copyBtn.textContent = '✓ Copied!';
           copyBtn.style.background = 'rgba(16, 124, 16, 0.8)';
-          
+
           setTimeout(() => {
             copyBtn.textContent = originalText;
             copyBtn.style.background = 'rgba(255, 255, 255, 0.1)';
@@ -1648,7 +1672,7 @@ function processCodeBlocks() {
           }, 2000);
         });
       });
-      
+
       pre.style.position = 'relative';
       pre.appendChild(copyBtn);
     }
