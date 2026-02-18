@@ -8,6 +8,7 @@ import { markdownToHtml, detectRTLCharacters, extractMermaidBlocks } from '../ut
 import { htmlToMarkdown, hashContent } from '../utils/htmlProcessor';
 import { RTLService } from '../services/RTLService';
 import { exportToHTML, ExportOptions } from '../utils/htmlExporter';
+import { exportToDOCX } from '../utils/docxExporter';
 
 export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
   private readonly context: vscode.ExtensionContext;
@@ -187,6 +188,10 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
           basePath: path.dirname(document.uri.fsPath),
         }, panel);
         break;
+
+      case 'exportDOCX':
+        this.handleExportDOCX(document, panel);
+        break;
     }
   }
 
@@ -343,6 +348,40 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
       }
     } catch (error) {
       vscode.window.showErrorMessage(`Failed to export HTML: ${error}`);
+    }
+  }
+
+  private async handleExportDOCX(
+    document: WebviewDocument,
+    panel: vscode.WebviewPanel
+  ) {
+    try {
+      const markdown = document.getContent();
+      const docName = path.basename(document.uri.fsPath, path.extname(document.uri.fsPath));
+
+      // Pre-render Mermaid diagrams to PNG via the already-open editor webview
+      const { mermaidSources } = extractMermaidBlocks(markdown);
+      const mermaidImages = Object.keys(mermaidSources).length > 0
+        ? await this.renderMermaidViaWebview(panel, mermaidSources)
+        : {};
+
+      const docx = await exportToDOCX(markdown, {
+        title: docName,
+        basePath: path.dirname(document.uri.fsPath),
+        mermaidImages,
+      });
+
+      const uri = await vscode.window.showSaveDialog({
+        defaultUri: vscode.Uri.file(path.join(path.dirname(document.uri.fsPath), `${docName}.docx`)),
+        filters: { 'Word Documents': ['docx'] },
+      });
+
+      if (uri) {
+        fs.writeFileSync(uri.fsPath, docx);
+        vscode.window.showInformationMessage(`Word document exported to ${path.basename(uri.fsPath)}`);
+      }
+    } catch (error) {
+      vscode.window.showErrorMessage(`Failed to export Word document: ${error}`);
     }
   }
 

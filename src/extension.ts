@@ -5,6 +5,7 @@ import * as path from 'path';
 import * as iconv from 'iconv-lite';
 import * as chardet from 'chardet';
 import { exportToHTML } from './utils/htmlExporter';
+import { exportToDOCX } from './utils/docxExporter';
 import { extractMermaidBlocks } from './utils/markdownProcessor';
 import { renderMermaidToPng } from './utils/mermaidRenderer';
 
@@ -132,6 +133,53 @@ export function activate(context: vscode.ExtensionContext) {
         }
       } catch (error) {
         vscode.window.showErrorMessage(`Failed to export self-contained HTML: ${error}`);
+      }
+    })
+  );
+
+  // Register command to export current document as Word DOCX
+  context.subscriptions.push(
+    vscode.commands.registerCommand('rtf-markdown-editor.exportDOCX', async () => {
+      const editor = vscode.window.activeTextEditor;
+      if (!editor || !editor.document.fileName.endsWith('.md')) {
+        vscode.window.showErrorMessage('Please open a markdown file first');
+        return;
+      }
+
+      try {
+        const buffer = fs.readFileSync(editor.document.uri.fsPath);
+        const charset = detectCharset(buffer);
+        const markdown = iconv.decode(buffer, charset);
+
+        const docName = path.basename(editor.document.uri.fsPath, path.extname(editor.document.uri.fsPath));
+
+        // Pre-render Mermaid diagrams to PNG using a hidden webview
+        const { mermaidSources } = extractMermaidBlocks(markdown);
+        let mermaidImages: Record<string, string> = {};
+        if (Object.keys(mermaidSources).length > 0) {
+          await vscode.window.withProgress(
+            { location: vscode.ProgressLocation.Notification, title: 'Exporting DOCX: rendering Mermaid diagrams...', cancellable: false },
+            async () => { mermaidImages = await renderMermaidToPng(mermaidSources, context); }
+          );
+        }
+
+        const docx = await exportToDOCX(markdown, {
+          title: docName,
+          basePath: path.dirname(editor.document.uri.fsPath),
+          mermaidImages,
+        });
+
+        const uri = await vscode.window.showSaveDialog({
+          defaultUri: vscode.Uri.file(path.join(path.dirname(editor.document.uri.fsPath), `${docName}.docx`)),
+          filters: { 'Word Documents': ['docx'] },
+        });
+
+        if (uri) {
+          fs.writeFileSync(uri.fsPath, docx);
+          vscode.window.showInformationMessage(`Word document exported to ${path.basename(uri.fsPath)}`);
+        }
+      } catch (error) {
+        vscode.window.showErrorMessage(`Failed to export Word document: ${error}`);
       }
     })
   );

@@ -76,6 +76,11 @@
         "command": "rtf-markdown-editor.exportHTMLSelfContained",
         "title": "Export Self-Contained HTML (Embed Images)",
         "category": "RTF Markdown"
+      },
+      {
+        "command": "rtf-markdown-editor.exportDOCX",
+        "title": "Export as Word Document (DOCX)",
+        "category": "RTF Markdown"
       }
     ],
     "configuration": {
