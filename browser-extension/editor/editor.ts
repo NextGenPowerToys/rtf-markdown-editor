@@ -69,6 +69,14 @@ mermaid.initialize({
   startOnLoad: false,
   theme: 'default',
   securityLevel: 'loose',
+  // Configure flowchart for better text handling
+  flowchart: {
+    htmlLabels: false,  // Disable HTML labels, use plain text wrapping instead
+    useMaxWidth: true,
+    padding: 15,
+    nodeSpacing: 50,
+    rankSpacing: 50,
+  },
 });
 
 interface FileContext {
@@ -359,17 +367,58 @@ function showError(message: string) {
 }
 
 function renderMermaidDiagrams() {
-  document.querySelectorAll('.mermaid-placeholder').forEach((el) => {
-    const id = el.getAttribute('data-id');
+  document.querySelectorAll('.mermaid-placeholder').forEach((element) => {
+    const id = element.getAttribute('data-id');
     if (id && mermaidSources[id]) {
       const source = mermaidSources[id];
       try {
-        mermaid.render(`mermaid-${id}`, source).then(({ svg }) => {
-          el.innerHTML = svg;
+        // Preprocess source: convert <br/> tags to actual newlines for plain text mode
+        // Since htmlLabels is disabled, <br/> won't render as HTML, but newlines will wrap text
+        const processedSource = source.replace(/<br\s*\/?>/gi, '\n');
+        
+        mermaid.render(`mermaid-${id}`, processedSource).then(({ svg }) => {
+          element.innerHTML = svg;
+          
+          // Fix SVG display issues by ensuring it has proper dimensions
+          // This is critical for diagrams with multi-line text
+          const injectedSvg = element.querySelector('svg');
+          if (injectedSvg) {
+            // Wait for text content to fully render before applying styles
+            setTimeout(() => {
+              try {
+                // Remove inline width/height to let viewBox and CSS handle sizing
+                injectedSvg.removeAttribute('width');
+                injectedSvg.removeAttribute('height');
+                
+                // Apply CSS for responsive sizing
+                // Trust Mermaid's viewBox calculation
+                injectedSvg.style.width = '100%';
+                injectedSvg.style.height = 'auto';
+                injectedSvg.style.display = 'block';
+                injectedSvg.style.overflow = 'visible';
+                
+                // Ensure container allows natural sizing
+                element.style.overflow = 'visible';
+                element.style.width = 'auto';
+                element.style.height = 'auto';
+                
+                console.log(`[Mermaid] Finalized ${id}:`, {
+                  viewBox: injectedSvg.getAttribute('viewBox'),
+                  style: {
+                    width: injectedSvg.style.width,
+                    height: injectedSvg.style.height,
+                    overflow: injectedSvg.style.overflow,
+                  }
+                });
+              } catch (err) {
+                console.error(`[Mermaid] Error finalizing SVG for ${id}:`, err);
+              }
+            }, 100);
+          }
         });
       } catch (error) {
         console.error('[Mermaid] Render error:', error);
-        el.textContent = 'Mermaid diagram (render error)';
+        element.textContent = 'Mermaid diagram (render error)';
       }
     }
   });

@@ -123,11 +123,13 @@ A rich text editor extension for VS Code that provides a Microsoft Word / Google
 - **Mermaid Support**: Diagrams render correctly with bundled Mermaid.js
 - **Math Formulas**: KaTeX formulas render properly
 - **RTL Preservation**: RTL/LTR direction is detected and preserved
-- **Offline Ready**: Exported HTML works without internet connection
-- **CDN Integration**: Uses CDN for Mermaid and KaTeX for smaller file sizes
+- **Offline Capable**: Two export modes:
+  - **Standard Mode** (Default): Uses CDN for Mermaid/KaTeX rendering
+  - **Pre-rendered Mode**: SVG diagrams + math pre-rendered at export (fully offline)
 - **Standalone Files**: Each exported HTML is a complete, self-contained document
 - **Export Button**: Click the download icon in the toolbar or use Command Palette
 - **Command**: "Export as HTML" (via VS Code Command Palette)
+- **Documentation**: See [OFFLINE_EXPORT_GUIDE.md](OFFLINE_EXPORT_GUIDE.md) for offline export setup
 
 ### ✅ Editor Experience
 - **WYSIWYG**: What-You-See-Is-What-You-Get editing

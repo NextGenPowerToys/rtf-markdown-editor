@@ -2,7 +2,7 @@
   "name": "rtf-markdown-editor",
   "displayName": "RTF Markdown Editor",
   "description": "Word-like WYSIWYG Markdown Editor (RTL-first, Azure DevOps Mermaid, Autosave, FULLY OFFLINE)",
-  "version": "1.1.1",
+  "version": "1.1.7",
   "publisher": "NGPowerToys",
   "icon": "media/icons/RTFMD.png",
   "keywords": [
@@ -84,7 +84,13 @@
         "rtf-markdown-editor.defaultCharset": {
           "type": "string",
           "default": "UTF-8",
-          "enum": ["UTF-8", "UTF-16LE", "UTF-16BE", "ISO-8859-1", "Windows-1252"],
+          "enum": [
+            "UTF-8",
+            "UTF-16LE",
+            "UTF-16BE",
+            "ISO-8859-1",
+            "Windows-1252"
+          ],
           "enumDescriptions": [
             "Unicode UTF-8 (recommended, universal)",
             "Unicode UTF-16 Little Endian",
@@ -97,7 +103,12 @@
         "rtf-markdown-editor.defaultVariant": {
           "type": "string",
           "default": "GFM",
-          "enum": ["Original", "CommonMark", "GFM", "MultiMarkdown"],
+          "enum": [
+            "Original",
+            "CommonMark",
+            "GFM",
+            "MultiMarkdown"
+          ],
           "enumDescriptions": [
             "Original Markdown (Gruber 2004)",
             "CommonMark (standardized specification)",
@@ -125,13 +136,14 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run esbuild-base -- --minify",
+    "vscode:prepublish": "npm run copy:mermaid && npm run esbuild-base -- --minify",
+    "copy:mermaid": "node -e \"require('fs').copyFileSync('node_modules/mermaid/dist/mermaid.min.js', 'media/mermaid.min.js')\"",
     "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node",
     "esbuild": "npm run esbuild-base -- --sourcemap",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
     "build:webview": "esbuild ./media/editor.ts --bundle --outfile=media/editor.bundle.js --format=iife --sourcemap",
     "build:webview-watch": "npm run build:webview -- --watch",
-    "build": "npm run esbuild && npm run build:webview",
+    "build": "npm run copy:mermaid && npm run esbuild && npm run build:webview",
     "watch": "concurrently \"npm run esbuild-watch\" \"npm run build:webview-watch\"",
     "compile": "tsc -p ./",
     "test": "jest",

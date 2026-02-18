@@ -547,8 +547,11 @@ html[dir="rtl"] .ProseMirror table td {
   margin: 1em 0;
   background-color: #f8f8f8;
   border-radius: 4px;
-  min-height: 200px;
-  min-width: 300px;
+  min-height: auto;
+  min-width: auto;
+  width: auto;
+  height: auto;
+  overflow: visible;
 }
 
 [data-mdwe="mermaid"] svg,
@@ -557,12 +560,25 @@ html[dir="rtl"] .ProseMirror table td {
   height: auto !important;
   display: block;
   margin: 0 auto;
+  overflow: visible;
 }
 
-/* Ensure SVG content is visible */
+/* Ensure SVG content is visible - critical for multi-line text from HTML tags */
 [data-mdwe="mermaid"] svg g,
 .mermaid-placeholder svg g {
   display: block;
+}
+
+/* Ensure text elements in SVG are fully visible */
+[data-mdwe="mermaid"] svg text,
+.mermaid-placeholder svg text {
+  overflow: visible;
+}
+
+/* Ensure tspan (text segments) are visible - important for <br/> handling */
+[data-mdwe="mermaid"] svg tspan,
+.mermaid-placeholder svg tspan {
+  overflow: visible;
 }
 
 .mermaid {
