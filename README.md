@@ -1,8 +1,8 @@
 # RTF Markdown Editor
 
-**Word-like WYSIWYG Markdown Editor for VS Code** — RTL-first, Azure DevOps Mermaid, Autosave, **100% Offline**
+**Word-like WYSIWYG Markdown Editor for VS Code** — RTL-first, Azure DevOps Mermaid, Export to Word & HTML, Autosave, **100% Offline**
 
-A rich text editor extension for VS Code that provides a Microsoft Word / Google Docs-like editing experience for Markdown files, with special emphasis on right-to-left (RTL) languages like Hebrew and Arabic, automatic saving, and support for Azure DevOps Wiki Mermaid diagrams.
+A rich text editor extension for VS Code that provides a Microsoft Word / Google Docs-like editing experience for Markdown files, with special emphasis on right-to-left (RTL) languages like Hebrew and Arabic, automatic saving, Mermaid diagram support, and one-click export to HTML or Word (DOCX).
 
 ## Features
 
@@ -58,6 +58,7 @@ A rich text editor extension for VS Code that provides a Microsoft Word / Google
 - **Proper Alignment**: Direction-aware alignment controls
 - **Cursor Behavior**: Correct cursor movement in RTL text
 - **Bidirectional Text**: Mixed LTR/RTL content support
+- **RTL in Exports**: RTL direction preserved in both HTML and DOCX exports
 
 ### ✅ Diagram Support
 - **Mermaid Diagrams**: Full integration with all Mermaid diagram types:
@@ -70,18 +71,27 @@ A rich text editor extension for VS Code that provides a Microsoft Word / Google
   - User journey diagrams
   - Git graphs
   - Pie charts
-- **Syntax**: Standard `\`\`\`mermaid` blocks (GitHub compatible) and `::: mermaid` blocks (Azure DevOps compatible)
+- **Syntax**: Standard ` ```mermaid ` blocks (GitHub compatible) and `::: mermaid` blocks (Azure DevOps compatible)
 - **Live Editing**: Click diagram to open editor modal
 - **Bundled Renderer**: No CDN required, fully offline
+- **Export as PNG**: Diagrams are pre-rendered to PNG for HTML and DOCX export
 
-### ✅ Math Formulas (Partially Supported)
-- **Block Math**: `$$formula$$` syntax with KaTeX rendering
-- **Inline Math**: `$formula$` for inline mathematical notation
-- **LaTeX Support**: Most standard LaTeX commands supported
-- **KaTeX Engine**: Offline, bundled math renderer
-- **Limitations**:
-  - List item wrapping may break with complex inline math
-  - Hebrew/Arabic text in `\text{}` commands not supported (English only)
+### ✅ Export to HTML
+- **One-Click Export**: Toolbar button or Command Palette
+- **Self-Contained**: All images embedded as base64 — single portable file
+- **Mermaid as PNG**: Diagrams pre-rendered to PNG images (no CDN needed)
+- **RTL Preserved**: Right-to-left direction detected and applied
+- **Fully Offline**: No internet required — 100% standalone HTML output
+- **Command**: `RTF Markdown: Export Self-Contained HTML (Embed Images)`
+
+### ✅ Export to Word (DOCX)
+- **One-Click Export**: Toolbar button (W icon) or Command Palette
+- **Proper .docx Format**: Opens natively in Microsoft Word, LibreOffice, and Google Docs
+- **Mermaid as Embedded Images**: Diagrams exported as real PNG images inside the DOCX — not blank boxes
+- **RTL Support**: Document direction set correctly for Hebrew/Arabic content (`w:bidi`)
+- **All Styling Preserved**: Headings, tables, code blocks, lists, blockquotes
+- **No External Dependencies**: Built entirely with Node.js built-ins — no additional packages
+- **Command**: `RTF Markdown: Export as Word Document (DOCX)`
 
 ### 🔒 100% Offline & Secure
 - **No Internet Required**: All dependencies bundled locally
@@ -109,49 +119,18 @@ A rich text editor extension for VS Code that provides a Microsoft Word / Google
 - **Syntax Preservation**: All original Markdown syntax preserved exactly
 - **No Formatting**: No unwanted reformatting or style changes
 - **Relative Paths**: Image and link paths handled correctly
-- **UTF-8**: Full Unicode support including:
-  - Hebrew
-  - Arabic
-  - Chinese
-  - Japanese
-  - Emojis
-  - Special characters
-
-### ✅ Export to HTML
-- **One-Click Export**: Export markdown to standalone HTML file
-- **Fully Styled**: Exported HTML includes all editor CSS styling
-- **Mermaid Support**: Diagrams render correctly with bundled Mermaid.js
-- **Math Formulas**: KaTeX formulas render properly
-- **RTL Preservation**: RTL/LTR direction is detected and preserved
-- **Offline Capable**: Two export modes:
-  - **Standard Mode** (Default): Uses CDN for Mermaid/KaTeX rendering
-  - **Pre-rendered Mode**: SVG diagrams + math pre-rendered at export (fully offline)
-- **Standalone Files**: Each exported HTML is a complete, self-contained document
-- **Export Button**: Click the download icon in the toolbar or use Command Palette
-- **Command**: "Export as HTML" (via VS Code Command Palette)
-- **Documentation**: See [OFFLINE_EXPORT_GUIDE.md](OFFLINE_EXPORT_GUIDE.md) for offline export setup
-
-### ✅ Editor Experience
-- **WYSIWYG**: What-You-See-Is-What-You-Get editing
-- **Toolbar**: Comprehensive formatting toolbar with visual feedback
-- **Standard Shortcuts**: All VS Code keyboard shortcuts work:
-  - Ctrl+Z (Undo)
-  - Ctrl+Shift+Z (Redo)
-  - Ctrl+A (Select All)
-  - Ctrl+C/V (Copy/Paste)
-  - And more...
-- **Context Menus**: Right-click context menu support
-- **Selection Formatting**: Apply formatting to selected text
-- **Cursor Positioning**: Precise cursor control
-- **Line Numbers**: Optional line numbering
-- **Scroll Behavior**: Smooth scrolling and view management
+- **UTF-8 & Multi-Encoding**: Full Unicode support with automatic encoding detection:
+  - Hebrew, Arabic, Persian, Urdu
+  - Chinese, Japanese, Korean
+  - Emojis and special characters
+  - UTF-8 / UTF-16LE / UTF-16BE / ISO-8859-1 / Windows-1252
 
 ## Installation
 
 1. Open VS Code
 2. Go to Extensions (Ctrl+Shift+X)
-3. Search for "RTF Markdown Editor"
-4. Click Install
+3. Search for **"RTF Markdown Editor"**
+4. Click **Install**
 
 ## Usage
 
@@ -164,15 +143,30 @@ A rich text editor extension for VS Code that provides a Microsoft Word / Google
 ### Exporting to HTML
 
 1. Open a `.md` file in the RTF Markdown Editor
-2. Click the **download icon** (↓) in the toolbar, OR
-3. Open Command Palette (Ctrl+Shift+P) and run **"Export as HTML"**
-4. Choose save location and filename
-5. The exported HTML includes:
-   - All styling and formatting
-   - Mermaid diagrams (rendered via CDN)
-   - Math formulas (rendered via KaTeX CDN)
+2. Click the **archive icon** in the toolbar, OR
+3. Open Command Palette (Ctrl+Shift+P) → **"Export Self-Contained HTML (Embed Images)"**
+4. Choose a save location
+5. The exported HTML is a single self-contained file with:
+   - All styling embedded
+   - Mermaid diagrams pre-rendered as PNG images
+   - Local images embedded as base64
    - RTL/LTR direction preserved
-   - Fully functional offline (after initial CDN load)
+   - No internet required to view
+
+### Exporting to Word (DOCX)
+
+1. Open a `.md` file in the RTF Markdown Editor
+2. Click the **W document icon** in the toolbar, OR
+3. Open Command Palette (Ctrl+Shift+P) → **"Export as Word Document (DOCX)"**
+4. Choose a save location
+5. Open the `.docx` in Microsoft Word, LibreOffice, or Google Docs
+
+The exported document preserves:
+- All headings, paragraphs, and text formatting
+- Tables with borders and shading
+- Code blocks styled as monospace
+- Mermaid diagrams as embedded PNG images
+- RTL text direction for Hebrew/Arabic documents
 
 ### Toolbar Controls
 
@@ -210,21 +204,23 @@ A rich text editor extension for VS Code that provides a Microsoft Word / Google
 - **⊞** — Insert table
 - **─** — Insert horizontal rule
 
-#### Direction
+#### Export & Direction
+- **Archive icon** — Export Self-Contained HTML
+- **W icon** — Export as Word Document (DOCX)
 - **RTL** — Toggle RTL/LTR mode
 
 ### Mermaid Diagrams
 
-The editor supports **both** standard Markdown and Azure DevOps Wiki syntax for Mermaid diagrams:
+The editor supports **both** standard Markdown and Azure DevOps Wiki syntax:
 
 **Standard Markdown (Triple Backticks):**
-```markdown
-\`\`\`mermaid
+````markdown
+```mermaid
 graph TD
   A[Start] --> B[Process]
   B --> C[End]
-\`\`\`
 ```
+````
 
 **Azure DevOps Wiki (Triple/Quad Colons):**
 ```markdown
@@ -235,23 +231,16 @@ graph TD
 ::::
 ```
 
-**Format Preservation:** The editor automatically preserves the original fence format when you save. If you use backticks, it saves as backticks. If you use colons, it saves as colons.
+**Format Preservation:** The editor preserves the original fence format on save.
 
 **To edit a diagram:**
-1. Click on the diagram placeholder
+1. Click on the diagram in the editor
 2. Edit the Mermaid source in the modal
 3. Click **Save**
 
-The diagram is automatically saved in your Markdown file using the original fence format.
-
-**Export Support:** When you export to HTML, Mermaid diagrams are included with:
-- The diagram source code embedded in the HTML
-- Mermaid.js loaded from CDN for client-side rendering
-- Full diagram interactivity preserved
+**Export Support:** Diagrams are pre-rendered to PNG images in both HTML and DOCX exports — fully offline, no CDN required.
 
 ### Math Formulas (Partially Supported)
-
-The editor supports LaTeX math formulas using KaTeX:
 
 **Block math:**
 ```markdown
@@ -265,8 +254,7 @@ This is inline $x^2$ math.
 
 **Limitations:**
 - ⚠️ HTML list wrapping with complex inline math may break across lines
-- ⚠️ Hebrew/Arabic text inside math mode (`\text{}`) is not supported—use English only
-- KaTeX rendering is offline and fully bundled
+- ⚠️ Hebrew/Arabic text inside math mode (`\text{}`) is not supported — use English only
 
 ### Autosave
 
@@ -280,29 +268,16 @@ Content hashing prevents unnecessary saves if no changes were made.
 
 ### RTL (Right-to-Left) Languages
 
-The editor defaults to RTL mode and automatically detects Hebrew and Arabic text.
+The editor auto-detects Hebrew and Arabic content and switches to RTL mode automatically.
 
-**To toggle RTL/LTR:**
+**To toggle RTL/LTR manually:**
 - Click the **RTL** button in the toolbar
 
-Alignment controls work correctly in both modes:
-- In RTL mode: left/right buttons are visually reversed
-- Alignment is automatically applied based on direction
+RTL is fully preserved in both exported HTML and DOCX files.
 
 ### Code Formatting
 
-**Important:** All code (inline and code blocks) always uses left alignment, regardless of RTL/LTR mode:
-- **Inline code**: `text-align: left` with `direction: ltr`
-- **Code blocks**: `text-align: left` with `direction: ltr`
-- **Rationale**: Code is language-neutral and follows universal programming conventions where:
-  - Variables, functions, and operators read left-to-right
-  - Indentation and alignment are critical for readability
-  - Mixing RTL with code would break syntax highlighting and formatting
-- **RTL Documents**: Even in RTL mode, code remains left-aligned for proper rendering
-- **Applies To**:
-  - Inline code spans (\`code\`)
-  - Fenced code blocks (\`\`\`language)
-  - All programming languages (JavaScript, Python, TypeScript, etc.)
+All code (inline and code blocks) always uses left alignment, regardless of RTL/LTR mode — following universal programming conventions.
 
 ## File Format
 
@@ -311,15 +286,9 @@ Files are always saved in **Markdown** format. The editor:
 2. Edits as WYSIWYG HTML
 3. Converts HTML → Markdown when saving
 4. Preserves all original Markdown syntax
-5. Preserves Mermaid `::: mermaid` blocks exactly
-
-### Round-Trip Stability
-
-Opening and saving a file without edits produces identical output. No unwanted reformatting.
 
 ## Keyboard Shortcuts
 
-All standard VS Code editor shortcuts work:
 - **Ctrl+Z** — Undo
 - **Ctrl+Shift+Z** — Redo
 - **Ctrl+B** — Bold
@@ -331,21 +300,22 @@ All standard VS Code editor shortcuts work:
 
 ## Offline Mode
 
-This extension is designed to work completely offline:
+This extension is designed to work **completely offline**:
 
 - ✅ No internet connection required
 - ✅ No CDN dependencies
 - ✅ No remote font loading
-- ✅ No cloud storage integration
-- ✅ Mermaid library is bundled locally
-- ✅ All fonts and styles are system fonts
+- ✅ Mermaid library bundled locally
+- ✅ All fonts are system fonts
+- ✅ HTML export is fully self-contained
+- ✅ DOCX export needs no external tools
 
-**The extension will function even with network completely disabled.**
+**The extension will function even with the network completely disabled.**
 
 ## Security
 
 - **Strict Content Security Policy (CSP)**: Prevents inline scripts, unsafe eval
-- **Webview URI Sandboxing**: All assets are loaded via `webview.asWebviewUri()`
+- **Webview URI Sandboxing**: All assets loaded via `webview.asWebviewUri()`
 - **No `unsafe-eval`**: Extension code is pre-compiled, no runtime code generation
 - **Local-only**: No data is sent to external servers
 
@@ -363,12 +333,16 @@ This extension is designed to work completely offline:
 
 ### Mermaid diagrams not showing
 - Check the Mermaid syntax using the official [Mermaid documentation](https://mermaid.js.org/)
-- Ensure you're using `::: mermaid` syntax (not ` ``` mermaid`)
+- Both ` ```mermaid ` and `::: mermaid` syntax are supported
 - Try clicking the diagram to edit and re-save
 
+### Mermaid diagrams blank in exported DOCX
+- Use the **toolbar button** (W icon) rather than the Command Palette — the toolbar path uses the already-initialized editor for reliable rendering
+- Ensure you have the file open in the RTF Markdown Editor (not just a text editor)
+
 ### RTL text not displaying correctly
-- Ensure the content includes Hebrew/Arabic characters, or manually enable RTL mode
-- Try toggling the RTL button in the toolbar
+- The editor auto-detects Hebrew/Arabic — ensure the content includes those characters
+- Toggle RTL manually with the **RTL** button in the toolbar
 
 ## Technical Stack
 
@@ -377,6 +351,7 @@ This extension is designed to work completely offline:
 - **Editor**: TipTap (ProseMirror)
 - **Markdown**: markdown-it
 - **Diagrams**: Mermaid (bundled locally)
+- **DOCX**: Custom Open XML builder (no external library)
 - **Build**: esbuild
 - **Runtime**: Node.js (extension host), Browser (webview)
 
@@ -415,10 +390,10 @@ MIT
 ## Support
 
 For issues, feature requests, or questions:
-- Open an issue on GitHub
+- Open an issue on [GitHub](https://github.com/NextGenPowerToys/rtf-markdown-editor)
 - Check existing issues for similar problems
 - Provide details about your environment and steps to reproduce
 
 ---
 
-**RTF Markdown Editor** — Offline, RTL-first, WYSIWYG Markdown editing for VS Code.
+**RTF Markdown Editor** — Offline, RTL-first, WYSIWYG Markdown editing for VS Code. Export to HTML and Word with one click.

@@ -2,6 +2,39 @@
 
 All notable changes to the RTF Markdown Editor extension will be documented in this file.
 
+## [1.2.0] - 2026-02-18
+
+### Added
+
+- **Export to Word (DOCX)** — One-click export of Markdown documents to `.docx` format
+  - Toolbar button (W document icon) for quick export from the editor
+  - Command Palette: `RTF Markdown: Export as Word Document (DOCX)`
+  - Opens natively in Microsoft Word, LibreOffice, and Google Docs
+  - No external libraries — built entirely with Node.js built-ins
+
+- **Mermaid Diagrams in DOCX** — Diagrams are exported as real embedded PNG images
+  - Stored as proper OOXML image parts (`word/media/mermaid_N.png`)
+  - Referenced via `<w:drawing>/<wp:inline>/<pic:pic>` elements — never blank boxes
+  - Proportional scaling to fit page width (capped at 16.5 cm / ~6.5 inches)
+  - PNG dimensions parsed directly from binary header (no library needed)
+
+- **RTL Support in DOCX** — Full right-to-left document support matching HTML export
+  - Auto-detects Hebrew/Arabic content using the same `RTLService` as HTML export
+  - Sets `<w:bidi/>` in `<w:sectPr>` for document-level RTL direction in Word
+  - Each `altChunk` HTML segment gets `<html dir="rtl">` so CSS RTL rules apply
+  - RTL can be overridden explicitly via the `rtl` option in `DocxExportOptions`
+
+### Technical
+
+- **`src/utils/docxExporter.ts`** — New file implementing the full DOCX pipeline:
+  - `splitAtMermaidDivs()` — splits generated HTML at `data-mdwe="mermaid-rendered"` boundaries
+  - `wrapAsHtml()` — wraps text segments as standalone HTML documents for `altChunk`
+  - `drawingXml()` — generates complete OOXML inline-image XML per Mermaid PNG
+  - `buildDocumentXml()` — interleaves `<w:altChunk>` (text) and `<w:drawing>` (images)
+  - Fast path for documents without Mermaid diagrams (single altChunk)
+- **`src/utils/zipWriter.ts`** — Minimal ZIP builder (DEFLATE via `zlib`, manual CRC-32)
+- **`media/editor.ts`** — DOCX export toolbar button added to the RTL/export group
+
 ## [1.1.5] - 2026-02-02
 
 ### Changed
