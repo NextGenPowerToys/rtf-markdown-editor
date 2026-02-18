@@ -379,7 +379,6 @@ function createToolbar(container: HTMLElement) {
   const rtlGroup = document.createElement('div');
   rtlGroup.className = 'toolbar-group';
   rtlGroup.innerHTML = `
-    <button class="toolbar-btn" id="export-btn" title="Export as HTML">${icons.download}</button>
     <button class="toolbar-btn" id="export-self-contained-btn" title="Export Self-Contained HTML (images embedded)">${icons.archive}</button>
     <button class="toolbar-btn ${editorConfig.rtl ? 'active' : ''}" id="rtl-btn" title="Toggle RTL/LTR">${icons.rtl}</button>
   `;
@@ -614,22 +613,6 @@ function attachToolbarEventListeners() {
 
   document.getElementById('hr-btn')?.addEventListener('click', () => {
     editor!.chain().focus().setHorizontalRule().run();
-  });
-
-  // Export HTML
-  document.getElementById('export-btn')?.addEventListener('click', () => {
-    if (!editor) return;
-
-    const html = editor.getHTML();
-    vscode.postMessage({
-      type: 'exportHTML',
-      options: {
-        title: 'Document',
-        includeStyles: true,
-        includeScripts: true,
-        standalone: true,
-      },
-    });
   });
 
   // Export Self-Contained HTML (images embedded as base64)
