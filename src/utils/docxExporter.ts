@@ -17,6 +17,7 @@
  */
 import { exportToHTML } from './htmlExporter';
 import { ZipWriter } from './zipWriter';
+import { RTLService } from '../services/RTLService';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -31,6 +32,8 @@ export interface DocxExportOptions {
   mermaidImages?: Record<string, string>;
   /** Absolute directory path used to resolve relative image src values */
   basePath?: string;
+  /** Enable RTL mode (auto-detect from markdown if not specified) */
+  rtl?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -125,13 +128,14 @@ function splitAtMermaidDivs(bodyContent: string): Segment[] {
 }
 
 /** Wrap an HTML fragment as a complete standalone HTML document. */
-function wrapAsHtml(content: string, title: string, css: string): string {
+function wrapAsHtml(content: string, title: string, css: string, isRTL: boolean): string {
   const safe = title
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
+  const dir = isRTL ? ' dir="rtl"' : '';
   return `<!DOCTYPE html>
-<html>
+<html${dir}>
 <head>
   <meta charset="UTF-8">
   <title>${safe}</title>
@@ -263,7 +267,7 @@ ${lines.join('\n')}
 </Relationships>`;
 }
 
-function buildDocumentXml(segments: Segment[], pngBuffers: Buffer[]): string {
+function buildDocumentXml(segments: Segment[], pngBuffers: Buffer[], isRTL: boolean): string {
   let chunkIdx = 0;
   let imgIdx   = 0;
   const bodyParts: string[] = [];
@@ -278,10 +282,11 @@ function buildDocumentXml(segments: Segment[], pngBuffers: Buffer[]): string {
   }
 
   // Minimal section properties (US Letter page, 1-inch margins)
+  const bidi = isRTL ? '\n      <w:bidi/>' : '';
   const sectPr = `    <w:sectPr>
       <w:pgSz w:w="12240" w:h="15840"/>
       <w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"
-               w:header="720" w:footer="720" w:gutter="0"/>
+               w:header="720" w:footer="720" w:gutter="0"/>${bidi}
     </w:sectPr>`;
 
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -302,7 +307,7 @@ ${sectPr}
 // Simple single-altChunk path (no Mermaid diagrams)
 // ---------------------------------------------------------------------------
 
-function buildSimpleDocx(html: string): Buffer {
+function buildSimpleDocx(html: string, isRTL: boolean): Buffer {
   const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
   <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
@@ -312,6 +317,7 @@ function buildSimpleDocx(html: string): Buffer {
   <Override PartName="/afchunk_0.htm" ContentType="text/html"/>
 </Types>`;
 
+  const bidi = isRTL ? '\n      <w:bidi/>' : '';
   const documentXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:document
   xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
@@ -321,7 +327,7 @@ function buildSimpleDocx(html: string): Buffer {
     <w:sectPr>
       <w:pgSz w:w="12240" w:h="15840"/>
       <w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"
-               w:header="720" w:footer="720" w:gutter="0"/>
+               w:header="720" w:footer="720" w:gutter="0"/>${bidi}
     </w:sectPr>
   </w:body>
 </w:document>`;
@@ -361,7 +367,10 @@ export async function exportToDOCX(
   markdown: string,
   options: DocxExportOptions = {}
 ): Promise<Buffer> {
-  const { title = 'Untitled', mermaidImages, basePath } = options;
+  const { title = 'Untitled', mermaidImages, basePath, rtl } = options;
+
+  // Mirror htmlExporter.ts: auto-detect RTL when not explicitly specified
+  const isRTL = rtl !== undefined ? rtl : RTLService.detectRTLCharacters(markdown);
 
   // Generate fully self-contained HTML (local images base64-embedded,
   // Mermaid PNGs injected as data URIs via replaceMermaidWithImages).
@@ -372,11 +381,12 @@ export async function exportToDOCX(
     selfContained: true,
     basePath,
     mermaidImages,
+    rtl: isRTL,
   });
 
   // Fast path: no Mermaid diagrams → single altChunk for the whole document
   if (!html.includes('data-mdwe="mermaid-rendered"')) {
-    return buildSimpleDocx(html);
+    return buildSimpleDocx(html, isRTL);
   }
 
   // --- Mermaid path: split HTML at mermaid-rendered boundaries ---
@@ -401,14 +411,14 @@ export async function exportToDOCX(
   // Package-level manifests
   zip.addFile('[Content_Types].xml',          Buffer.from(buildContentTypesXml(chunkCount, pngCount), 'utf8'));
   zip.addFile('_rels/.rels',                  Buffer.from(relsXml(),                                  'utf8'));
-  zip.addFile('word/document.xml',            Buffer.from(buildDocumentXml(segments, pngBuffers),      'utf8'));
+  zip.addFile('word/document.xml',            Buffer.from(buildDocumentXml(segments, pngBuffers, isRTL), 'utf8'));
   zip.addFile('word/_rels/document.xml.rels', Buffer.from(buildDocumentRelsXml(chunkCount, pngCount),  'utf8'));
 
   // HTML chunks for text segments
   let chunkIdx = 0;
   for (const seg of segments) {
     if (seg.type === 'html') {
-      const wrapped = wrapAsHtml(seg.content, title, css);
+      const wrapped = wrapAsHtml(seg.content, title, css, isRTL);
       zip.addFile(`afchunk_${chunkIdx}.htm`, Buffer.from(wrapped, 'utf8'));
       chunkIdx++;
     }
