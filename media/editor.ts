@@ -380,6 +380,7 @@ function createToolbar(container: HTMLElement) {
   rtlGroup.className = 'toolbar-group';
   rtlGroup.innerHTML = `
     <button class="toolbar-btn" id="export-self-contained-btn" title="Export Self-Contained HTML (images embedded)">${icons.archive}</button>
+    <button class="toolbar-btn" id="export-docx-btn" title="Export as Word Document (DOCX)"><svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M4 3h8l4 4v11H4z" opacity="0.25"/><path d="M12 3l4 4h-4z"/><path d="M5.5 10h1.3l.7 3.2.8-2.1.8 2.1.7-3.2H11l-1.3 5H8.3l-.8-2-.8 2H5.3L4 10H5.5z"/></svg></button>
     <button class="toolbar-btn ${editorConfig.rtl ? 'active' : ''}" id="rtl-btn" title="Toggle RTL/LTR">${icons.rtl}</button>
   `;
   container.appendChild(rtlGroup);
@@ -619,6 +620,12 @@ function attachToolbarEventListeners() {
   document.getElementById('export-self-contained-btn')?.addEventListener('click', () => {
     if (!editor) return;
     vscode.postMessage({ type: 'exportHTMLSelfContained' });
+  });
+
+  // Export as Word Document (DOCX) — uses the already-loaded Mermaid instance
+  document.getElementById('export-docx-btn')?.addEventListener('click', () => {
+    if (!editor) return;
+    vscode.postMessage({ type: 'exportDOCX' });
   });
 
   // RTL toggle
