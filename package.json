@@ -71,6 +71,11 @@
         "command": "rtf-markdown-editor.openEditor",
         "title": "Edit with RTF Markdown Editor",
         "category": "RTF Markdown"
+      },
+      {
+        "command": "rtf-markdown-editor.exportHTMLSelfContained",
+        "title": "Export Self-Contained HTML (Embed Images)",
+        "category": "RTF Markdown"
       }
     ],
     "configuration": {

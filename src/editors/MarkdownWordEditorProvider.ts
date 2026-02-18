@@ -180,6 +180,13 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
       case 'exportHTML':
         this.handleExportHTML(document, message.options, panel);
         break;
+
+      case 'exportHTMLSelfContained':
+        this.handleExportHTML(document, {
+          selfContained: true,
+          basePath: path.dirname(document.uri.fsPath),
+        }, panel);
+        break;
     }
   }
 

@@ -1,3 +1,5 @@
+import * as fs from 'fs';
+import * as path from 'path';
 import { markdownToHtml } from './markdownProcessor';
 import { RTLService } from '../services/RTLService';
 
@@ -21,6 +23,10 @@ export interface ExportOptions {
   rtl?: boolean;
   /** Include markdown source as HTML comment (default: false) */
   includeSourceMarkdown?: boolean;
+  /** Embed local images as base64 data URLs for a portable single-file export (default: false) */
+  selfContained?: boolean;
+  /** Absolute directory path used to resolve relative image src paths when selfContained is true */
+  basePath?: string;
 }
 
 /**
@@ -365,6 +371,7 @@ export async function exportToHTML(
     title = 'Untitled',
     rtl: explicitRTL,
     includeSourceMarkdown = false,
+    selfContained = false,
   } = options;
 
   // Convert markdown to HTML
@@ -388,13 +395,14 @@ export async function exportToHTML(
   let contentHTML = `<div class="editor-content">${html}</div>`;
 
   // If standalone, wrap in complete HTML document
+  let output: string;
   if (standalone) {
     const dir = isRTL ? ' dir="rtl"' : '';
     const css = includeStyles ? `<style>\n${EDITOR_CSS}\n${KATEX_CSS}\n</style>` : '';
     const scripts = includeScripts ? `${MERMAID_SCRIPT}\n${KATEX_SCRIPT}` : '';
     const sourceComment = includeSourceMarkdown ? `\n<!-- Source Markdown:\n${escapeHtmlComment(markdown)}\n-->` : '';
 
-    return `<!DOCTYPE html>
+    output = `<!DOCTYPE html>
 <html${dir}>
 <head>
   <meta charset="UTF-8">
@@ -407,9 +415,15 @@ export async function exportToHTML(
   ${scripts}${sourceComment}
 </body>
 </html>`;
+  } else {
+    output = contentHTML;
   }
 
-  return contentHTML;
+  if (selfContained && options.basePath) {
+    output = await embedImages(output, options.basePath);
+  }
+
+  return output;
 }
 
 /**
@@ -458,6 +472,39 @@ function escapeHtmlComment(text: string): string {
 }
 
 /**
+ * Embed local images as base64 data URLs for self-contained HTML export.
+ * Remote URLs and existing data: URLs are left unchanged.
+ * Missing files are silently skipped (graceful degradation).
+ */
+async function embedImages(html: string, basePath: string): Promise<string> {
+  const imgPattern = /<img([^>]*?)src="([^"]+)"([^>]*?)>/gi;
+  const matches = [...html.matchAll(imgPattern)];
+
+  for (const match of matches) {
+    const [full, pre, src, post] = match;
+    if (src.startsWith('data:') || src.startsWith('http://') || src.startsWith('https://')) {
+      continue;
+    }
+    try {
+      const absPath = path.isAbsolute(src) ? src : path.join(basePath, src);
+      const buffer = fs.readFileSync(absPath);
+      const ext = path.extname(absPath).slice(1).toLowerCase();
+      const mime =
+        ext === 'svg' ? 'image/svg+xml' :
+        ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' :
+        ext === 'webp' ? 'image/webp' :
+        ext === 'gif' ? 'image/gif' :
+        `image/${ext}`;
+      const dataUrl = `data:${mime};base64,${buffer.toString('base64')}`;
+      html = html.replace(full, `<img${pre}src="${dataUrl}"${post}>`);
+    } catch {
+      // Image file not found — leave src unchanged
+    }
+  }
+  return html;
+}
+
+/**
  * Get export options preset for different use cases
  */
 export const ExportPresets = {
@@ -495,5 +542,15 @@ export const ExportPresets = {
     preRenderMermaid: false,
     preRenderMath: false,
     standalone: false,
+  }),
+
+  /** Fully portable single-file HTML with images embedded as base64 */
+  selfContained: (): ExportOptions => ({
+    includeStyles: true,
+    includeScripts: true,
+    preRenderMermaid: false,
+    preRenderMath: false,
+    standalone: true,
+    selfContained: true,
   }),
 };

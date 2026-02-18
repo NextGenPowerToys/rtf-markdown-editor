@@ -73,6 +73,46 @@ export function activate(context: vscode.ExtensionContext) {
       }
     })
   );
+
+  // Register command to export as self-contained HTML (images embedded as base64)
+  context.subscriptions.push(
+    vscode.commands.registerCommand('rtf-markdown-editor.exportHTMLSelfContained', async () => {
+      const editor = vscode.window.activeTextEditor;
+      if (!editor || !editor.document.fileName.endsWith('.md')) {
+        vscode.window.showErrorMessage('Please open a markdown file first');
+        return;
+      }
+
+      try {
+        const buffer = fs.readFileSync(editor.document.uri.fsPath);
+        const charset = detectCharset(buffer);
+        const markdown = iconv.decode(buffer, charset);
+
+        const docName = path.basename(editor.document.uri.fsPath, path.extname(editor.document.uri.fsPath));
+
+        const html = await exportToHTML(markdown, {
+          title: docName,
+          includeStyles: true,
+          includeScripts: true,
+          standalone: true,
+          selfContained: true,
+          basePath: path.dirname(editor.document.uri.fsPath),
+        });
+
+        const uri = await vscode.window.showSaveDialog({
+          defaultUri: vscode.Uri.file(path.join(path.dirname(editor.document.uri.fsPath), `${docName}.html`)),
+          filters: { 'HTML Files': ['html'] },
+        });
+
+        if (uri) {
+          fs.writeFileSync(uri.fsPath, html, 'utf8');
+          vscode.window.showInformationMessage(`Self-contained HTML exported to ${path.basename(uri.fsPath)}`);
+        }
+      } catch (error) {
+        vscode.window.showErrorMessage(`Failed to export self-contained HTML: ${error}`);
+      }
+    })
+  );
 }
 
 /**

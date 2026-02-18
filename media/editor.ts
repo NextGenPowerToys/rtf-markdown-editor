@@ -37,6 +37,7 @@ const icons = {
   table: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M3 4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1H3zm0 1h14v3h-3V5H9v3H3V5zm0 4h5v3H3V9zm6 0h3v3H9V9zm4 0h4v3h-4V9zM3 13h5v2H3v-2zm6 0h3v2H9v-2zm4 0h4v2h-4v-2z"/></svg>',
   hr: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M2 9.5h16v1H2v-1z"/></svg>',
   download: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a.5.5 0 0 1 .5.5v10.086l2.793-2.793a.5.5 0 1 1 .707.707l-4 4a.5.5 0 0 1-.707 0l-4-4a.5.5 0 1 1 .707-.707L9.5 12.586V2.5A.5.5 0 0 1 10 2zm-6 14h12v1H4v-1z"/></svg>',
+  archive: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M2 4.5A2.5 2.5 0 0 1 4.5 2h11A2.5 2.5 0 0 1 18 4.5V5h.5a.5.5 0 0 1 0 1H18v9.5a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 2 15.5V6H1.5a.5.5 0 0 1 0-1H2v-.5zm1 1.5h14v-.5a1.5 1.5 0 0 0-1.5-1.5h-11A1.5 1.5 0 0 0 3 4.5V6zm0 1v8.5A1.5 1.5 0 0 0 4.5 17h11a1.5 1.5 0 0 0 1.5-1.5V7H3zm4 3h6a.5.5 0 0 1 0 1H7a.5.5 0 0 1 0-1z"/></svg>',
   rtl: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M3 4.5h14v1H3v-1zm0 5h10v1H3v-1zm0 5h14v1H3v-1z"/><path d="M14.5 9.5l2.5 2.5-2.5 2.5v-1.5h-4v-2h4v-1.5z"/></svg>',
   math: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M2 5h1v10H2V5zm3.5 0c-.276 0-.5.224-.5.5v3.414L3.793 7.207a.5.5 0 1 0-.707.707L4.293 10l-1.207 1.207a.5.5 0 1 0 .707.707L5.5 11.086V14.5c0 .276.224.5.5.5s.5-.224.5-.5v-3.414l1.207 1.207a.5.5 0 1 0 .707-.707L6.707 10l1.207-1.207a.5.5 0 0 0-.707-.707L6.5 8.914V5.5c0-.276-.224-.5-.5-.5zm7 0h3.5c1.381 0 2.5 1.119 2.5 2.5v5c0 1.381-1.119 2.5-2.5 2.5h-3.5c-.276 0-.5-.224-.5-.5s.224-.5.5-.5h3.5c.829 0 1.5-.671 1.5-1.5v-5c0-.829-.671-1.5-1.5-1.5h-3.5c-.276 0-.5-.224-.5-.5s.224-.5.5-.5zm9 0h1v10h-1V5z"/></svg>',
 };
@@ -361,6 +362,7 @@ function createToolbar(container: HTMLElement) {
   rtlGroup.className = 'toolbar-group';
   rtlGroup.innerHTML = `
     <button class="toolbar-btn" id="export-btn" title="Export as HTML">${icons.download}</button>
+    <button class="toolbar-btn" id="export-self-contained-btn" title="Export Self-Contained HTML (images embedded)">${icons.archive}</button>
     <button class="toolbar-btn ${editorConfig.rtl ? 'active' : ''}" id="rtl-btn" title="Toggle RTL/LTR">${icons.rtl}</button>
   `;
   container.appendChild(rtlGroup);
@@ -599,7 +601,7 @@ function attachToolbarEventListeners() {
   // Export HTML
   document.getElementById('export-btn')?.addEventListener('click', () => {
     if (!editor) return;
-    
+
     const html = editor.getHTML();
     vscode.postMessage({
       type: 'exportHTML',
@@ -610,6 +612,12 @@ function attachToolbarEventListeners() {
         standalone: true,
       },
     });
+  });
+
+  // Export Self-Contained HTML (images embedded as base64)
+  document.getElementById('export-self-contained-btn')?.addEventListener('click', () => {
+    if (!editor) return;
+    vscode.postMessage({ type: 'exportHTMLSelfContained' });
   });
 
   // RTL toggle
