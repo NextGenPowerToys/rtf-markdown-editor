@@ -2,9 +2,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { markdownToHtml } from './markdownProcessor';
 import { RTLService } from '../services/RTLService';
-import * as fs from 'fs';
-import * as path from 'path';
-import mermaid from 'mermaid';
 
 /**
  * Load bundled Mermaid library from media folder
@@ -73,6 +70,9 @@ export interface ExportOptions {
   selfContained?: boolean;
   /** Absolute directory path used to resolve relative image src paths when selfContained is true */
   basePath?: string;
+  /** Pre-rendered Mermaid diagrams as PNG data URLs (data:image/png;base64,...).
+   * When provided, mermaid source injection and the bundled mermaid.js script are skipped. */
+  mermaidImages?: Record<string, string>;
 }
 
 /**
@@ -390,65 +390,30 @@ document.querySelectorAll('.math-display, .math-inline').forEach(function(el) {
 }
 
 /**
- * Pre-render Mermaid diagrams to SVG
- * Uses the bundled Mermaid library (same as VS Code extension)
- * @param mermaidSources Map of diagram IDs to diagram source code
- * @returns Promise with map of diagram IDs to SVG strings
+ * Replace mermaid placeholder divs with <img> tags containing pre-rendered PNG data URLs.
+ * Diagrams absent from mermaidImages are left as placeholder divs for fallback handling.
  */
-async function preRenderMermaidDiagrams(
-  mermaidSources: Record<string, string>
-): Promise<Record<string, string>> {
-  try {
-    // Initialize Mermaid with offline config (same as editor)
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: 'default',
-      flowchart: {
-        htmlLabels: false,
-        useMaxWidth: true,
-        padding: 15,
-        nodeSpacing: 50,
-        rankSpacing: 50
-      }
-    });
-
-    const svgResults: Record<string, string> = {};
-    
-    for (const [id, source] of Object.entries(mermaidSources)) {
-      try {
-        // Pre-process source to handle <br/> tags (same as editor)
-        const processedSource = source.replace(/<br\s*\/?>/gi, '\n');
-        
-        // Render using Mermaid (same API as editor)
-        const { svg } = await mermaid.render(id, processedSource);
-        svgResults[id] = svg;
-      } catch (error) {
-        console.warn(`Failed to pre-render Mermaid diagram ${id}:`, error);
-        // Fall back to returning empty (will skip SVG replacement)
-        svgResults[id] = '';
-      }
-    }
-    return svgResults;
-  } catch (error) {
-    console.warn('Mermaid pre-rendering error:', error);
-    return {};
-  }
-}
-
-/**
- * Replace mermaid div with SVG content
- */
-function replaceMermaidWithSVG(
+function replaceMermaidWithImages(
   html: string,
-  mermaidId: string,
-  svg: string
+  mermaidImages: Record<string, string>,
+  mermaidSources: Record<string, string>
 ): string {
-  // Find the div containing the mermaid source and replace with SVG
-  const divPattern = new RegExp(
-    `<div class="mermaid" data-mdwe="mermaid" data-id="${mermaidId}"[^>]*>.*?</div>`,
-    's'
-  );
-  return html.replace(divPattern, `<div class="mermaid-svg" data-mdwe="mermaid-rendered">${svg}</div>`);
+  for (const [mermaidId, dataUrl] of Object.entries(mermaidImages)) {
+    const divPattern = new RegExp(
+      `<div\\s+data-mdwe="mermaid"\\s+data-id="${mermaidId}"[^>]*>\\s*</div>`,
+      'g'
+    );
+    const firstLine = (mermaidSources[mermaidId] || '').split('\n')[0].trim();
+    const altText = escapeHtmlAttribute(`Mermaid diagram: ${firstLine}`);
+    html = html.replace(divPattern,
+      `<div class="mermaid-png" data-mdwe="mermaid-rendered" data-id="${mermaidId}" ` +
+      `style="text-align:center;margin:16px 0;">` +
+      `<img src="${dataUrl}" alt="${altText}" ` +
+      `style="max-width:100%;height:auto;display:inline-block;border:none;border-radius:0;">` +
+      `</div>`
+    );
+  }
+  return html;
 }
 
 /**
@@ -468,22 +433,44 @@ export async function exportToHTML(
     rtl: explicitRTL,
     includeSourceMarkdown = false,
     selfContained = false,
+    mermaidImages,
   } = options;
 
   // Convert markdown to HTML
   let { html, mermaidSources } = markdownToHtml(markdown);
 
-  // Inject mermaid source code into the placeholder divs (client-side rendering)
+  const hasMermaidImages = mermaidImages && Object.keys(mermaidImages).length > 0;
 
-  // Inject mermaid source code into the remaining placeholder divs (for client-side rendering)
-  for (const [mermaidId, source] of Object.entries(mermaidSources)) {
-    const placeholder = `<div data-mdwe="mermaid" data-id="${mermaidId}"`;
-    const replacement = `<div class="mermaid" data-mdwe="mermaid" data-id="${mermaidId}"`;
-    html = html.replace(placeholder, replacement);
-    
-    // Find and replace the empty div with one containing the source
-    const emptyDivPattern = new RegExp(`<div class="mermaid" data-mdwe="mermaid" data-id="${mermaidId}"[^>]*></div>`, 'g');
-    html = html.replace(emptyDivPattern, `<div class="mermaid" data-mdwe="mermaid" data-id="${mermaidId}">${escapeHtml(source)}</div>`);
+  if (hasMermaidImages) {
+    // Pre-rendered path: replace placeholder divs with <img> tags
+    html = replaceMermaidWithImages(html, mermaidImages!, mermaidSources);
+
+    // Diagrams that failed to render: show source as a styled code block fallback
+    for (const [mermaidId, source] of Object.entries(mermaidSources)) {
+      if (!mermaidImages![mermaidId]) {
+        const pattern = new RegExp(
+          `<div\\s+data-mdwe="mermaid"\\s+data-id="${mermaidId}"[^>]*>\\s*</div>`,
+          'g'
+        );
+        html = html.replace(pattern,
+          `<div class="mermaid-fallback" data-mdwe="mermaid-fallback" data-id="${mermaidId}" ` +
+          `style="margin:16px 0;padding:12px;background:#f6f8fa;border:1px solid #e1e4e8;` +
+          `border-radius:6px;font-family:monospace;font-size:0.875em;white-space:pre-wrap;">` +
+          escapeHtml(source) +
+          `</div>`
+        );
+      }
+    }
+  } else {
+    // Client-side rendering path: inject mermaid source into placeholder divs
+    for (const [mermaidId, source] of Object.entries(mermaidSources)) {
+      const placeholder = `<div data-mdwe="mermaid" data-id="${mermaidId}"`;
+      const replacement = `<div class="mermaid" data-mdwe="mermaid" data-id="${mermaidId}"`;
+      html = html.replace(placeholder, replacement);
+
+      const emptyDivPattern = new RegExp(`<div class="mermaid" data-mdwe="mermaid" data-id="${mermaidId}"[^>]*></div>`, 'g');
+      html = html.replace(emptyDivPattern, `<div class="mermaid" data-mdwe="mermaid" data-id="${mermaidId}">${escapeHtml(source)}</div>`);
+    }
   }
 
   // Detect RTL if not explicitly specified
@@ -497,10 +484,10 @@ export async function exportToHTML(
   if (standalone) {
     const dir = isRTL ? ' dir="rtl"' : '';
     const css = includeStyles ? `<style>\n${EDITOR_CSS}\n${KATEX_CSS}\n</style>` : '';
-    // Use bundled scripts for offline support
-    const mermaidScript = getBundledMermaidScript();
+    // Only include bundled mermaid.js when diagrams are NOT pre-rendered as images
+    const mermaidScript = hasMermaidImages ? '' : getBundledMermaidScript();
     const kaTeXScript = getKaTeXScript();
-    const scripts = `${mermaidScript}\n${kaTeXScript}`;
+    const scripts = mermaidScript ? `${mermaidScript}\n${kaTeXScript}` : kaTeXScript;
     const sourceComment = includeSourceMarkdown ? `\n<!-- Source Markdown:\n${escapeHtmlComment(markdown)}\n-->` : '';
 
     output = `<!DOCTYPE html>
@@ -645,9 +632,6 @@ export const ExportPresets = {
   /** Fully portable single-file HTML with images embedded as base64 */
   selfContained: (): ExportOptions => ({
     includeStyles: true,
-    includeScripts: true,
-    preRenderMermaid: false,
-    preRenderMath: false,
     standalone: true,
     selfContained: true,
   }),

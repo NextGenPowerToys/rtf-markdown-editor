@@ -5,6 +5,8 @@ import * as path from 'path';
 import * as iconv from 'iconv-lite';
 import * as chardet from 'chardet';
 import { exportToHTML } from './utils/htmlExporter';
+import { extractMermaidBlocks } from './utils/markdownProcessor';
+import { renderMermaidToPng } from './utils/mermaidRenderer';
 
 export function activate(context: vscode.ExtensionContext) {
   const provider = new MarkdownWordEditorProvider(context);
@@ -50,12 +52,22 @@ export function activate(context: vscode.ExtensionContext) {
         // Get document name for title
         const docName = path.basename(editor.document.uri.fsPath, path.extname(editor.document.uri.fsPath));
 
+        // Pre-render Mermaid diagrams to PNG using a hidden webview
+        const { mermaidSources } = extractMermaidBlocks(markdown);
+        let mermaidImages: Record<string, string> = {};
+        if (Object.keys(mermaidSources).length > 0) {
+          await vscode.window.withProgress(
+            { location: vscode.ProgressLocation.Notification, title: 'Exporting HTML: rendering Mermaid diagrams...', cancellable: false },
+            async () => { mermaidImages = await renderMermaidToPng(mermaidSources, context); }
+          );
+        }
+
         // Generate HTML
         const html = await exportToHTML(markdown, {
           title: docName,
           includeStyles: true,
-          includeScripts: true,
           standalone: true,
+          mermaidImages,
         });
 
         // Ask user where to save
@@ -90,13 +102,23 @@ export function activate(context: vscode.ExtensionContext) {
 
         const docName = path.basename(editor.document.uri.fsPath, path.extname(editor.document.uri.fsPath));
 
+        // Pre-render Mermaid diagrams to PNG using a hidden webview
+        const { mermaidSources } = extractMermaidBlocks(markdown);
+        let mermaidImages: Record<string, string> = {};
+        if (Object.keys(mermaidSources).length > 0) {
+          await vscode.window.withProgress(
+            { location: vscode.ProgressLocation.Notification, title: 'Exporting HTML: rendering Mermaid diagrams...', cancellable: false },
+            async () => { mermaidImages = await renderMermaidToPng(mermaidSources, context); }
+          );
+        }
+
         const html = await exportToHTML(markdown, {
           title: docName,
           includeStyles: true,
-          includeScripts: true,
           standalone: true,
           selfContained: true,
           basePath: path.dirname(editor.document.uri.fsPath),
+          mermaidImages,
         });
 
         const uri = await vscode.window.showSaveDialog({

@@ -4,7 +4,7 @@ import * as path from 'path';
 import * as chardet from 'chardet';
 import * as iconv from 'iconv-lite';
 import { MessageFromWebview, MessageToWebview, EditorConfig, MarkdownMetadata } from '../types';
-import { markdownToHtml, detectRTLCharacters } from '../utils/markdownProcessor';
+import { markdownToHtml, detectRTLCharacters, extractMermaidBlocks } from '../utils/markdownProcessor';
 import { htmlToMarkdown, hashContent } from '../utils/htmlProcessor';
 import { RTLService } from '../services/RTLService';
 import { exportToHTML, ExportOptions } from '../utils/htmlExporter';
@@ -317,10 +317,17 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
       const markdown = document.getContent();
       const docName = path.basename(document.uri.fsPath, path.extname(document.uri.fsPath));
 
+      // Pre-render Mermaid diagrams to PNG via the already-open editor webview
+      const { mermaidSources } = extractMermaidBlocks(markdown);
+      const mermaidImages = Object.keys(mermaidSources).length > 0
+        ? await this.renderMermaidViaWebview(panel, mermaidSources)
+        : {};
+
       // Generate HTML
       const html = await exportToHTML(markdown, {
         ...options,
         title: docName,
+        mermaidImages,
       });
 
       // Ask user where to save
@@ -337,6 +344,36 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
     } catch (error) {
       vscode.window.showErrorMessage(`Failed to export HTML: ${error}`);
     }
+  }
+
+  /**
+   * Ask the already-open editor webview to render Mermaid sources to PNG data URLs.
+   * Returns a map of diagram IDs to PNG data URLs. Returns {} on timeout.
+   */
+  private renderMermaidViaWebview(
+    panel: vscode.WebviewPanel,
+    mermaidSources: Record<string, string>,
+    timeoutMs = 30000
+  ): Promise<Record<string, string>> {
+    return new Promise<Record<string, string>>((resolve) => {
+      const timer = setTimeout(() => {
+        disposable.dispose();
+        resolve({});
+      }, timeoutMs);
+
+      const disposable = panel.webview.onDidReceiveMessage((msg) => {
+        if (msg.type === 'mermaidExportReady') {
+          clearTimeout(timer);
+          disposable.dispose();
+          resolve(msg.mermaidImages || {});
+        }
+      });
+
+      panel.webview.postMessage({
+        type: 'renderMermaidForExport',
+        mermaidSources,
+      });
+    });
   }
 
   private convertImagePathsToWebviewUris(html: string, documentUri: vscode.Uri, webview: vscode.Webview): string {

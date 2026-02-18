@@ -1439,6 +1439,33 @@ function handleMessageFromExtension(message: MessageToWebview) {
       console.error('Editor error:', message.message);
       break;
 
+    case 'renderMermaidForExport':
+      // Render mermaid sources to PNG data URLs for HTML export using the existing mermaid instance.
+      (async () => {
+        const sources = message.mermaidSources || {};
+        const exportImages: Record<string, string> = {};
+        for (const [diagramId, source] of Object.entries(sources) as [string, string][]) {
+          try {
+            // Same preprocessing as renderMermaidDiagrams()
+            let processed = source.replace(
+              /^[\t ]*participant\s+([a-zA-Z0-9_\-]+)\s+as\s+([^"\n]+?)(?:\s*)$/gm,
+              (match: string, participantId: string, alias: string) => {
+                const trimmed = alias.trim();
+                if (trimmed.startsWith('"') && trimmed.endsWith('"')) { return match; }
+                return `\tparticipant ${participantId} as "${trimmed}"`;
+              }
+            );
+            processed = processed.replace(/<br\s*\/?>/gi, '\\n');
+            const { svg } = await mermaid.render('mermaid-export-' + diagramId, processed);
+            exportImages[diagramId] = await mermaidSvgToPng(svg);
+          } catch (err) {
+            console.error(`[Mermaid Export] Failed to render ${diagramId}:`, err);
+          }
+        }
+        vscode.postMessage({ type: 'mermaidExportReady', mermaidImages: exportImages } as MessageFromWebview);
+      })();
+      break;
+
     case 'imageSaved':
       if (editor && message.imagePath) {
         // Use imageUrl for display (webview URI), but store imagePath (relative path) in src attribute
@@ -1576,6 +1603,50 @@ function renderMermaidDiagrams() {
       console.error(`[Mermaid] Error processing diagram ${mermaidId}:`, error);
       element.innerHTML = `<div style="color: #d13438; padding: 12px; background: #fff4f4; border: 1px solid #f0adac; border-radius: 4px; font-size: 12px;">Error: ${error instanceof Error ? error.message : String(error)}</div>`;
     }
+  });
+}
+
+/**
+ * Convert an SVG string to a PNG data URL via an off-screen canvas.
+ * Parses viewBox for correct dimensions and fills with a white background.
+ */
+function mermaidSvgToPng(svgString: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const parser = new DOMParser();
+    const svgDoc = parser.parseFromString(svgString, 'image/svg+xml');
+    const svgEl = svgDoc.querySelector('svg');
+    let width = 1200, height = 800;
+    if (svgEl) {
+      const vb = svgEl.getAttribute('viewBox');
+      if (vb) {
+        const parts = vb.trim().split(/[\s,]+/);
+        if (parts.length >= 4) {
+          width = parseFloat(parts[2]) || width;
+          height = parseFloat(parts[3]) || height;
+        }
+      } else {
+        width = parseFloat(svgEl.getAttribute('width') || '') || width;
+        height = parseFloat(svgEl.getAttribute('height') || '') || height;
+      }
+    }
+    // Use a data: URL instead of blob: — the webview CSP allows img-src data: but not blob:
+    const svgBase64 = btoa(unescape(encodeURIComponent(svgString)));
+    const dataUrl = 'data:image/svg+xml;base64,' + svgBase64;
+    const img = new window.Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d')!;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/png'));
+    };
+    img.onerror = () => {
+      reject(new Error('SVG to PNG conversion failed'));
+    };
+    img.src = dataUrl;
   });
 }
 
