@@ -304,6 +304,11 @@ export function htmlToMarkdown(html: string, mermaidSources: Record<string, stri
     console.log(`[htmlToMarkdown] Restored code block ${index} from marker`);
   });
 
+  // Fix: Word import (mammoth) wraps <li> content in <p> with surrounding whitespace,
+  // resulting in the bullet marker "- " sitting alone on its own line followed by blank
+  // lines and then the actual content. Merge them back into a single bullet line.
+  markdown = markdown.replace(/^([ \t]*- )[ \t]*\n+(?=\S)/gm, '$1');
+
   // Clean up extra whitespace
   markdown = markdown
     .replace(/\n{3,}/g, '\n\n')
