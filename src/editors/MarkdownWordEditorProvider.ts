@@ -346,6 +346,7 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
     options: ExportOptions = {},
     panel: vscode.WebviewPanel
   ) {
+    panel.webview.postMessage({ type: 'exportStart', message: 'Converting to HTML\u2026' });
     try {
       const markdown = document.getContent();
       const docName = path.basename(document.uri.fsPath, path.extname(document.uri.fsPath));
@@ -377,6 +378,8 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
       }
     } catch (error) {
       vscode.window.showErrorMessage(`Failed to export HTML: ${error}`);
+    } finally {
+      panel.webview.postMessage({ type: 'exportDone' });
     }
   }
 
@@ -384,6 +387,7 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
     document: WebviewDocument,
     panel: vscode.WebviewPanel
   ) {
+    panel.webview.postMessage({ type: 'exportStart', message: 'Converting to Word\u2026' });
     try {
       const markdown = document.getContent();
       const docName = path.basename(document.uri.fsPath, path.extname(document.uri.fsPath));
@@ -412,6 +416,8 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
       }
     } catch (error) {
       vscode.window.showErrorMessage(`Failed to export Word document: ${error}`);
+    } finally {
+      panel.webview.postMessage({ type: 'exportDone' });
     }
   }
 
@@ -419,8 +425,7 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
     document: WebviewDocument,
     panel: vscode.WebviewPanel
   ) {
-    // Tell the webview to show the blocking overlay immediately
-    panel.webview.postMessage({ type: 'exportPDFStart' });
+    panel.webview.postMessage({ type: 'exportStart', message: 'Converting to PDF\u2026' });
     try {
       const markdown = document.getContent();
       const docName = path.basename(document.uri.fsPath, path.extname(document.uri.fsPath));
@@ -459,8 +464,7 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
         vscode.window.showErrorMessage(`Failed to export PDF: ${msg}`);
       }
     } finally {
-      // Always restore the toolbar button — covers success, error, and user-cancelled save dialog
-      panel.webview.postMessage({ type: 'exportPDFDone' });
+      panel.webview.postMessage({ type: 'exportDone' });
     }
   }
 

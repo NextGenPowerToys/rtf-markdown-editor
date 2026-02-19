@@ -311,9 +311,9 @@ function initializeEditor() {
 // PDF export overlay — shown while Chrome is generating the PDF
 // ---------------------------------------------------------------------------
 
-function createPdfOverlay() {
+function createExportOverlay() {
   const overlay = document.createElement('div');
-  overlay.id = 'pdf-export-overlay';
+  overlay.id = 'export-overlay';
   overlay.style.cssText = [
     'display:none',
     'position:fixed',
@@ -333,19 +333,26 @@ function createPdfOverlay() {
           from="0 26 26" to="360 26 26" dur="0.75s" repeatCount="indefinite"/>
       </path>
     </svg>
-    <span style="color:white;font-size:13px;font-family:var(--vscode-font-family,sans-serif);opacity:0.9">Converting to PDF\u2026</span>
+    <span id="export-overlay-label" style="color:white;font-size:13px;font-family:var(--vscode-font-family,sans-serif);opacity:0.9"></span>
   `;
   document.body.appendChild(overlay);
 }
 
-function showPdfOverlay() {
-  const el = document.getElementById('pdf-export-overlay');
+function showExportOverlay(label: string) {
+  const el = document.getElementById('export-overlay');
+  const labelEl = document.getElementById('export-overlay-label');
+  if (labelEl) { labelEl.textContent = label; }
   if (el) { el.style.display = 'flex'; }
 }
 
-function hidePdfOverlay() {
-  const el = document.getElementById('pdf-export-overlay');
+function hideExportOverlay() {
+  const el = document.getElementById('export-overlay');
   if (el) { el.style.display = 'none'; }
+  // Re-enable all export buttons
+  for (const id of ['export-self-contained-btn', 'export-docx-btn', 'export-pdf-btn']) {
+    const btn = document.getElementById(id) as HTMLButtonElement | null;
+    if (btn) { btn.disabled = false; }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -357,8 +364,8 @@ function setupUIHandlers() {
   // Create toolbar groups
   createToolbar(toolbar);
 
-  // PDF export overlay
-  createPdfOverlay();
+  // Export overlay (used by HTML, DOCX, and PDF exports)
+  createExportOverlay();
 
   // Modal handlers
   document.getElementById('modal-close')?.addEventListener('click', closeMermaidModal);
@@ -684,26 +691,27 @@ function attachToolbarEventListeners() {
     editor!.chain().focus().setHorizontalRule().run();
   });
 
-  // Export Self-Contained HTML (images embedded as base64)
+  // Export Self-Contained HTML
   document.getElementById('export-self-contained-btn')?.addEventListener('click', () => {
     if (!editor) return;
+    const btn = document.getElementById('export-self-contained-btn') as HTMLButtonElement | null;
+    if (btn && !btn.disabled) { btn.disabled = true; showExportOverlay('Converting to HTML\u2026'); }
     vscode.postMessage({ type: 'exportHTMLSelfContained' });
   });
 
-  // Export as Word Document (DOCX) — uses the already-loaded Mermaid instance
+  // Export as Word Document (DOCX)
   document.getElementById('export-docx-btn')?.addEventListener('click', () => {
     if (!editor) return;
+    const btn = document.getElementById('export-docx-btn') as HTMLButtonElement | null;
+    if (btn && !btn.disabled) { btn.disabled = true; showExportOverlay('Converting to Word\u2026'); }
     vscode.postMessage({ type: 'exportDOCX' });
   });
 
-  // Export as PDF — show blocking overlay immediately, extension will echo exportPDFStart
+  // Export as PDF
   document.getElementById('export-pdf-btn')?.addEventListener('click', () => {
     if (!editor) return;
     const btn = document.getElementById('export-pdf-btn') as HTMLButtonElement | null;
-    if (btn && !btn.disabled) {
-      btn.disabled = true;
-      showPdfOverlay();
-    }
+    if (btn && !btn.disabled) { btn.disabled = true; showExportOverlay('Converting to PDF\u2026'); }
     vscode.postMessage({ type: 'exportPDF' });
   });
 
@@ -1564,17 +1572,14 @@ function handleMessageFromExtension(message: MessageToWebview) {
       }
       break;
 
-    case 'exportPDFStart':
+    case 'exportStart':
       // Show blocking overlay — covers both toolbar button and context menu paths
-      showPdfOverlay();
+      showExportOverlay(message.message || 'Converting\u2026');
       break;
 
-    case 'exportPDFDone': {
-      hidePdfOverlay();
-      const btn = document.getElementById('export-pdf-btn') as HTMLButtonElement | null;
-      if (btn) { btn.disabled = false; }
+    case 'exportDone':
+      hideExportOverlay();
       break;
-    }
   }
 }
 
