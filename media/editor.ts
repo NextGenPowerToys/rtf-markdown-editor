@@ -55,6 +55,8 @@ const icons = {
   download: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a.5.5 0 0 1 .5.5v10.086l2.793-2.793a.5.5 0 1 1 .707.707l-4 4a.5.5 0 0 1-.707 0l-4-4a.5.5 0 1 1 .707-.707L9.5 12.586V2.5A.5.5 0 0 1 10 2zm-6 14h12v1H4v-1z"/></svg>',
   // HTML export — </> tag icon
   archive: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M7 6.5L3.5 10 7 13.5l1-.9L4.9 10 8 7.4 7 6.5zm6 0-1 .9L15.1 10 12 12.6l1 .9L16.5 10 13 6.5zm-2.5 8 .97-.26-2-7.5-.97.26 2 7.5z"/></svg>',
+  // PDF export — document with text lines icon
+  pdf: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M4 3h8.5L16 6.5V17H4V3zm1.5 1.5v11h9V7.5H12V4.5H5.5zm8 .5 1.5 1.5H13.5V5zM7 10h6v1.5H7V10zm0 2.5h4.5V14H7v-1.5z"/></svg>',
   // RTL toggle — lines with right-pointing arrow
   rtl: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M3 5h13v1.5H3V5zm0 4.5h8v1.5H3V9.5zm0 4.5h13v1.5H3V14zm10-5 2.5 2.5L13 14v-1.5H9.5v-2H13V7.5z"/></svg>',
   // Math — Greek capital Sigma Σ (summation)
@@ -400,6 +402,7 @@ function createToolbar(container: HTMLElement) {
   rtlGroup.innerHTML = `
     <button class="toolbar-btn" id="export-self-contained-btn" title="Export Self-Contained HTML (images embedded)">${icons.archive}</button>
     <button class="toolbar-btn" id="export-docx-btn" title="Export as Word Document (DOCX)"><svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M4 3h8.5L16 6.5V17H4V3zm1.5 1.5v11h9V7.5H12V4.5H5.5zm8 .5 1.5 1.5H13.5V5z" opacity="0.9"/><path d="M7 9h1.2l.8 3.5.9-2.3.9 2.3.8-3.5H12.8l-1.7 6H9.7l-.7-2-.7 2H6.7L5 9h2z"/></svg></button>
+    <button class="toolbar-btn" id="export-pdf-btn" title="Export as PDF">${icons.pdf}</button>
     <button class="toolbar-btn ${editorConfig.rtl ? 'active' : ''}" id="rtl-btn" title="Toggle RTL/LTR">${icons.rtl}</button>
   `;
   container.appendChild(rtlGroup);
@@ -645,6 +648,12 @@ function attachToolbarEventListeners() {
   document.getElementById('export-docx-btn')?.addEventListener('click', () => {
     if (!editor) return;
     vscode.postMessage({ type: 'exportDOCX' });
+  });
+
+  // Export as PDF
+  document.getElementById('export-pdf-btn')?.addEventListener('click', () => {
+    if (!editor) return;
+    vscode.postMessage({ type: 'exportPDF' });
   });
 
   // RTL toggle

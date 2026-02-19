@@ -121,6 +121,21 @@ export function activate(context: vscode.ExtensionContext) {
       await provider.exportFromUri(target, 'docx');
     })
   );
+  // Register command to export current document as PDF
+  // Same delegation pattern as exportHTMLSelfContained and exportDOCX.
+  context.subscriptions.push(
+    vscode.commands.registerCommand('rtf-markdown-editor.exportPDF', async (uri?: vscode.Uri) => {
+      const target = uri ?? (vscode.window.activeTextEditor
+        ? vscode.Uri.file(vscode.window.activeTextEditor.document.uri.fsPath)
+        : undefined);
+      if (!target || !/\.(md|markdown)$/i.test(target.fsPath)) {
+        vscode.window.showErrorMessage('Please open or select a Markdown file first');
+        return;
+      }
+      await provider.exportFromUri(target, 'pdf');
+    })
+  );
+
   // Register command to import a Word DOCX file and convert it to Markdown
   context.subscriptions.push(
     vscode.commands.registerCommand('rtf-markdown-editor.importDOCX', async (uri?: vscode.Uri) => {

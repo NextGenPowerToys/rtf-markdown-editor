@@ -9,12 +9,13 @@ import { htmlToMarkdown, hashContent } from '../utils/htmlProcessor';
 import { RTLService } from '../services/RTLService';
 import { exportToHTML, ExportOptions } from '../utils/htmlExporter';
 import { exportToDOCX } from '../utils/docxExporter';
+import { exportToPDF } from '../utils/pdfExporter';
 
 export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
   private readonly context: vscode.ExtensionContext;
   private documentMap: Map<string, WebviewDocument> = new Map();
   private panelMap: Map<string, vscode.WebviewPanel> = new Map();
-  private pendingExports: Map<string, { type: 'docx' | 'html'; options?: ExportOptions }> = new Map();
+  private pendingExports: Map<string, { type: 'docx' | 'html' | 'pdf'; options?: ExportOptions }> = new Map();
   private _onDidChangeCustomDocument = new vscode.EventEmitter<vscode.CustomDocumentContentChangeEvent<WebviewDocument>>();
   
   readonly onDidChangeCustomDocument = this._onDidChangeCustomDocument.event;
@@ -148,6 +149,8 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
             setTimeout(() => {
               if (pending.type === 'docx') {
                 this.handleExportDOCX(document, panel);
+              } else if (pending.type === 'pdf') {
+                this.handleExportPDF(document, panel);
               } else {
                 this.handleExportHTML(document, pending.options ?? {}, panel);
               }
@@ -212,6 +215,10 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
 
       case 'exportDOCX':
         this.handleExportDOCX(document, panel);
+        break;
+
+      case 'exportPDF':
+        this.handleExportPDF(document, panel);
         break;
     }
   }
@@ -408,6 +415,50 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
     }
   }
 
+  private async handleExportPDF(
+    document: WebviewDocument,
+    panel: vscode.WebviewPanel
+  ) {
+    try {
+      const markdown = document.getContent();
+      const docName = path.basename(document.uri.fsPath, path.extname(document.uri.fsPath));
+
+      // Pre-render Mermaid diagrams to PNG via the already-open editor webview
+      const { mermaidSources } = extractMermaidBlocks(markdown);
+      const mermaidImages = Object.keys(mermaidSources).length > 0
+        ? await this.renderMermaidViaWebview(panel, mermaidSources)
+        : {};
+
+      const pdfBuffer = await exportToPDF(markdown, {
+        title: docName,
+        basePath: path.dirname(document.uri.fsPath),
+        mermaidImages,
+      });
+
+      const uri = await vscode.window.showSaveDialog({
+        defaultUri: vscode.Uri.file(path.join(path.dirname(document.uri.fsPath), `${docName}.pdf`)),
+        filters: { 'PDF Files': ['pdf'] },
+      });
+
+      if (uri) {
+        fs.writeFileSync(uri.fsPath, pdfBuffer);
+        vscode.window.showInformationMessage(`PDF exported to ${path.basename(uri.fsPath)}`);
+        await vscode.env.openExternal(uri);
+      }
+    } catch (error) {
+      const msg = String(error);
+      if (msg.includes('PDF export requires Google Chrome')) {
+        vscode.window.showErrorMessage(msg, 'Get Chrome').then(action => {
+          if (action === 'Get Chrome') {
+            vscode.env.openExternal(vscode.Uri.parse('https://www.google.com/chrome'));
+          }
+        });
+      } else {
+        vscode.window.showErrorMessage(`Failed to export PDF: ${msg}`);
+      }
+    }
+  }
+
   /**
    * Export the document at `uri` using the same pipeline as the editor toolbar buttons.
    * If the file is already open in the custom editor the live webview is used directly.
@@ -416,7 +467,7 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
    */
   public async exportFromUri(
     uri: vscode.Uri,
-    type: 'docx' | 'html',
+    type: 'docx' | 'html' | 'pdf',
     options?: ExportOptions
   ): Promise<void> {
     const key = uri.toString();
@@ -427,6 +478,8 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
       // Already open — delegate to the live webview immediately
       if (type === 'docx') {
         await this.handleExportDOCX(document, panel);
+      } else if (type === 'pdf') {
+        await this.handleExportPDF(document, panel);
       } else {
         await this.handleExportHTML(document, options ?? {}, panel);
       }

@@ -94,6 +94,11 @@
           "group": "1_modification"
         },
         {
+          "command": "rtf-markdown-editor.exportPDF",
+          "when": "resourceExtname == .md || resourceExtname == .markdown",
+          "group": "1_modification"
+        },
+        {
           "command": "rtf-markdown-editor.importDOCX",
           "when": "resourceExtname == .docx",
           "group": "1_modification"
@@ -114,6 +119,11 @@
       {
         "command": "rtf-markdown-editor.exportDOCX",
         "title": "Convert to Word (DOCX)",
+        "category": "RTF Markdown"
+      },
+      {
+        "command": "rtf-markdown-editor.exportPDF",
+        "title": "Convert to PDF",
         "category": "RTF Markdown"
       },
       {
@@ -182,7 +192,7 @@
   "scripts": {
     "vscode:prepublish": "npm run copy:mermaid && npm run esbuild-base -- --minify",
     "copy:mermaid": "node -e \"require('fs').copyFileSync('node_modules/mermaid/dist/mermaid.min.js', 'media/mermaid.min.js')\"",
-    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node",
+    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --external:puppeteer-core --format=cjs --platform=node",
     "esbuild": "npm run esbuild-base -- --sourcemap",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
     "build:webview": "esbuild ./media/editor.ts --bundle --outfile=media/editor.bundle.js --format=iife --sourcemap",
@@ -239,6 +249,7 @@
     "mammoth": "^1.11.0",
     "markdown-it": "^13.0.0",
     "markdown-it-front-matter": "^0.2.4",
-    "mermaid": "^10.6.0"
+    "mermaid": "^10.6.0",
+    "puppeteer-core": "^24.37.4"
   }
 }

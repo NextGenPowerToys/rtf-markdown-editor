@@ -1,5 +1,7 @@
 export interface MessageFromWebview {
-  type: 'ready' | 'contentChanged' | 'requestSaveNow' | 'editMermaid' | 'updateMermaid' | 'saveImageFile' | 'mermaidExportReady';
+  type: 'ready' | 'contentChanged' | 'requestSaveNow' | 'editMermaid' | 'updateMermaid'
+      | 'saveImageFile' | 'mermaidExportReady'
+      | 'exportHTML' | 'exportHTMLSelfContained' | 'exportDOCX' | 'exportPDF';
   content?: string;
   html?: string;
   mermaidSources?: Record<string, string>;
@@ -8,6 +10,7 @@ export interface MessageFromWebview {
   imageData?: string;
   fileName?: string;
   mermaidImages?: Record<string, string>;
+  options?: Record<string, unknown>;
 }
 
 export interface MessageToWebview {
