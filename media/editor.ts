@@ -307,12 +307,58 @@ function initializeEditor() {
   }
 }
 
+// ---------------------------------------------------------------------------
+// PDF export overlay — shown while Chrome is generating the PDF
+// ---------------------------------------------------------------------------
+
+function createPdfOverlay() {
+  const overlay = document.createElement('div');
+  overlay.id = 'pdf-export-overlay';
+  overlay.style.cssText = [
+    'display:none',
+    'position:fixed',
+    'top:0', 'left:0', 'right:0', 'bottom:0',
+    'background:rgba(0,0,0,0.45)',
+    'z-index:9999',
+    'align-items:center',
+    'justify-content:center',
+    'flex-direction:column',
+    'gap:14px',
+  ].join(';');
+  overlay.innerHTML = `
+    <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+      <circle cx="26" cy="26" r="22" stroke="white" stroke-width="4" opacity="0.2"/>
+      <path d="M26 4a22 22 0 0 1 22 22" stroke="white" stroke-width="4" stroke-linecap="round">
+        <animateTransform attributeName="transform" type="rotate"
+          from="0 26 26" to="360 26 26" dur="0.75s" repeatCount="indefinite"/>
+      </path>
+    </svg>
+    <span style="color:white;font-size:13px;font-family:var(--vscode-font-family,sans-serif);opacity:0.9">Converting to PDF\u2026</span>
+  `;
+  document.body.appendChild(overlay);
+}
+
+function showPdfOverlay() {
+  const el = document.getElementById('pdf-export-overlay');
+  if (el) { el.style.display = 'flex'; }
+}
+
+function hidePdfOverlay() {
+  const el = document.getElementById('pdf-export-overlay');
+  if (el) { el.style.display = 'none'; }
+}
+
+// ---------------------------------------------------------------------------
+
 function setupUIHandlers() {
   const toolbar = document.getElementById('toolbar');
   if (!toolbar) return;
 
   // Create toolbar groups
   createToolbar(toolbar);
+
+  // PDF export overlay
+  createPdfOverlay();
 
   // Modal handlers
   document.getElementById('modal-close')?.addEventListener('click', closeMermaidModal);
@@ -650,9 +696,14 @@ function attachToolbarEventListeners() {
     vscode.postMessage({ type: 'exportDOCX' });
   });
 
-  // Export as PDF
+  // Export as PDF — show blocking overlay immediately, extension will echo exportPDFStart
   document.getElementById('export-pdf-btn')?.addEventListener('click', () => {
     if (!editor) return;
+    const btn = document.getElementById('export-pdf-btn') as HTMLButtonElement | null;
+    if (btn && !btn.disabled) {
+      btn.disabled = true;
+      showPdfOverlay();
+    }
     vscode.postMessage({ type: 'exportPDF' });
   });
 
@@ -1512,6 +1563,18 @@ function handleMessageFromExtension(message: MessageToWebview) {
         }
       }
       break;
+
+    case 'exportPDFStart':
+      // Show blocking overlay — covers both toolbar button and context menu paths
+      showPdfOverlay();
+      break;
+
+    case 'exportPDFDone': {
+      hidePdfOverlay();
+      const btn = document.getElementById('export-pdf-btn') as HTMLButtonElement | null;
+      if (btn) { btn.disabled = false; }
+      break;
+    }
   }
 }
 

@@ -14,7 +14,7 @@ export interface MessageFromWebview {
 }
 
 export interface MessageToWebview {
-  type: 'setContent' | 'setConfig' | 'externalUpdate' | 'showConflictPrompt' | 'showError' | 'mermaidRendered' | 'imageSaved' | 'renderMermaidForExport';
+  type: 'setContent' | 'setConfig' | 'externalUpdate' | 'showConflictPrompt' | 'showError' | 'mermaidRendered' | 'imageSaved' | 'renderMermaidForExport' | 'exportPDFStart' | 'exportPDFDone';
   content?: string;
   html?: string;
   mermaidSources?: Record<string, string>;

@@ -419,6 +419,8 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
     document: WebviewDocument,
     panel: vscode.WebviewPanel
   ) {
+    // Tell the webview to show the blocking overlay immediately
+    panel.webview.postMessage({ type: 'exportPDFStart' });
     try {
       const markdown = document.getContent();
       const docName = path.basename(document.uri.fsPath, path.extname(document.uri.fsPath));
@@ -456,6 +458,9 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
       } else {
         vscode.window.showErrorMessage(`Failed to export PDF: ${msg}`);
       }
+    } finally {
+      // Always restore the toolbar button — covers success, error, and user-cancelled save dialog
+      panel.webview.postMessage({ type: 'exportPDFDone' });
     }
   }
 
