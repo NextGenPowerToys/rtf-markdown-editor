@@ -6,6 +6,7 @@ import * as iconv from 'iconv-lite';
 import * as chardet from 'chardet';
 import { exportToHTML } from './utils/htmlExporter';
 import { exportToDOCX } from './utils/docxExporter';
+import { importFromDOCX } from './utils/docxImporter';
 import { extractMermaidBlocks } from './utils/markdownProcessor';
 import { renderMermaidToPng } from './utils/mermaidRenderer';
 
@@ -180,6 +181,62 @@ export function activate(context: vscode.ExtensionContext) {
         }
       } catch (error) {
         vscode.window.showErrorMessage(`Failed to export Word document: ${error}`);
+      }
+    })
+  );
+  // Register command to import a Word DOCX file and convert it to Markdown
+  context.subscriptions.push(
+    vscode.commands.registerCommand('rtf-markdown-editor.importDOCX', async (uri?: vscode.Uri) => {
+      try {
+        // Determine the DOCX file to import:
+        // - If invoked from the Explorer context menu, `uri` is the selected file.
+        // - If invoked from the Command Palette, show an Open dialog.
+        let docxUri: vscode.Uri | undefined = uri;
+
+        if (!docxUri) {
+          const picked = await vscode.window.showOpenDialog({
+            canSelectMany: false,
+            filters: { 'Word Documents': ['docx'] },
+            openLabel: 'Import DOCX',
+          });
+          if (!picked || picked.length === 0) { return; }
+          docxUri = picked[0];
+        }
+
+        const docxPath = docxUri.fsPath;
+        const docName = path.basename(docxPath, path.extname(docxPath));
+
+        // Show save dialog before conversion so we know the output path upfront
+        // (needed to compute relative image paths during extraction)
+        const saveUri = await vscode.window.showSaveDialog({
+          defaultUri: vscode.Uri.file(path.join(path.dirname(docxPath), `${docName}.md`)),
+          filters: { 'Markdown Files': ['md'] },
+        });
+        if (!saveUri) { return; }
+
+        let markdown = '';
+        await vscode.window.withProgress(
+          {
+            location: vscode.ProgressLocation.Notification,
+            title: `Converting "${docName}.docx" to Markdown…`,
+            cancellable: false,
+          },
+          async () => {
+            markdown = await importFromDOCX(docxPath, saveUri.fsPath);
+          }
+        );
+
+        fs.writeFileSync(saveUri.fsPath, markdown, 'utf8');
+
+        const action = await vscode.window.showInformationMessage(
+          `Markdown saved to ${path.basename(saveUri.fsPath)}`,
+          'Open File'
+        );
+        if (action === 'Open File') {
+          await vscode.commands.executeCommand('vscode.openWith', saveUri, 'rtf-markdown-editor.editor');
+        }
+      } catch (error) {
+        vscode.window.showErrorMessage(`Failed to import DOCX: ${error}`);
       }
     })
   );

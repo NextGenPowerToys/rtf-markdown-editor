@@ -78,6 +78,11 @@
           "command": "rtf-markdown-editor.openEditor",
           "when": "resourceExtname == .md || resourceExtname == .markdown",
           "group": "1_modification"
+        },
+        {
+          "command": "rtf-markdown-editor.importDOCX",
+          "when": "resourceExtname == .docx",
+          "group": "1_modification"
         }
       ]
     },
@@ -95,6 +100,11 @@
       {
         "command": "rtf-markdown-editor.exportDOCX",
         "title": "Export as Word Document (DOCX)",
+        "category": "RTF Markdown"
+      },
+      {
+        "command": "rtf-markdown-editor.importDOCX",
+        "title": "Import Word Document as Markdown (DOCX → MD)",
         "category": "RTF Markdown"
       }
     ],
@@ -208,11 +218,13 @@
     "@tiptap/extension-underline": "^2.1.0",
     "@tiptap/pm": "^2.1.0",
     "@tiptap/starter-kit": "^2.1.0",
+    "adm-zip": "^0.5.16",
+    "chardet": "^1.6.0",
+    "he": "^1.2.0",
+    "iconv-lite": "^0.6.3",
+    "mammoth": "^1.11.0",
     "markdown-it": "^13.0.0",
     "markdown-it-front-matter": "^0.2.4",
-    "mermaid": "^10.6.0",
-    "chardet": "^1.6.0",
-    "iconv-lite": "^0.6.3",
-    "he": "^1.2.0"
+    "mermaid": "^10.6.0"
   }
 }
