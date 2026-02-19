@@ -5,7 +5,6 @@ import * as path from 'path';
 import * as iconv from 'iconv-lite';
 import * as chardet from 'chardet';
 import { exportToHTML } from './utils/htmlExporter';
-import { exportToDOCX } from './utils/docxExporter';
 import { importFromDOCX } from './utils/docxImporter';
 import { extractMermaidBlocks } from './utils/markdownProcessor';
 import { renderMermaidToPng } from './utils/mermaidRenderer';
@@ -89,99 +88,37 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   // Register command to export as self-contained HTML (images embedded as base64)
+  // Delegates to the provider so it uses the live editor content and webview Mermaid
+  // rendering — identical to the toolbar button. Opens the editor in the background
+  // if the file is not already open.
   context.subscriptions.push(
-    vscode.commands.registerCommand('rtf-markdown-editor.exportHTMLSelfContained', async () => {
-      const editor = vscode.window.activeTextEditor;
-      if (!editor || !editor.document.fileName.endsWith('.md')) {
-        vscode.window.showErrorMessage('Please open a markdown file first');
+    vscode.commands.registerCommand('rtf-markdown-editor.exportHTMLSelfContained', async (uri?: vscode.Uri) => {
+      const target = uri ?? (vscode.window.activeTextEditor
+        ? vscode.Uri.file(vscode.window.activeTextEditor.document.uri.fsPath)
+        : undefined);
+      if (!target || !/\.(md|markdown)$/i.test(target.fsPath)) {
+        vscode.window.showErrorMessage('Please open or select a Markdown file first');
         return;
       }
-
-      try {
-        const buffer = fs.readFileSync(editor.document.uri.fsPath);
-        const charset = detectCharset(buffer);
-        const markdown = iconv.decode(buffer, charset);
-
-        const docName = path.basename(editor.document.uri.fsPath, path.extname(editor.document.uri.fsPath));
-
-        // Pre-render Mermaid diagrams to PNG using a hidden webview
-        const { mermaidSources } = extractMermaidBlocks(markdown);
-        let mermaidImages: Record<string, string> = {};
-        if (Object.keys(mermaidSources).length > 0) {
-          await vscode.window.withProgress(
-            { location: vscode.ProgressLocation.Notification, title: 'Exporting HTML: rendering Mermaid diagrams...', cancellable: false },
-            async () => { mermaidImages = await renderMermaidToPng(mermaidSources, context); }
-          );
-        }
-
-        const html = await exportToHTML(markdown, {
-          title: docName,
-          includeStyles: true,
-          standalone: true,
-          selfContained: true,
-          basePath: path.dirname(editor.document.uri.fsPath),
-          mermaidImages,
-        });
-
-        const uri = await vscode.window.showSaveDialog({
-          defaultUri: vscode.Uri.file(path.join(path.dirname(editor.document.uri.fsPath), `${docName}.html`)),
-          filters: { 'HTML Files': ['html'] },
-        });
-
-        if (uri) {
-          fs.writeFileSync(uri.fsPath, html, 'utf8');
-          vscode.window.showInformationMessage(`Self-contained HTML exported to ${path.basename(uri.fsPath)}`);
-        }
-      } catch (error) {
-        vscode.window.showErrorMessage(`Failed to export self-contained HTML: ${error}`);
-      }
+      await provider.exportFromUri(target, 'html', {
+        selfContained: true,
+        basePath: path.dirname(target.fsPath),
+      });
     })
   );
 
   // Register command to export current document as Word DOCX
+  // Same delegation pattern as exportHTMLSelfContained.
   context.subscriptions.push(
-    vscode.commands.registerCommand('rtf-markdown-editor.exportDOCX', async () => {
-      const editor = vscode.window.activeTextEditor;
-      if (!editor || !editor.document.fileName.endsWith('.md')) {
-        vscode.window.showErrorMessage('Please open a markdown file first');
+    vscode.commands.registerCommand('rtf-markdown-editor.exportDOCX', async (uri?: vscode.Uri) => {
+      const target = uri ?? (vscode.window.activeTextEditor
+        ? vscode.Uri.file(vscode.window.activeTextEditor.document.uri.fsPath)
+        : undefined);
+      if (!target || !/\.(md|markdown)$/i.test(target.fsPath)) {
+        vscode.window.showErrorMessage('Please open or select a Markdown file first');
         return;
       }
-
-      try {
-        const buffer = fs.readFileSync(editor.document.uri.fsPath);
-        const charset = detectCharset(buffer);
-        const markdown = iconv.decode(buffer, charset);
-
-        const docName = path.basename(editor.document.uri.fsPath, path.extname(editor.document.uri.fsPath));
-
-        // Pre-render Mermaid diagrams to PNG using a hidden webview
-        const { mermaidSources } = extractMermaidBlocks(markdown);
-        let mermaidImages: Record<string, string> = {};
-        if (Object.keys(mermaidSources).length > 0) {
-          await vscode.window.withProgress(
-            { location: vscode.ProgressLocation.Notification, title: 'Exporting DOCX: rendering Mermaid diagrams...', cancellable: false },
-            async () => { mermaidImages = await renderMermaidToPng(mermaidSources, context); }
-          );
-        }
-
-        const docx = await exportToDOCX(markdown, {
-          title: docName,
-          basePath: path.dirname(editor.document.uri.fsPath),
-          mermaidImages,
-        });
-
-        const uri = await vscode.window.showSaveDialog({
-          defaultUri: vscode.Uri.file(path.join(path.dirname(editor.document.uri.fsPath), `${docName}.docx`)),
-          filters: { 'Word Documents': ['docx'] },
-        });
-
-        if (uri) {
-          fs.writeFileSync(uri.fsPath, docx);
-          vscode.window.showInformationMessage(`Word document exported to ${path.basename(uri.fsPath)}`);
-        }
-      } catch (error) {
-        vscode.window.showErrorMessage(`Failed to export Word document: ${error}`);
-      }
+      await provider.exportFromUri(target, 'docx');
     })
   );
   // Register command to import a Word DOCX file and convert it to Markdown

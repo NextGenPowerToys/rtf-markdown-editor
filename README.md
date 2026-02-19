@@ -85,23 +85,34 @@ A rich text editor extension for VS Code that provides a Microsoft Word / Google
 - **Command**: `RTF Markdown: Export Self-Contained HTML (Embed Images)`
 
 ### ✅ Export to Word (DOCX)
-- **One-Click Export**: Toolbar button (W icon) or Command Palette
+
+- **One-Click Export**: Toolbar button (W icon), right-click context menu, or Command Palette
 - **Proper .docx Format**: Opens natively in Microsoft Word, LibreOffice, and Google Docs
 - **Mermaid as Embedded Images**: Diagrams exported as real PNG images inside the DOCX — not blank boxes
 - **RTL Support**: Document direction set correctly for Hebrew/Arabic content (`w:bidi`)
 - **All Styling Preserved**: Headings, tables, code blocks, lists, blockquotes
 - **No External Dependencies**: Built entirely with Node.js built-ins — no additional packages
-- **Command**: `RTF Markdown: Export as Word Document (DOCX)`
+- **Command**: `RTF Markdown: Convert to Word (DOCX)`
+
+### ✅ Export to Web Archive (HTML)
+
+- **One-Click Export**: Toolbar button, right-click context menu, or Command Palette
+- **Self-Contained**: All images embedded as base64 — single portable file
+- **Mermaid as PNG**: Diagrams pre-rendered to PNG images (no CDN needed)
+- **RTL Preserved**: Right-to-left direction detected and applied
+- **Fully Offline**: No internet required — 100% standalone HTML output
+- **Command**: `RTF Markdown: Convert to Web Archive (HTML)`
 
 ### ✅ Import from Word (DOCX → Markdown)
 
 - **Full Round-Trip**: Export to Word, edit it, import back to Markdown
-- **Right-Click Import**: Right-click any `.docx` file in the Explorer → **"Import Word Document as Markdown (DOCX → MD)"**
-- **Command Palette**: `RTF Markdown: Import Word Document as Markdown (DOCX → MD)`
+- **Right-Click Import**: Right-click any `.docx` file in the Explorer → **"Convert to Markdown"**
+- **Command Palette**: `RTF Markdown: Convert to Markdown`
 - **All Content Preserved**: Text, headings, tables, code blocks, lists, blockquotes
 - **Images Extracted**: All embedded images saved as real files in `.attachments/.<name>/` — no base64 blobs in your Markdown
 - **Mermaid Diagrams**: Exported Mermaid PNGs are imported back as image references
 - **Smart Detection**: Automatically handles both extension-generated DOCX files and standard Word documents
+- **Correct Bullet Import**: Bullet lists from standard Word documents import with proper formatting (fixes Word "List Paragraph" style artifact)
 - **Offline**: No external tools or internet required
 
 ### 🔒 100% Offline & Secure

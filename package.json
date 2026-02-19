@@ -2,7 +2,7 @@
   "name": "rtf-markdown-editor",
   "displayName": "RTF Markdown Editor",
   "description": "Word-like WYSIWYG Markdown Editor — Export & Import Word (DOCX), Export HTML, RTL-first (Hebrew/Arabic), Azure DevOps Mermaid, Autosave, 100% Offline",
-  "version": "2.0.0",
+  "version": "2.0.2",
   "publisher": "NGPowerToys",
   "icon": "media/icons/RTFMD.png",
   "keywords": [
@@ -84,6 +84,16 @@
           "group": "1_modification"
         },
         {
+          "command": "rtf-markdown-editor.exportDOCX",
+          "when": "resourceExtname == .md || resourceExtname == .markdown",
+          "group": "1_modification"
+        },
+        {
+          "command": "rtf-markdown-editor.exportHTMLSelfContained",
+          "when": "resourceExtname == .md || resourceExtname == .markdown",
+          "group": "1_modification"
+        },
+        {
           "command": "rtf-markdown-editor.importDOCX",
           "when": "resourceExtname == .docx",
           "group": "1_modification"
@@ -98,17 +108,17 @@
       },
       {
         "command": "rtf-markdown-editor.exportHTMLSelfContained",
-        "title": "Export Self-Contained HTML (Embed Images)",
+        "title": "Convert to Web Archive (HTML)",
         "category": "RTF Markdown"
       },
       {
         "command": "rtf-markdown-editor.exportDOCX",
-        "title": "Export as Word Document (DOCX)",
+        "title": "Convert to Word (DOCX)",
         "category": "RTF Markdown"
       },
       {
         "command": "rtf-markdown-editor.importDOCX",
-        "title": "Import Word Document as Markdown (DOCX → MD)",
+        "title": "Convert to Markdown",
         "category": "RTF Markdown"
       }
     ],

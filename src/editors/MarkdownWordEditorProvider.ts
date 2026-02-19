@@ -13,6 +13,8 @@ import { exportToDOCX } from '../utils/docxExporter';
 export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
   private readonly context: vscode.ExtensionContext;
   private documentMap: Map<string, WebviewDocument> = new Map();
+  private panelMap: Map<string, vscode.WebviewPanel> = new Map();
+  private pendingExports: Map<string, { type: 'docx' | 'html'; options?: ExportOptions }> = new Map();
   private _onDidChangeCustomDocument = new vscode.EventEmitter<vscode.CustomDocumentContentChangeEvent<WebviewDocument>>();
   
   readonly onDidChangeCustomDocument = this._onDidChangeCustomDocument.event;
@@ -72,6 +74,9 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
     };
 
     webviewPanel.webview.html = this.getWebviewContent(webviewPanel.webview);
+
+    this.panelMap.set(document.uri.toString(), webviewPanel);
+    webviewPanel.onDidDispose(() => this.panelMap.delete(document.uri.toString()));
 
     webviewDocument.onDidChange((e: WebviewDocumentChangeEvent) => {
       let { html, mermaidSources } = markdownToHtml(e.content);
@@ -135,6 +140,20 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
     switch (message.type) {
       case 'ready':
         this.sendInitialContent(document, panel);
+        {
+          const pending = this.pendingExports.get(document.uri.toString());
+          if (pending) {
+            this.pendingExports.delete(document.uri.toString());
+            // Delay lets Mermaid initialize in the webview before export is triggered
+            setTimeout(() => {
+              if (pending.type === 'docx') {
+                this.handleExportDOCX(document, panel);
+              } else {
+                this.handleExportHTML(document, pending.options ?? {}, panel);
+              }
+            }, 500);
+          }
+        }
         break;
 
       case 'contentChanged':
@@ -384,6 +403,38 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
       }
     } catch (error) {
       vscode.window.showErrorMessage(`Failed to export Word document: ${error}`);
+    }
+  }
+
+  /**
+   * Export the document at `uri` using the same pipeline as the editor toolbar buttons.
+   * If the file is already open in the custom editor the live webview is used directly.
+   * If not, the editor is opened in the background (preserveFocus) and the export is
+   * triggered automatically once the webview signals it is ready.
+   */
+  public async exportFromUri(
+    uri: vscode.Uri,
+    type: 'docx' | 'html',
+    options?: ExportOptions
+  ): Promise<void> {
+    const key = uri.toString();
+    const panel = this.panelMap.get(key);
+    const document = this.documentMap.get(key);
+
+    if (panel && document) {
+      // Already open — delegate to the live webview immediately
+      if (type === 'docx') {
+        await this.handleExportDOCX(document, panel);
+      } else {
+        await this.handleExportHTML(document, options ?? {}, panel);
+      }
+    } else {
+      // Not open — queue the export; it fires when the 'ready' message arrives
+      this.pendingExports.set(key, { type, options });
+      await vscode.commands.executeCommand(
+        'vscode.openWith', uri, 'rtf-markdown-editor.editor',
+        { viewColumn: vscode.ViewColumn.Active, preserveFocus: true }
+      );
     }
   }
 

@@ -2,6 +2,39 @@
 
 All notable changes to the RTF Markdown Editor extension will be documented in this file.
 
+## [2.0.2] - 2026-02-19
+
+### Added
+
+- **Context Menu for Markdown Files** — Right-click any `.md` file in the Explorer for quick conversions
+  - **Edit with RTF Markdown Editor** — open in the WYSIWYG editor
+  - **Convert to Word (DOCX)** — export directly from the context menu
+  - **Convert to Web Archive (HTML)** — export directly from the context menu
+
+- **Context Menu for Word Files** — Right-click any `.docx` file
+  - **Convert to Markdown** — import directly from the context menu
+
+### Changed
+
+- **Unified Export Pipeline** — Context menu export commands now use the exact same pipeline as the editor toolbar buttons
+  - Uses live in-memory editor content (not the saved file on disk)
+  - Mermaid diagrams rendered via the already-open editor webview
+  - If the file is not yet open, the editor opens automatically in the background (`preserveFocus`) and the export triggers once the webview is ready
+
+- **Cleaner Command Names** in Command Palette and context menus:
+  - `RTF Markdown: Convert to Word (DOCX)` (was "Export as Word Document (DOCX)")
+  - `RTF Markdown: Convert to Web Archive (HTML)` (was "Export Self-Contained HTML (Embed Images)")
+  - `RTF Markdown: Convert to Markdown` (was "Import Word Document as Markdown (DOCX → MD)")
+
+## [2.0.1] - 2026-02-19
+
+### Fixed
+
+- **Import from Word — Bullet Lists** — Bullet points now import correctly from standard Word documents
+  - Word's "List Paragraph" style causes mammoth to wrap `<li>` content in `<p>` tags with surrounding whitespace, producing a lone `"-"` marker on its own line followed by a blank line and then the text
+  - Fixed by a post-processing pass in `htmlToMarkdown()` that merges an isolated bullet marker back onto its content line
+  - Affected: all bullet/unordered list items in `.docx` files converted via the mammoth path (standard Word documents)
+
 ## [2.0.0] - 2026-02-19
 
 ### Added
