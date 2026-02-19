@@ -121,6 +121,42 @@ function parseDocumentSequence(docXml: string): DocItem[] {
   return items;
 }
 
+/**
+ * Find all data-URI image srcs in an HTML string, save each as a file in
+ * attachDir, and replace the src with a file:// URI so that
+ * htmlToMarkdown's convertToRelativePath produces a correct relative path.
+ *
+ * This is needed because the DOCX exporter embeds all local images (JPG, PNG,
+ * etc.) as base64 data URIs inside afchunk HTML via exportToHTML selfContained.
+ */
+function saveDataUriImages(
+  html: string,
+  attachDir: string,
+  imgCounterRef: { value: number },
+  attachDirCreatedRef: { value: boolean }
+): string {
+  return html.replace(
+    /src="(data:image\/([^;]+);base64,([^"]+))"/gi,
+    (_match, _dataUri, mimeSubtype, base64Data) => {
+      const extMap: Record<string, string> = {
+        jpeg: 'jpg', jpg: 'jpg', png: 'png', gif: 'gif',
+        webp: 'webp', bmp: 'bmp', tiff: 'tiff', 'svg+xml': 'svg',
+      };
+      const rawExt = mimeSubtype.toLowerCase();
+      const ext = extMap[rawExt] ?? rawExt.replace('+', '');
+      imgCounterRef.value++;
+      const fileName = `image_${imgCounterRef.value}.${ext}`;
+      if (!attachDirCreatedRef.value) {
+        fs.mkdirSync(attachDir, { recursive: true });
+        attachDirCreatedRef.value = true;
+      }
+      const absPath = path.join(attachDir, fileName);
+      fs.writeFileSync(absPath, Buffer.from(base64Data, 'base64'));
+      return `src="${pathToFileURL(absPath).toString()}"`;
+    }
+  );
+}
+
 function importFromExtensionDocx(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   zip: any,
@@ -142,8 +178,9 @@ function importFromExtensionDocx(
   const sequence = parseDocumentSequence(docXml);
 
   const htmlParts: string[] = [];
-  let imgCounter = 0;
-  let attachDirCreated = false;
+  // Shared counter/flag across both OOXML images and data-URI images
+  const imgCounterRef      = { value: 0 };
+  const attachDirCreatedRef = { value: false };
 
   for (const item of sequence) {
     const target = rels[item.relId];
@@ -153,20 +190,23 @@ function importFromExtensionDocx(
       // target is like "afchunk_0.htm" — look it up directly in the ZIP root
       const entry = zip.getEntry(target);
       if (entry) {
-        const chunkHtml = entry.getData().toString('utf8');
+        let chunkHtml = entry.getData().toString('utf8');
+        // Extract any data-URI images embedded by the selfContained exporter
+        // (JPGs, PNGs, etc.) and save them to .attachments/ as real files
+        chunkHtml = saveDataUriImages(chunkHtml, attachDir, imgCounterRef, attachDirCreatedRef);
         htmlParts.push(extractBodyContent(chunkHtml));
       }
     } else {
       // target is like "media/mermaid_0.png" — lives under word/ in the ZIP
       const entry = zip.getEntry('word/' + target);
       if (entry) {
-        if (!attachDirCreated) {
+        if (!attachDirCreatedRef.value) {
           fs.mkdirSync(attachDir, { recursive: true });
-          attachDirCreated = true;
+          attachDirCreatedRef.value = true;
         }
-        imgCounter++;
+        imgCounterRef.value++;
         const ext      = path.extname(target) || '.png';
-        const fileName = `image_${imgCounter}${ext}`;
+        const fileName = `image_${imgCounterRef.value}${ext}`;
         const absPath  = path.join(attachDir, fileName);
         fs.writeFileSync(absPath, entry.getData());
         // Use file:// URI so htmlToMarkdown's convertToRelativePath resolves
