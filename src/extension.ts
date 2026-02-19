@@ -165,13 +165,8 @@ export function activate(context: vscode.ExtensionContext) {
 
         fs.writeFileSync(saveUri.fsPath, markdown, 'utf8');
 
-        const action = await vscode.window.showInformationMessage(
-          `Markdown saved to ${path.basename(saveUri.fsPath)}`,
-          'Open File'
-        );
-        if (action === 'Open File') {
-          await vscode.commands.executeCommand('vscode.openWith', saveUri, 'rtf-markdown-editor.editor');
-        }
+        vscode.window.showInformationMessage(`Markdown saved to ${path.basename(saveUri.fsPath)}`);
+        await vscode.commands.executeCommand('vscode.openWith', saveUri, 'rtf-markdown-editor.editor');
       } catch (error) {
         vscode.window.showErrorMessage(`Failed to import DOCX: ${error}`);
       }

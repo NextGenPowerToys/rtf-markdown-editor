@@ -2,6 +2,15 @@
 
 All notable changes to the RTF Markdown Editor extension will be documented in this file.
 
+## [2.1.0] - 2026-02-19
+
+### Changed
+
+- **Auto-Open After Export/Import** — Converted files now open immediately without requiring a click
+  - **Convert to Word (DOCX)** — the exported `.docx` opens automatically in Microsoft Word (or the system default for `.docx`)
+  - **Convert to Web Archive (HTML)** — the exported `.html` opens automatically in the default browser
+  - **Convert to Markdown** — the resulting `.md` file opens automatically in the RTF Markdown Editor
+
 ## [2.0.2] - 2026-02-19
 
 ### Added

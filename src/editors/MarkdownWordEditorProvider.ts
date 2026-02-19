@@ -366,6 +366,7 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
         // Write the HTML file
         fs.writeFileSync(uri.fsPath, html, 'utf8');
         vscode.window.showInformationMessage(`HTML exported to ${path.basename(uri.fsPath)}`);
+        await vscode.env.openExternal(uri);
       }
     } catch (error) {
       vscode.window.showErrorMessage(`Failed to export HTML: ${error}`);
@@ -400,6 +401,7 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
       if (uri) {
         fs.writeFileSync(uri.fsPath, docx);
         vscode.window.showInformationMessage(`Word document exported to ${path.basename(uri.fsPath)}`);
+        await vscode.env.openExternal(uri);
       }
     } catch (error) {
       vscode.window.showErrorMessage(`Failed to export Word document: ${error}`);

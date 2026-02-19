@@ -82,7 +82,7 @@ A rich text editor extension for VS Code that provides a Microsoft Word / Google
 - **Mermaid as PNG**: Diagrams pre-rendered to PNG images (no CDN needed)
 - **RTL Preserved**: Right-to-left direction detected and applied
 - **Fully Offline**: No internet required — 100% standalone HTML output
-- **Command**: `RTF Markdown: Export Self-Contained HTML (Embed Images)`
+- **Command**: `RTF Markdown: Convert to Web Archive (HTML)`
 
 ### ✅ Export to Word (DOCX)
 
@@ -165,10 +165,11 @@ A rich text editor extension for VS Code that provides a Microsoft Word / Google
 ### Exporting to HTML
 
 1. Open a `.md` file in the RTF Markdown Editor
-2. Click the **archive icon** in the toolbar, OR
-3. Open Command Palette (Ctrl+Shift+P) → **"Export Self-Contained HTML (Embed Images)"**
+2. Click the **archive icon** in the toolbar, OR right-click the file in Explorer → **"Convert to Web Archive (HTML)"**, OR
+3. Open Command Palette (Ctrl+Shift+P) → **"RTF Markdown: Convert to Web Archive (HTML)"**
 4. Choose a save location
-5. The exported HTML is a single self-contained file with:
+5. The exported HTML opens automatically in your default browser
+6. The exported file is a single self-contained HTML with:
    - All styling embedded
    - Mermaid diagrams pre-rendered as PNG images
    - Local images embedded as base64
@@ -178,10 +179,10 @@ A rich text editor extension for VS Code that provides a Microsoft Word / Google
 ### Exporting to Word (DOCX)
 
 1. Open a `.md` file in the RTF Markdown Editor
-2. Click the **W document icon** in the toolbar, OR
-3. Open Command Palette (Ctrl+Shift+P) → **"Export as Word Document (DOCX)"**
+2. Click the **W document icon** in the toolbar, OR right-click the file in Explorer → **"Convert to Word (DOCX)"**, OR
+3. Open Command Palette (Ctrl+Shift+P) → **"RTF Markdown: Convert to Word (DOCX)"**
 4. Choose a save location
-5. Open the `.docx` in Microsoft Word, LibreOffice, or Google Docs
+5. The exported `.docx` opens automatically in Microsoft Word (or your system default)
 
 The exported document preserves:
 - All headings, paragraphs, and text formatting
@@ -195,15 +196,16 @@ The exported document preserves:
 **From Explorer (easiest):**
 
 1. Right-click a `.docx` file in the VS Code Explorer
-2. Select **"Import Word Document as Markdown (DOCX → MD)"**
+2. Select **"Convert to Markdown"**
 3. Choose where to save the resulting `.md` file
 4. The file opens automatically in the RTF Markdown Editor
 
 **From Command Palette:**
 
-1. Open Command Palette (Ctrl+Shift+P) → **"Import Word Document as Markdown (DOCX → MD)"**
+1. Open Command Palette (Ctrl+Shift+P) → **"RTF Markdown: Convert to Markdown"**
 2. Pick the `.docx` file to import
 3. Choose where to save the resulting `.md` file
+4. The file opens automatically in the RTF Markdown Editor
 
 **What gets imported:**
 
@@ -389,8 +391,9 @@ This extension is designed to work **completely offline**:
 - Images are saved to `.attachments/.<name>/` beside the output `.md` file — check that folder exists after import
 
 ### Mermaid diagrams blank in exported DOCX
-- Use the **toolbar button** (W icon) rather than the Command Palette — the toolbar path uses the already-initialized editor for reliable rendering
-- Ensure you have the file open in the RTF Markdown Editor (not just a text editor)
+
+- Ensure you have the file open in the RTF Markdown Editor (not just a text editor); the toolbar button, context menu, and Command Palette all use the same rendering pipeline
+- If exporting via Command Palette with the file not yet open, the editor will open in the background automatically before exporting
 
 ### RTL text not displaying correctly
 - The editor auto-detects Hebrew/Arabic — ensure the content includes those characters
