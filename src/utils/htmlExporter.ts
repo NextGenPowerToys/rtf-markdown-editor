@@ -104,6 +104,7 @@ h1, h2, h3, h4, h5, h6 {
   margin-top: 24px;
   margin-bottom: 12px;
   font-weight: 600;
+  page-break-after: avoid;
 }
 
 h1 {
@@ -202,6 +203,7 @@ table {
   border-collapse: collapse;
   width: 100%;
   margin: 0 0 16px 0;
+  page-break-inside: avoid;
 }
 
 table thead {
@@ -230,6 +232,7 @@ img {
   margin: 16px 0;
   border-radius: 6px;
   border: 1px solid #d0d7de;
+  page-break-inside: avoid;
 }
 
 img.align-left {
