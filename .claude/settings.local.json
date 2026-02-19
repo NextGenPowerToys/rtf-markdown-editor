@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run esbuild:*)",
+      "Bash(npm run build:webview:*)"
+    ]
+  }
+}

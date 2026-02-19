@@ -2,6 +2,118 @@
 
 All notable changes to the RTF Markdown Editor extension will be documented in this file.
 
+## [2.1.0] - 2026-02-19
+
+### Changed
+
+- **Auto-Open After Export/Import** — Converted files now open immediately without requiring a click
+  - **Convert to Word (DOCX)** — the exported `.docx` opens automatically in Microsoft Word (or the system default for `.docx`)
+  - **Convert to Web Archive (HTML)** — the exported `.html` opens automatically in the default browser
+  - **Convert to Markdown** — the resulting `.md` file opens automatically in the RTF Markdown Editor
+
+## [2.0.2] - 2026-02-19
+
+### Added
+
+- **Context Menu for Markdown Files** — Right-click any `.md` file in the Explorer for quick conversions
+  - **Edit with RTF Markdown Editor** — open in the WYSIWYG editor
+  - **Convert to Word (DOCX)** — export directly from the context menu
+  - **Convert to Web Archive (HTML)** — export directly from the context menu
+
+- **Context Menu for Word Files** — Right-click any `.docx` file
+  - **Convert to Markdown** — import directly from the context menu
+
+### Changed
+
+- **Unified Export Pipeline** — Context menu export commands now use the exact same pipeline as the editor toolbar buttons
+  - Uses live in-memory editor content (not the saved file on disk)
+  - Mermaid diagrams rendered via the already-open editor webview
+  - If the file is not yet open, the editor opens automatically in the background (`preserveFocus`) and the export triggers once the webview is ready
+
+- **Cleaner Command Names** in Command Palette and context menus:
+  - `RTF Markdown: Convert to Word (DOCX)` (was "Export as Word Document (DOCX)")
+  - `RTF Markdown: Convert to Web Archive (HTML)` (was "Export Self-Contained HTML (Embed Images)")
+  - `RTF Markdown: Convert to Markdown` (was "Import Word Document as Markdown (DOCX → MD)")
+
+## [2.0.1] - 2026-02-19
+
+### Fixed
+
+- **Import from Word — Bullet Lists** — Bullet points now import correctly from standard Word documents
+  - Word's "List Paragraph" style causes mammoth to wrap `<li>` content in `<p>` tags with surrounding whitespace, producing a lone `"-"` marker on its own line followed by a blank line and then the text
+  - Fixed by a post-processing pass in `htmlToMarkdown()` that merges an isolated bullet marker back onto its content line
+  - Affected: all bullet/unordered list items in `.docx` files converted via the mammoth path (standard Word documents)
+
+## [2.0.0] - 2026-02-19
+
+### Added
+
+- **Import from Word (DOCX → MD)** — Full round-trip: export to Word and import back to Markdown
+  - Right-click any `.docx` file in Explorer → **"Import Word Document as Markdown (DOCX → MD)"**
+  - Command Palette: `RTF Markdown: Import Word Document as Markdown (DOCX → MD)`
+  - Opens the resulting `.md` file directly in the RTF Markdown Editor
+  - Works with both extension-generated DOCX and standard Word documents
+
+- **Full Content Preservation on Import** — All content extracted, nothing dropped
+  - Text, headings, tables, code blocks, blockquotes — full fidelity
+  - Mermaid diagrams extracted from `word/media/` and saved as `.png` files
+  - Local images (JPG, PNG, GIF, WebP, BMP, TIFF) embedded as data URIs in the DOCX are extracted and saved as real image files in `.attachments/.<name>/`
+  - Image references in the resulting `.md` use correct relative paths
+
+- **Dual-Path DOCX Import Engine**
+  - **Extension-generated DOCX**: altChunk-aware path — reads `word/document.xml` for document order, extracts HTML from `afchunk_N.htm` ZIP entries, preserves interleaved text + image sequence
+  - **Standard Word DOCX**: mammoth-based path — full HTML conversion with image extraction to `.attachments/`
+  - Auto-detection: presence of `afchunk_0.htm` in the ZIP distinguishes the two formats
+
+- **Real-Time Editor Refresh** — Editor now correctly reflects external file changes
+  - Fixed `externalUpdate` message: content is now converted to HTML before being sent to the webview
+  - Image paths resolved to webview URIs for correct display after external edits
+
+### Implementation Details
+
+- **`src/utils/docxImporter.ts`** — New file implementing the full DOCX→MD pipeline
+  - `importFromDOCX()` — public entry point, auto-detects DOCX type
+  - `importFromExtensionDocx()` — altChunk path using `adm-zip` for ZIP reading
+  - `importFromStandardDocx()` — mammoth path for standard Word documents
+  - `saveDataUriImages()` — extracts base64-embedded images to `.attachments/`, replaces with `file://` URIs
+  - `parseDocumentSequence()` — scans `document.xml` for ordered altChunk + image blip references
+  - `parseRels()` — parses `word/_rels/document.xml.rels` into a relId→path map
+- **`src/extension.ts`** — Added `importDOCX` command registration
+- **`src/editors/MarkdownWordEditorProvider.ts`** — Fixed `externalUpdate` webview message
+
+## [1.2.0] - 2026-02-18
+
+### Added
+
+- **Export to Word (DOCX)** — One-click export of Markdown documents to `.docx` format
+  - Toolbar button (W document icon) for quick export from the editor
+  - Command Palette: `RTF Markdown: Export as Word Document (DOCX)`
+  - Opens natively in Microsoft Word, LibreOffice, and Google Docs
+  - No external libraries — built entirely with Node.js built-ins
+
+- **Mermaid Diagrams in DOCX** — Diagrams are exported as real embedded PNG images
+  - Stored as proper OOXML image parts (`word/media/mermaid_N.png`)
+  - Referenced via `<w:drawing>/<wp:inline>/<pic:pic>` elements — never blank boxes
+  - Proportional scaling to fit page width (capped at 16.5 cm / ~6.5 inches)
+  - PNG dimensions parsed directly from binary header (no library needed)
+
+- **RTL Support in DOCX** — Full right-to-left document support matching HTML export
+  - Auto-detects Hebrew/Arabic content using the same `RTLService` as HTML export
+  - Sets `<w:bidi/>` in `<w:sectPr>` for document-level RTL direction in Word
+  - Each `altChunk` HTML segment gets `<html dir="rtl">` so CSS RTL rules apply
+  - RTL can be overridden explicitly via the `rtl` option in `DocxExportOptions`
+
+### Technical
+
+- **`src/utils/docxExporter.ts`** — New file implementing the full DOCX pipeline:
+  - `splitAtMermaidDivs()` — splits generated HTML at `data-mdwe="mermaid-rendered"` boundaries
+  - `wrapAsHtml()` — wraps text segments as standalone HTML documents for `altChunk`
+  - `drawingXml()` — generates complete OOXML inline-image XML per Mermaid PNG
+  - `buildDocumentXml()` — interleaves `<w:altChunk>` (text) and `<w:drawing>` (images)
+  - Fast path for documents without Mermaid diagrams (single altChunk)
+- **`src/utils/zipWriter.ts`** — Minimal ZIP builder (DEFLATE via `zlib`, manual CRC-32)
+- **`media/editor.ts`** — DOCX export toolbar button added to the RTL/export group
+
 ## [1.1.5] - 2026-02-02
 
 ### Changed
@@ -189,6 +301,8 @@ All notable changes to the RTF Markdown Editor extension will be documented in t
 
 - [ ] Markdown preview pane
 - [x] Export to HTML *(Added in v1.1.0)*
+- [x] Export to Word (DOCX) *(Added in v1.2.0)*
+- [x] Import from Word (DOCX → MD) *(Added in v2.0.0)*
 - [ ] Export to PDF
 - [ ] Collaborative editing
 - [ ] Plugin system

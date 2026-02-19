@@ -19,27 +19,46 @@ import { WebviewRTLService } from './rtlService';
 import mermaid from 'mermaid';
 import katex from 'katex';
 
-// Fluent UI System Icons SVG paths
+// Microsoft Word–style toolbar icons
 const icons = {
-  bold: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M5.5 3.5h5.049a3.876 3.876 0 0 1 2.744 1.136A3.876 3.876 0 0 1 14.429 7.38c0 1.03-.419 1.962-1.094 2.637.924.673 1.524 1.76 1.524 2.982a3.876 3.876 0 0 1-1.136 2.744 3.876 3.876 0 0 1-2.744 1.136h-5.43v-1h5.43c.796 0 1.558-.316 2.12-.878a2.996 2.996 0 0 0 .88-2.12c0-.795-.317-1.558-.88-2.12a2.996 2.996 0 0 0-2.12-.879H8.5v-1h2.048c.796 0 1.559-.316 2.121-.878a2.996 2.996 0 0 0 .879-2.121c0-.795-.317-1.559-.879-2.12a2.996 2.996 0 0 0-2.12-.88H5.5v-1z"/></svg>',
-  italic: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M8.5 3.5h7v1h-2.837L9.337 15.5h2.826v1h-7v-1h2.837l3.326-11H8.5v-1z"/></svg>',
-  underline: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M5.5 3.5h1v7c0 1.933 1.567 3.5 3.5 3.5s3.5-1.567 3.5-3.5v-7h1v7c0 2.485-2.015 4.5-4.5 4.5s-4.5-2.015-4.5-4.5v-7zm-1 13h11v1h-11v-1z"/></svg>',
-  strikethrough: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M14.5 6.5c0-1.93-1.57-3.5-3.5-3.5H7c-1.93 0-3.5 1.57-3.5 3.5v1h1v-1C4.5 5.12 5.62 4 7 4h4c1.38 0 2.5 1.12 2.5 2.5v.5h-10v1h16v-1h-5v-.5zM7 16h4c1.38 0 2.5-1.12 2.5-2.5v-.5h1v.5c0 1.93-1.57 3.5-3.5 3.5H7c-1.93 0-3.5-1.57-3.5-3.5v-.5h1v.5c0 1.38 1.12 2.5 2.5 2.5z"/></svg>',
-  code: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M6.354 5.646L2.707 9.293a1 1 0 0 0 0 1.414l3.647 3.647.707-.707L3.414 10l3.647-3.647-.707-.707zm7.292 0l-.707.707L16.586 10l-3.647 3.647.707.707 3.647-3.647a1 1 0 0 0 0-1.414l-3.647-3.647z"/></svg>',
-  bulletList: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M2 5.5a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0zm0 4.5a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0zm0 4.5a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0zM6.5 5h11v1h-11V5zm0 4.5h11v1h-11v-1zm0 4.5h11v1h-11v-1z"/></svg>',
-  orderedList: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M2.5 3.5h1.75v3.75H2.5v-1h1.25v-1.5H2.5v-1zm0 6h2.75v1H2.75v.75h1.5v1H2.5v-1h1.75v-.75H2.5v-1zm0 6h1.75v.75H2.5v1h2.75v-3H2.5v1h1.75v.5H2.5v.75zm4-10h11v1h-11v-1zm0 4.5h11v1h-11v-1zm0 4.5h11v1h-11v-1z"/></svg>',
-  quote: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M4.5 6c0-1.657 1.343-3 3-3h.5a.5.5 0 0 0 0-1h-.5c-2.21 0-4 1.79-4 4v3.5A1.5 1.5 0 0 0 5 11h1.5a.5.5 0 0 0 .5-.5V7a.5.5 0 0 0-.5-.5H6a.5.5 0 0 0-.5.5v2.5h-.5a.5.5 0 0 1-.5-.5V6zm6 0c0-1.657 1.343-3 3-3h.5a.5.5 0 0 0 0-1h-.5c-2.21 0-4 1.79-4 4v3.5a1.5 1.5 0 0 0 1.5 1.5H13a.5.5 0 0 0 .5-.5V7a.5.5 0 0 0-.5-.5h-.5a.5.5 0 0 0-.5.5v2.5h-.5a.5.5 0 0 1-.5-.5V6z"/></svg>',
-  codeBlock: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M11.5 3.5l.4.92-4 14-.92-.4 4-14 .92.4zM6.354 6.146l-3.647 3.647a1 1 0 0 0 0 1.414l3.647 3.647.707-.707L3.414 10.5l3.647-3.647-.707-.707zm7.292 0l-.707.707 3.647 3.647-3.647 3.647.707.707 3.647-3.647a1 1 0 0 0 0-1.414l-3.647-3.647z"/></svg>',
-  textColor: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3L5 14h1.5l1.25-2.75h5.5L14.5 14H16L11 3h-1zm0 2.5l2 4.5H8l2-4.5z"/></svg>',
-  highlight: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M10.5 2.915a.5.5 0 0 1 .277.447l.001 1.038h1.038a.5.5 0 0 1 0 1h-1.038v1.038a.5.5 0 0 1-1 0V5.4H8.74a.5.5 0 0 1 0-1h1.038V3.362a.5.5 0 0 1 .723-.447zm3.328 2.913l-7.071 7.071 2.121 2.122 7.071-7.071-2.121-2.122zM5.636 12.778L2.757 15.657a.5.5 0 0 0 0 .707l.879.879a.5.5 0 0 0 .707 0l2.879-2.879-1.586-1.586z"/></svg>',
-  link: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M9.5 7.5a2.5 2.5 0 0 0 0 5h1v-1h-1a1.5 1.5 0 0 1 0-3h1v-1h-1zm1 1v3h1v-3h-1zm2 4h1a2.5 2.5 0 0 0 0-5h-1v1h1a1.5 1.5 0 0 1 0 3h-1v1z"/><path d="M7.5 5C5.567 5 4 6.567 4 8.5v3C4 13.433 5.567 15 7.5 15h5c1.933 0 3.5-1.567 3.5-3.5v-3C16 6.567 14.433 5 12.5 5h-5zm0 1h5C13.881 6 15 7.119 15 8.5v3c0 1.381-1.119 2.5-2.5 2.5h-5C6.119 14 5 12.881 5 11.5v-3C5 7.119 6.119 6 7.5 6z"/></svg>',
-  image: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M3 4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1H3zm0 1h14v7.586l-2.293-2.293a1 1 0 0 0-1.414 0L10 13.586l-2.293-2.293a1 1 0 0 0-1.414 0L3 14.586V5zm3.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/></svg>',
-  table: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M3 4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1H3zm0 1h14v3h-3V5H9v3H3V5zm0 4h5v3H3V9zm6 0h3v3H9V9zm4 0h4v3h-4V9zM3 13h5v2H3v-2zm6 0h3v2H9v-2zm4 0h4v2h-4v-2z"/></svg>',
-  hr: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M2 9.5h16v1H2v-1z"/></svg>',
+  // Bold — thick serif B with two bumps
+  bold: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M6 3.5h5.5a3 3 0 0 1 2.1 5.1A3.25 3.25 0 0 1 11.5 16H6V3.5zm2 2V9H11a1 1 0 0 0 0-2H8zm0 5v4h3.5a1.5 1.5 0 0 0 0-3H8z"/></svg>',
+  // Italic — capital I, slanted, with serifs at top and bottom
+  italic: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M9 4h5v1.5h-1.8L9.4 14.5H11V16H6v-1.5h1.8L10.6 5.5H9V4z"/></svg>',
+  // Underline — U shape + thick underline bar
+  underline: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M5 4h1.5v6a3.5 3.5 0 0 0 7 0V4H15v6a5 5 0 0 1-10 0V4zm-1 12.5h12V18H4v-1.5z"/></svg>',
+  // Strikethrough — S with horizontal line through middle
+  strikethrough: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M3.5 10.5h13v1h-13v-1zM10 5C8 5 6.5 6 6.5 7.5H5C5 5.2 7.2 3.5 10 3.5c2.5 0 4.5 1.5 4.5 3H13c0-1-1.2-1.5-3-1.5zm0 9.5c-2 0-3-1-3-2h-1.5c0 2 2 3.5 4.5 3.5S14.5 14 14.5 12H13c0 1.3-1.2 2.5-3 2.5z"/></svg>',
+  // Inline code — < /> angle brackets + slash
+  code: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M7 6.5L3.5 10 7 13.5l1-.9L5 10l3-2.6-1-.9zm6 0l-1 .9L15 10l-3 2.6 1 .9L16.5 10 13 6.5zm-3.5 7.5.96-.26-2-7.5-.97.26 2 7.5z"/></svg>',
+  // Bullet list — 3 filled circles + 3 text lines
+  bulletList: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><circle cx="3" cy="5" r="1.5"/><circle cx="3" cy="10" r="1.5"/><circle cx="3" cy="15" r="1.5"/><path d="M7 4.25h11v1.5H7v-1.5zm0 5h11v1.5H7v-1.5zm0 5h11v1.5H7v-1.5z"/></svg>',
+  // Ordered list — 1/2/3 numerals + 3 text lines
+  orderedList: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M2 3.75h1.5V8H2V5H1V3.75h1zm-1 7.25h3v1H3v.5h1.5v1H3v.5H4v1H1v-1h1.5V13H1v-1h.5v-.5H1v-.5zm0 6h3v-1H2v-.5h2v-1H2V15h1.5v-.5H1v-1h3v1h-1.5v.5H4V16.25H1v-1.25zM7 4.25h11v1.5H7v-1.5zm0 5h11v1.5H7v-1.5zm0 5h11v1.5H7v-1.5z"/></svg>',
+  // Blockquote — thick left bar + 3 indented lines
+  quote: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M3 4h2v12H3V4zm4 2h10v1.5H7V6zm0 4h10v1.5H7V10zm0 4h10v1.5H7V14z"/></svg>',
+  // Code block — { } braces inside a rounded rectangle
+  codeBlock: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M2 5.5A2.5 2.5 0 0 1 4.5 3h11A2.5 2.5 0 0 1 18 5.5v9a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 2 14.5v-9zm2.5-1A1.5 1.5 0 0 0 3 5.5v9A1.5 1.5 0 0 0 4.5 16h11a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 15.5 4.5h-11zM7 8.5l-1.5 1.5L7 11.5l-.75.75L4 10l2.25-2.25L7 8.5zm6 0 .75-.75L16 10l-2.25 2.25L13 11.5l1.5-1.5L13 8.5zm-4.5 3.5.97-.25 1.5-5-.97-.25-1.5 5z"/></svg>',
+  // Text color — bold A glyph with thick bar at bottom
+  textColor: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3 5.5 15h1.75L8.5 11.5h3l1.25 3.5h1.75L10 3zm0 3 1.1 4H8.9L10 6zM3.5 16.5h13V18h-13v-1.5z"/></svg>',
+  // Highlight — diagonal marker/pen stroke
+  highlight: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M14.5 2 18 5.5 8.5 15H5v-3.5L14.5 2zm0 2.1L6.5 12.1V13.5H7.9l8-8L14.5 4.1zM2 18h16v-1.5H2V18z"/></svg>',
+  // Link — two interlocked oval chain rings
+  link: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M8.5 13.5a4.5 4.5 0 0 1 0-7l1.5-1.5a4.5 4.5 0 0 1 6 6.7l-.7.7A4.5 4.5 0 0 1 8.5 13.5zm1-1 1.5-1.5.7.7-1.5 1.5a2.5 2.5 0 0 0 3.6-3.5l-.7-.7-1.5 1.5-.7-.7 1.5-1.5a3 3 0 1 0-4.2 4.2l.7.7 1.5-1.5.7.7-1.5 1.5-.7-.7-.7.7zM4.7 14.7a4.5 4.5 0 0 1 0-6.4l.7.7a3 3 0 0 0 0 4.2L6.8 14l.7.7a3 3 0 0 0 4.2 0l-.7-.7 1-1 .7.7a4.5 4.5 0 0 1-6.4 0l-.6-.7z"/></svg>',
+  // Image — landscape with mountains, sky, sun
+  image: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M3 4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1H3zm0 1h14v6.5l-3.3-2.8a1 1 0 0 0-1.3.1L9.2 12l-1.9-1.4a1 1 0 0 0-1.3.2L3 14.3V5zm2.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/></svg>',
+  // Table — 3×3 grid with header row
+  table: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M3 4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1H3zm0 1h4v3H3V5zm0 4h4v3H3V9zm0 4h4v2H3v-2zm5-8h4v3H8V5zm0 4h4v3H8V9zm0 4h4v2H8v-2zm5-8h4v3h-4V5zm0 4h4v3h-4V9zm0 4h4v2h-4v-2z"/></svg>',
+  // Horizontal rule — thick center line with short end ticks
+  hr: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M3 9.25h14v1.5H3v-1.5zm0-2.5h1.5v6.5H3V6.75zm13.5 0H18v6.5h-1.5V6.75z"/></svg>',
+  // Download (kept for backward compat)
   download: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a.5.5 0 0 1 .5.5v10.086l2.793-2.793a.5.5 0 1 1 .707.707l-4 4a.5.5 0 0 1-.707 0l-4-4a.5.5 0 1 1 .707-.707L9.5 12.586V2.5A.5.5 0 0 1 10 2zm-6 14h12v1H4v-1z"/></svg>',
-  archive: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M2 4.5A2.5 2.5 0 0 1 4.5 2h11A2.5 2.5 0 0 1 18 4.5V5h.5a.5.5 0 0 1 0 1H18v9.5a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 2 15.5V6H1.5a.5.5 0 0 1 0-1H2v-.5zm1 1.5h14v-.5a1.5 1.5 0 0 0-1.5-1.5h-11A1.5 1.5 0 0 0 3 4.5V6zm0 1v8.5A1.5 1.5 0 0 0 4.5 17h11a1.5 1.5 0 0 0 1.5-1.5V7H3zm4 3h6a.5.5 0 0 1 0 1H7a.5.5 0 0 1 0-1z"/></svg>',
-  rtl: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M3 4.5h14v1H3v-1zm0 5h10v1H3v-1zm0 5h14v1H3v-1z"/><path d="M14.5 9.5l2.5 2.5-2.5 2.5v-1.5h-4v-2h4v-1.5z"/></svg>',
-  math: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M2 5h1v10H2V5zm3.5 0c-.276 0-.5.224-.5.5v3.414L3.793 7.207a.5.5 0 1 0-.707.707L4.293 10l-1.207 1.207a.5.5 0 1 0 .707.707L5.5 11.086V14.5c0 .276.224.5.5.5s.5-.224.5-.5v-3.414l1.207 1.207a.5.5 0 1 0 .707-.707L6.707 10l1.207-1.207a.5.5 0 0 0-.707-.707L6.5 8.914V5.5c0-.276-.224-.5-.5-.5zm7 0h3.5c1.381 0 2.5 1.119 2.5 2.5v5c0 1.381-1.119 2.5-2.5 2.5h-3.5c-.276 0-.5-.224-.5-.5s.224-.5.5-.5h3.5c.829 0 1.5-.671 1.5-1.5v-5c0-.829-.671-1.5-1.5-1.5h-3.5c-.276 0-.5-.224-.5-.5s.224-.5.5-.5zm9 0h1v10h-1V5z"/></svg>',
+  // HTML export — </> tag icon
+  archive: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M7 6.5L3.5 10 7 13.5l1-.9L4.9 10 8 7.4 7 6.5zm6 0-1 .9L15.1 10 12 12.6l1 .9L16.5 10 13 6.5zm-2.5 8 .97-.26-2-7.5-.97.26 2 7.5z"/></svg>',
+  // RTL toggle — lines with right-pointing arrow
+  rtl: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M3 5h13v1.5H3V5zm0 4.5h8v1.5H3V9.5zm0 4.5h13v1.5H3V14zm10-5 2.5 2.5L13 14v-1.5H9.5v-2H13V7.5z"/></svg>',
+  // Math — Greek capital Sigma Σ (summation)
+  math: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M4 3.5h12v1.75L11 10l5 4.75V16.5H4V14.75h9.4L9 10.5v-1l4.4-4.25H4V3.5z"/></svg>',
 };
 
 // Custom extension to preserve Mermaid placeholder divs
@@ -379,8 +398,8 @@ function createToolbar(container: HTMLElement) {
   const rtlGroup = document.createElement('div');
   rtlGroup.className = 'toolbar-group';
   rtlGroup.innerHTML = `
-    <button class="toolbar-btn" id="export-btn" title="Export as HTML">${icons.download}</button>
     <button class="toolbar-btn" id="export-self-contained-btn" title="Export Self-Contained HTML (images embedded)">${icons.archive}</button>
+    <button class="toolbar-btn" id="export-docx-btn" title="Export as Word Document (DOCX)"><svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M4 3h8.5L16 6.5V17H4V3zm1.5 1.5v11h9V7.5H12V4.5H5.5zm8 .5 1.5 1.5H13.5V5z" opacity="0.9"/><path d="M7 9h1.2l.8 3.5.9-2.3.9 2.3.8-3.5H12.8l-1.7 6H9.7l-.7-2-.7 2H6.7L5 9h2z"/></svg></button>
     <button class="toolbar-btn ${editorConfig.rtl ? 'active' : ''}" id="rtl-btn" title="Toggle RTL/LTR">${icons.rtl}</button>
   `;
   container.appendChild(rtlGroup);
@@ -616,26 +635,16 @@ function attachToolbarEventListeners() {
     editor!.chain().focus().setHorizontalRule().run();
   });
 
-  // Export HTML
-  document.getElementById('export-btn')?.addEventListener('click', () => {
-    if (!editor) return;
-
-    const html = editor.getHTML();
-    vscode.postMessage({
-      type: 'exportHTML',
-      options: {
-        title: 'Document',
-        includeStyles: true,
-        includeScripts: true,
-        standalone: true,
-      },
-    });
-  });
-
   // Export Self-Contained HTML (images embedded as base64)
   document.getElementById('export-self-contained-btn')?.addEventListener('click', () => {
     if (!editor) return;
     vscode.postMessage({ type: 'exportHTMLSelfContained' });
+  });
+
+  // Export as Word Document (DOCX) — uses the already-loaded Mermaid instance
+  document.getElementById('export-docx-btn')?.addEventListener('click', () => {
+    if (!editor) return;
+    vscode.postMessage({ type: 'exportDOCX' });
   });
 
   // RTL toggle
@@ -1439,6 +1448,33 @@ function handleMessageFromExtension(message: MessageToWebview) {
       console.error('Editor error:', message.message);
       break;
 
+    case 'renderMermaidForExport':
+      // Render mermaid sources to PNG data URLs for HTML export using the existing mermaid instance.
+      (async () => {
+        const sources = message.mermaidSources || {};
+        const exportImages: Record<string, string> = {};
+        for (const [diagramId, source] of Object.entries(sources) as [string, string][]) {
+          try {
+            // Same preprocessing as renderMermaidDiagrams()
+            let processed = source.replace(
+              /^[\t ]*participant\s+([a-zA-Z0-9_\-]+)\s+as\s+([^"\n]+?)(?:\s*)$/gm,
+              (match: string, participantId: string, alias: string) => {
+                const trimmed = alias.trim();
+                if (trimmed.startsWith('"') && trimmed.endsWith('"')) { return match; }
+                return `\tparticipant ${participantId} as "${trimmed}"`;
+              }
+            );
+            processed = processed.replace(/<br\s*\/?>/gi, '\\n');
+            const { svg } = await mermaid.render('mermaid-export-' + diagramId, processed);
+            exportImages[diagramId] = await mermaidSvgToPng(svg);
+          } catch (err) {
+            console.error(`[Mermaid Export] Failed to render ${diagramId}:`, err);
+          }
+        }
+        vscode.postMessage({ type: 'mermaidExportReady', mermaidImages: exportImages } as MessageFromWebview);
+      })();
+      break;
+
     case 'imageSaved':
       if (editor && message.imagePath) {
         // Use imageUrl for display (webview URI), but store imagePath (relative path) in src attribute
@@ -1576,6 +1612,50 @@ function renderMermaidDiagrams() {
       console.error(`[Mermaid] Error processing diagram ${mermaidId}:`, error);
       element.innerHTML = `<div style="color: #d13438; padding: 12px; background: #fff4f4; border: 1px solid #f0adac; border-radius: 4px; font-size: 12px;">Error: ${error instanceof Error ? error.message : String(error)}</div>`;
     }
+  });
+}
+
+/**
+ * Convert an SVG string to a PNG data URL via an off-screen canvas.
+ * Parses viewBox for correct dimensions and fills with a white background.
+ */
+function mermaidSvgToPng(svgString: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const parser = new DOMParser();
+    const svgDoc = parser.parseFromString(svgString, 'image/svg+xml');
+    const svgEl = svgDoc.querySelector('svg');
+    let width = 1200, height = 800;
+    if (svgEl) {
+      const vb = svgEl.getAttribute('viewBox');
+      if (vb) {
+        const parts = vb.trim().split(/[\s,]+/);
+        if (parts.length >= 4) {
+          width = parseFloat(parts[2]) || width;
+          height = parseFloat(parts[3]) || height;
+        }
+      } else {
+        width = parseFloat(svgEl.getAttribute('width') || '') || width;
+        height = parseFloat(svgEl.getAttribute('height') || '') || height;
+      }
+    }
+    // Use a data: URL instead of blob: — the webview CSP allows img-src data: but not blob:
+    const svgBase64 = btoa(unescape(encodeURIComponent(svgString)));
+    const dataUrl = 'data:image/svg+xml;base64,' + svgBase64;
+    const img = new window.Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d')!;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/png'));
+    };
+    img.onerror = () => {
+      reject(new Error('SVG to PNG conversion failed'));
+    };
+    img.src = dataUrl;
   });
 }
 

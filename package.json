@@ -1,8 +1,8 @@
 {
   "name": "rtf-markdown-editor",
   "displayName": "RTF Markdown Editor",
-  "description": "Word-like WYSIWYG Markdown Editor (RTL-first, Azure DevOps Mermaid, Autosave, FULLY OFFLINE)",
-  "version": "1.1.7",
+  "description": "Word-like WYSIWYG Markdown Editor — Export & Import Word (DOCX), Export HTML, RTL-first (Hebrew/Arabic), Azure DevOps Mermaid, Autosave, 100% Offline",
+  "version": "2.1.0",
   "publisher": "NGPowerToys",
   "icon": "media/icons/RTFMD.png",
   "keywords": [
@@ -13,17 +13,36 @@
     "rtl",
     "hebrew",
     "arabic",
+    "persian",
+    "urdu",
+    "bidirectional",
+    "bidi",
     "mermaid",
     "diagrams",
+    "flowchart",
+    "sequence-diagram",
+    "diagram",
     "export",
     "html",
+    "docx",
+    "word",
+    "microsoft-word",
+    "document",
     "offline",
     "autosave",
     "word-like",
     "rich-text",
+    "wysiwyg-editor",
+    "markdown-editor",
     "github",
     "azure-devops",
-    "rfc-7763"
+    "technical-writing",
+    "documentation",
+    "rfc-7763",
+    "import",
+    "convert",
+    "docx-to-markdown",
+    "word-to-markdown"
   ],
   "repository": {
     "type": "git",
@@ -63,6 +82,21 @@
           "command": "rtf-markdown-editor.openEditor",
           "when": "resourceExtname == .md || resourceExtname == .markdown",
           "group": "1_modification"
+        },
+        {
+          "command": "rtf-markdown-editor.exportDOCX",
+          "when": "resourceExtname == .md || resourceExtname == .markdown",
+          "group": "1_modification"
+        },
+        {
+          "command": "rtf-markdown-editor.exportHTMLSelfContained",
+          "when": "resourceExtname == .md || resourceExtname == .markdown",
+          "group": "1_modification"
+        },
+        {
+          "command": "rtf-markdown-editor.importDOCX",
+          "when": "resourceExtname == .docx",
+          "group": "1_modification"
         }
       ]
     },
@@ -74,7 +108,17 @@
       },
       {
         "command": "rtf-markdown-editor.exportHTMLSelfContained",
-        "title": "Export Self-Contained HTML (Embed Images)",
+        "title": "Convert to Web Archive (HTML)",
+        "category": "RTF Markdown"
+      },
+      {
+        "command": "rtf-markdown-editor.exportDOCX",
+        "title": "Convert to Word (DOCX)",
+        "category": "RTF Markdown"
+      },
+      {
+        "command": "rtf-markdown-editor.importDOCX",
+        "title": "Convert to Markdown",
         "category": "RTF Markdown"
       }
     ],
@@ -188,11 +232,13 @@
     "@tiptap/extension-underline": "^2.1.0",
     "@tiptap/pm": "^2.1.0",
     "@tiptap/starter-kit": "^2.1.0",
+    "adm-zip": "^0.5.16",
+    "chardet": "^1.6.0",
+    "he": "^1.2.0",
+    "iconv-lite": "^0.6.3",
+    "mammoth": "^1.11.0",
     "markdown-it": "^13.0.0",
     "markdown-it-front-matter": "^0.2.4",
-    "mermaid": "^10.6.0",
-    "chardet": "^1.6.0",
-    "iconv-lite": "^0.6.3",
-    "he": "^1.2.0"
+    "mermaid": "^10.6.0"
   }
 }

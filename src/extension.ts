@@ -5,6 +5,9 @@ import * as path from 'path';
 import * as iconv from 'iconv-lite';
 import * as chardet from 'chardet';
 import { exportToHTML } from './utils/htmlExporter';
+import { importFromDOCX } from './utils/docxImporter';
+import { extractMermaidBlocks } from './utils/markdownProcessor';
+import { renderMermaidToPng } from './utils/mermaidRenderer';
 
 export function activate(context: vscode.ExtensionContext) {
   const provider = new MarkdownWordEditorProvider(context);
@@ -50,12 +53,22 @@ export function activate(context: vscode.ExtensionContext) {
         // Get document name for title
         const docName = path.basename(editor.document.uri.fsPath, path.extname(editor.document.uri.fsPath));
 
+        // Pre-render Mermaid diagrams to PNG using a hidden webview
+        const { mermaidSources } = extractMermaidBlocks(markdown);
+        let mermaidImages: Record<string, string> = {};
+        if (Object.keys(mermaidSources).length > 0) {
+          await vscode.window.withProgress(
+            { location: vscode.ProgressLocation.Notification, title: 'Exporting HTML: rendering Mermaid diagrams...', cancellable: false },
+            async () => { mermaidImages = await renderMermaidToPng(mermaidSources, context); }
+          );
+        }
+
         // Generate HTML
         const html = await exportToHTML(markdown, {
           title: docName,
           includeStyles: true,
-          includeScripts: true,
           standalone: true,
+          mermaidImages,
         });
 
         // Ask user where to save
@@ -75,41 +88,87 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   // Register command to export as self-contained HTML (images embedded as base64)
+  // Delegates to the provider so it uses the live editor content and webview Mermaid
+  // rendering — identical to the toolbar button. Opens the editor in the background
+  // if the file is not already open.
   context.subscriptions.push(
-    vscode.commands.registerCommand('rtf-markdown-editor.exportHTMLSelfContained', async () => {
-      const editor = vscode.window.activeTextEditor;
-      if (!editor || !editor.document.fileName.endsWith('.md')) {
-        vscode.window.showErrorMessage('Please open a markdown file first');
+    vscode.commands.registerCommand('rtf-markdown-editor.exportHTMLSelfContained', async (uri?: vscode.Uri) => {
+      const target = uri ?? (vscode.window.activeTextEditor
+        ? vscode.Uri.file(vscode.window.activeTextEditor.document.uri.fsPath)
+        : undefined);
+      if (!target || !/\.(md|markdown)$/i.test(target.fsPath)) {
+        vscode.window.showErrorMessage('Please open or select a Markdown file first');
         return;
       }
+      await provider.exportFromUri(target, 'html', {
+        selfContained: true,
+        basePath: path.dirname(target.fsPath),
+      });
+    })
+  );
 
+  // Register command to export current document as Word DOCX
+  // Same delegation pattern as exportHTMLSelfContained.
+  context.subscriptions.push(
+    vscode.commands.registerCommand('rtf-markdown-editor.exportDOCX', async (uri?: vscode.Uri) => {
+      const target = uri ?? (vscode.window.activeTextEditor
+        ? vscode.Uri.file(vscode.window.activeTextEditor.document.uri.fsPath)
+        : undefined);
+      if (!target || !/\.(md|markdown)$/i.test(target.fsPath)) {
+        vscode.window.showErrorMessage('Please open or select a Markdown file first');
+        return;
+      }
+      await provider.exportFromUri(target, 'docx');
+    })
+  );
+  // Register command to import a Word DOCX file and convert it to Markdown
+  context.subscriptions.push(
+    vscode.commands.registerCommand('rtf-markdown-editor.importDOCX', async (uri?: vscode.Uri) => {
       try {
-        const buffer = fs.readFileSync(editor.document.uri.fsPath);
-        const charset = detectCharset(buffer);
-        const markdown = iconv.decode(buffer, charset);
+        // Determine the DOCX file to import:
+        // - If invoked from the Explorer context menu, `uri` is the selected file.
+        // - If invoked from the Command Palette, show an Open dialog.
+        let docxUri: vscode.Uri | undefined = uri;
 
-        const docName = path.basename(editor.document.uri.fsPath, path.extname(editor.document.uri.fsPath));
-
-        const html = await exportToHTML(markdown, {
-          title: docName,
-          includeStyles: true,
-          includeScripts: true,
-          standalone: true,
-          selfContained: true,
-          basePath: path.dirname(editor.document.uri.fsPath),
-        });
-
-        const uri = await vscode.window.showSaveDialog({
-          defaultUri: vscode.Uri.file(path.join(path.dirname(editor.document.uri.fsPath), `${docName}.html`)),
-          filters: { 'HTML Files': ['html'] },
-        });
-
-        if (uri) {
-          fs.writeFileSync(uri.fsPath, html, 'utf8');
-          vscode.window.showInformationMessage(`Self-contained HTML exported to ${path.basename(uri.fsPath)}`);
+        if (!docxUri) {
+          const picked = await vscode.window.showOpenDialog({
+            canSelectMany: false,
+            filters: { 'Word Documents': ['docx'] },
+            openLabel: 'Import DOCX',
+          });
+          if (!picked || picked.length === 0) { return; }
+          docxUri = picked[0];
         }
+
+        const docxPath = docxUri.fsPath;
+        const docName = path.basename(docxPath, path.extname(docxPath));
+
+        // Show save dialog before conversion so we know the output path upfront
+        // (needed to compute relative image paths during extraction)
+        const saveUri = await vscode.window.showSaveDialog({
+          defaultUri: vscode.Uri.file(path.join(path.dirname(docxPath), `${docName}.md`)),
+          filters: { 'Markdown Files': ['md'] },
+        });
+        if (!saveUri) { return; }
+
+        let markdown = '';
+        await vscode.window.withProgress(
+          {
+            location: vscode.ProgressLocation.Notification,
+            title: `Converting "${docName}.docx" to Markdown…`,
+            cancellable: false,
+          },
+          async () => {
+            markdown = await importFromDOCX(docxPath, saveUri.fsPath);
+          }
+        );
+
+        fs.writeFileSync(saveUri.fsPath, markdown, 'utf8');
+
+        vscode.window.showInformationMessage(`Markdown saved to ${path.basename(saveUri.fsPath)}`);
+        await vscode.commands.executeCommand('vscode.openWith', saveUri, 'rtf-markdown-editor.editor');
       } catch (error) {
-        vscode.window.showErrorMessage(`Failed to export self-contained HTML: ${error}`);
+        vscode.window.showErrorMessage(`Failed to import DOCX: ${error}`);
       }
     })
   );

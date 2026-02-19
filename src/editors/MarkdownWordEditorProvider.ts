@@ -4,14 +4,17 @@ import * as path from 'path';
 import * as chardet from 'chardet';
 import * as iconv from 'iconv-lite';
 import { MessageFromWebview, MessageToWebview, EditorConfig, MarkdownMetadata } from '../types';
-import { markdownToHtml, detectRTLCharacters } from '../utils/markdownProcessor';
+import { markdownToHtml, detectRTLCharacters, extractMermaidBlocks } from '../utils/markdownProcessor';
 import { htmlToMarkdown, hashContent } from '../utils/htmlProcessor';
 import { RTLService } from '../services/RTLService';
 import { exportToHTML, ExportOptions } from '../utils/htmlExporter';
+import { exportToDOCX } from '../utils/docxExporter';
 
 export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
   private readonly context: vscode.ExtensionContext;
   private documentMap: Map<string, WebviewDocument> = new Map();
+  private panelMap: Map<string, vscode.WebviewPanel> = new Map();
+  private pendingExports: Map<string, { type: 'docx' | 'html'; options?: ExportOptions }> = new Map();
   private _onDidChangeCustomDocument = new vscode.EventEmitter<vscode.CustomDocumentContentChangeEvent<WebviewDocument>>();
   
   readonly onDidChangeCustomDocument = this._onDidChangeCustomDocument.event;
@@ -72,11 +75,16 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
 
     webviewPanel.webview.html = this.getWebviewContent(webviewPanel.webview);
 
+    this.panelMap.set(document.uri.toString(), webviewPanel);
+    webviewPanel.onDidDispose(() => this.panelMap.delete(document.uri.toString()));
+
     webviewDocument.onDidChange((e: WebviewDocumentChangeEvent) => {
+      let { html, mermaidSources } = markdownToHtml(e.content);
+      html = this.convertImagePathsToWebviewUris(html, document.uri, webviewPanel.webview);
       webviewPanel.webview.postMessage({
         type: 'externalUpdate',
-        content: e.content,
-        mermaidSources: e.mermaidSources,
+        html,
+        mermaidSources,
       } as MessageToWebview);
     });
 
@@ -132,6 +140,20 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
     switch (message.type) {
       case 'ready':
         this.sendInitialContent(document, panel);
+        {
+          const pending = this.pendingExports.get(document.uri.toString());
+          if (pending) {
+            this.pendingExports.delete(document.uri.toString());
+            // Delay lets Mermaid initialize in the webview before export is triggered
+            setTimeout(() => {
+              if (pending.type === 'docx') {
+                this.handleExportDOCX(document, panel);
+              } else {
+                this.handleExportHTML(document, pending.options ?? {}, panel);
+              }
+            }, 500);
+          }
+        }
         break;
 
       case 'contentChanged':
@@ -186,6 +208,10 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
           selfContained: true,
           basePath: path.dirname(document.uri.fsPath),
         }, panel);
+        break;
+
+      case 'exportDOCX':
+        this.handleExportDOCX(document, panel);
         break;
     }
   }
@@ -317,10 +343,17 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
       const markdown = document.getContent();
       const docName = path.basename(document.uri.fsPath, path.extname(document.uri.fsPath));
 
+      // Pre-render Mermaid diagrams to PNG via the already-open editor webview
+      const { mermaidSources } = extractMermaidBlocks(markdown);
+      const mermaidImages = Object.keys(mermaidSources).length > 0
+        ? await this.renderMermaidViaWebview(panel, mermaidSources)
+        : {};
+
       // Generate HTML
       const html = await exportToHTML(markdown, {
         ...options,
         title: docName,
+        mermaidImages,
       });
 
       // Ask user where to save
@@ -333,10 +366,108 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
         // Write the HTML file
         fs.writeFileSync(uri.fsPath, html, 'utf8');
         vscode.window.showInformationMessage(`HTML exported to ${path.basename(uri.fsPath)}`);
+        await vscode.env.openExternal(uri);
       }
     } catch (error) {
       vscode.window.showErrorMessage(`Failed to export HTML: ${error}`);
     }
+  }
+
+  private async handleExportDOCX(
+    document: WebviewDocument,
+    panel: vscode.WebviewPanel
+  ) {
+    try {
+      const markdown = document.getContent();
+      const docName = path.basename(document.uri.fsPath, path.extname(document.uri.fsPath));
+
+      // Pre-render Mermaid diagrams to PNG via the already-open editor webview
+      const { mermaidSources } = extractMermaidBlocks(markdown);
+      const mermaidImages = Object.keys(mermaidSources).length > 0
+        ? await this.renderMermaidViaWebview(panel, mermaidSources)
+        : {};
+
+      const docx = await exportToDOCX(markdown, {
+        title: docName,
+        basePath: path.dirname(document.uri.fsPath),
+        mermaidImages,
+      });
+
+      const uri = await vscode.window.showSaveDialog({
+        defaultUri: vscode.Uri.file(path.join(path.dirname(document.uri.fsPath), `${docName}.docx`)),
+        filters: { 'Word Documents': ['docx'] },
+      });
+
+      if (uri) {
+        fs.writeFileSync(uri.fsPath, docx);
+        vscode.window.showInformationMessage(`Word document exported to ${path.basename(uri.fsPath)}`);
+        await vscode.env.openExternal(uri);
+      }
+    } catch (error) {
+      vscode.window.showErrorMessage(`Failed to export Word document: ${error}`);
+    }
+  }
+
+  /**
+   * Export the document at `uri` using the same pipeline as the editor toolbar buttons.
+   * If the file is already open in the custom editor the live webview is used directly.
+   * If not, the editor is opened in the background (preserveFocus) and the export is
+   * triggered automatically once the webview signals it is ready.
+   */
+  public async exportFromUri(
+    uri: vscode.Uri,
+    type: 'docx' | 'html',
+    options?: ExportOptions
+  ): Promise<void> {
+    const key = uri.toString();
+    const panel = this.panelMap.get(key);
+    const document = this.documentMap.get(key);
+
+    if (panel && document) {
+      // Already open — delegate to the live webview immediately
+      if (type === 'docx') {
+        await this.handleExportDOCX(document, panel);
+      } else {
+        await this.handleExportHTML(document, options ?? {}, panel);
+      }
+    } else {
+      // Not open — queue the export; it fires when the 'ready' message arrives
+      this.pendingExports.set(key, { type, options });
+      await vscode.commands.executeCommand(
+        'vscode.openWith', uri, 'rtf-markdown-editor.editor',
+        { viewColumn: vscode.ViewColumn.Active, preserveFocus: true }
+      );
+    }
+  }
+
+  /**
+   * Ask the already-open editor webview to render Mermaid sources to PNG data URLs.
+   * Returns a map of diagram IDs to PNG data URLs. Returns {} on timeout.
+   */
+  private renderMermaidViaWebview(
+    panel: vscode.WebviewPanel,
+    mermaidSources: Record<string, string>,
+    timeoutMs = 30000
+  ): Promise<Record<string, string>> {
+    return new Promise<Record<string, string>>((resolve) => {
+      const timer = setTimeout(() => {
+        disposable.dispose();
+        resolve({});
+      }, timeoutMs);
+
+      const disposable = panel.webview.onDidReceiveMessage((msg) => {
+        if (msg.type === 'mermaidExportReady') {
+          clearTimeout(timer);
+          disposable.dispose();
+          resolve(msg.mermaidImages || {});
+        }
+      });
+
+      panel.webview.postMessage({
+        type: 'renderMermaidForExport',
+        mermaidSources,
+      });
+    });
   }
 
   private convertImagePathsToWebviewUris(html: string, documentUri: vscode.Uri, webview: vscode.Webview): string {
