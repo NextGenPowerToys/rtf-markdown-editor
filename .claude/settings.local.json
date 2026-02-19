@@ -2,7 +2,12 @@
   "permissions": {
     "allow": [
       "Bash(npm run esbuild:*)",
-      "Bash(npm run build:webview:*)"
+      "Bash(npm run build:webview:*)",
+      "Bash(git -C /Users/alexk/Projects/NextGenPowerToys/rtf-markdown-editor status)",
+      "Bash(git -C /Users/alexk/Projects/NextGenPowerToys/rtf-markdown-editor log --oneline -5)",
+      "Bash(git -C /Users/alexk/Projects/NextGenPowerToys/rtf-markdown-editor diff --stat HEAD)",
+      "Bash(git -C /Users/alexk/Projects/NextGenPowerToys/rtf-markdown-editor diff HEAD -- package.json CHANGELOG.md README.md)",
+      "Bash(git -C /Users/alexk/Projects/NextGenPowerToys/rtf-markdown-editor show:*)"
     ]
   }
 }
