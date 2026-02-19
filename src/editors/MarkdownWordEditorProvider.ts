@@ -74,10 +74,12 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
     webviewPanel.webview.html = this.getWebviewContent(webviewPanel.webview);
 
     webviewDocument.onDidChange((e: WebviewDocumentChangeEvent) => {
+      let { html, mermaidSources } = markdownToHtml(e.content);
+      html = this.convertImagePathsToWebviewUris(html, document.uri, webviewPanel.webview);
       webviewPanel.webview.postMessage({
         type: 'externalUpdate',
-        content: e.content,
-        mermaidSources: e.mermaidSources,
+        html,
+        mermaidSources,
       } as MessageToWebview);
     });
 
