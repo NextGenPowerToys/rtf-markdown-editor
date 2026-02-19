@@ -1,8 +1,8 @@
 {
   "name": "rtf-markdown-editor",
   "displayName": "RTF Markdown Editor",
-  "description": "Word-like WYSIWYG Markdown Editor — Export to Word & HTML, RTL-first (Hebrew/Arabic), Azure DevOps Mermaid, Autosave, 100% Offline",
-  "version": "1.2.0",
+  "description": "Word-like WYSIWYG Markdown Editor — Export & Import Word (DOCX), Export HTML, RTL-first (Hebrew/Arabic), Azure DevOps Mermaid, Autosave, 100% Offline",
+  "version": "2.0.0",
   "publisher": "NGPowerToys",
   "icon": "media/icons/RTFMD.png",
   "keywords": [
@@ -38,7 +38,11 @@
     "azure-devops",
     "technical-writing",
     "documentation",
-    "rfc-7763"
+    "rfc-7763",
+    "import",
+    "convert",
+    "docx-to-markdown",
+    "word-to-markdown"
   ],
   "repository": {
     "type": "git",

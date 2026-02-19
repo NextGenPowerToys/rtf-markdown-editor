@@ -1,8 +1,8 @@
 # RTF Markdown Editor
 
-**Word-like WYSIWYG Markdown Editor for VS Code** — RTL-first, Azure DevOps Mermaid, Export to Word & HTML, Autosave, **100% Offline**
+**Word-like WYSIWYG Markdown Editor for VS Code** — RTL-first, Azure DevOps Mermaid, Export & Import Word/HTML, Autosave, **100% Offline**
 
-A rich text editor extension for VS Code that provides a Microsoft Word / Google Docs-like editing experience for Markdown files, with special emphasis on right-to-left (RTL) languages like Hebrew and Arabic, automatic saving, Mermaid diagram support, and one-click export to HTML or Word (DOCX).
+A rich text editor extension for VS Code that provides a Microsoft Word / Google Docs-like editing experience for Markdown files, with special emphasis on right-to-left (RTL) languages like Hebrew and Arabic, automatic saving, Mermaid diagram support, and one-click export to HTML or Word (DOCX) — plus full **import from Word back to Markdown**.
 
 ## Features
 
@@ -93,6 +93,17 @@ A rich text editor extension for VS Code that provides a Microsoft Word / Google
 - **No External Dependencies**: Built entirely with Node.js built-ins — no additional packages
 - **Command**: `RTF Markdown: Export as Word Document (DOCX)`
 
+### ✅ Import from Word (DOCX → Markdown)
+
+- **Full Round-Trip**: Export to Word, edit it, import back to Markdown
+- **Right-Click Import**: Right-click any `.docx` file in the Explorer → **"Import Word Document as Markdown (DOCX → MD)"**
+- **Command Palette**: `RTF Markdown: Import Word Document as Markdown (DOCX → MD)`
+- **All Content Preserved**: Text, headings, tables, code blocks, lists, blockquotes
+- **Images Extracted**: All embedded images saved as real files in `.attachments/.<name>/` — no base64 blobs in your Markdown
+- **Mermaid Diagrams**: Exported Mermaid PNGs are imported back as image references
+- **Smart Detection**: Automatically handles both extension-generated DOCX files and standard Word documents
+- **Offline**: No external tools or internet required
+
 ### 🔒 100% Offline & Secure
 - **No Internet Required**: All dependencies bundled locally
 - **No CDN Calls**: Fonts, scripts, and styles are embedded
@@ -167,6 +178,30 @@ The exported document preserves:
 - Code blocks styled as monospace
 - Mermaid diagrams as embedded PNG images
 - RTL text direction for Hebrew/Arabic documents
+
+### Importing from Word (DOCX)
+
+**From Explorer (easiest):**
+
+1. Right-click a `.docx` file in the VS Code Explorer
+2. Select **"Import Word Document as Markdown (DOCX → MD)"**
+3. Choose where to save the resulting `.md` file
+4. The file opens automatically in the RTF Markdown Editor
+
+**From Command Palette:**
+
+1. Open Command Palette (Ctrl+Shift+P) → **"Import Word Document as Markdown (DOCX → MD)"**
+2. Pick the `.docx` file to import
+3. Choose where to save the resulting `.md` file
+
+**What gets imported:**
+
+- All text content: headings, paragraphs, tables, lists, code blocks, blockquotes
+- Embedded images saved as real files in `.attachments/.<name>/` (referenced by relative path)
+- Mermaid diagrams (from extension-exported DOCX) imported as PNG image references
+- RTL text direction preserved
+
+**Round-trip workflow:** `.md` → Export as DOCX → Import as Markdown → `.md`
 
 ### Toolbar Controls
 
@@ -336,6 +371,12 @@ This extension is designed to work **completely offline**:
 - Both ` ```mermaid ` and `::: mermaid` syntax are supported
 - Try clicking the diagram to edit and re-save
 
+### Imported DOCX is missing content
+
+- Ensure the `.docx` was saved properly and is not password-protected
+- For extension-generated DOCX files, the import reads the internal `afchunk_N.htm` entries — if the file was modified by a third-party tool it may fall back to the mammoth path
+- Images are saved to `.attachments/.<name>/` beside the output `.md` file — check that folder exists after import
+
 ### Mermaid diagrams blank in exported DOCX
 - Use the **toolbar button** (W icon) rather than the Command Palette — the toolbar path uses the already-initialized editor for reliable rendering
 - Ensure you have the file open in the RTF Markdown Editor (not just a text editor)
@@ -396,4 +437,4 @@ For issues, feature requests, or questions:
 
 ---
 
-**RTF Markdown Editor** — Offline, RTL-first, WYSIWYG Markdown editing for VS Code. Export to HTML and Word with one click.
+**RTF Markdown Editor** — Offline, RTL-first, WYSIWYG Markdown editing for VS Code. Export to HTML and Word, import from Word — all with one click.

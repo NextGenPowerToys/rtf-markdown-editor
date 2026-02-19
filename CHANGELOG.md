@@ -2,6 +2,43 @@
 
 All notable changes to the RTF Markdown Editor extension will be documented in this file.
 
+## [2.0.0] - 2026-02-19
+
+### Added
+
+- **Import from Word (DOCX → MD)** — Full round-trip: export to Word and import back to Markdown
+  - Right-click any `.docx` file in Explorer → **"Import Word Document as Markdown (DOCX → MD)"**
+  - Command Palette: `RTF Markdown: Import Word Document as Markdown (DOCX → MD)`
+  - Opens the resulting `.md` file directly in the RTF Markdown Editor
+  - Works with both extension-generated DOCX and standard Word documents
+
+- **Full Content Preservation on Import** — All content extracted, nothing dropped
+  - Text, headings, tables, code blocks, blockquotes — full fidelity
+  - Mermaid diagrams extracted from `word/media/` and saved as `.png` files
+  - Local images (JPG, PNG, GIF, WebP, BMP, TIFF) embedded as data URIs in the DOCX are extracted and saved as real image files in `.attachments/.<name>/`
+  - Image references in the resulting `.md` use correct relative paths
+
+- **Dual-Path DOCX Import Engine**
+  - **Extension-generated DOCX**: altChunk-aware path — reads `word/document.xml` for document order, extracts HTML from `afchunk_N.htm` ZIP entries, preserves interleaved text + image sequence
+  - **Standard Word DOCX**: mammoth-based path — full HTML conversion with image extraction to `.attachments/`
+  - Auto-detection: presence of `afchunk_0.htm` in the ZIP distinguishes the two formats
+
+- **Real-Time Editor Refresh** — Editor now correctly reflects external file changes
+  - Fixed `externalUpdate` message: content is now converted to HTML before being sent to the webview
+  - Image paths resolved to webview URIs for correct display after external edits
+
+### Implementation Details
+
+- **`src/utils/docxImporter.ts`** — New file implementing the full DOCX→MD pipeline
+  - `importFromDOCX()` — public entry point, auto-detects DOCX type
+  - `importFromExtensionDocx()` — altChunk path using `adm-zip` for ZIP reading
+  - `importFromStandardDocx()` — mammoth path for standard Word documents
+  - `saveDataUriImages()` — extracts base64-embedded images to `.attachments/`, replaces with `file://` URIs
+  - `parseDocumentSequence()` — scans `document.xml` for ordered altChunk + image blip references
+  - `parseRels()` — parses `word/_rels/document.xml.rels` into a relId→path map
+- **`src/extension.ts`** — Added `importDOCX` command registration
+- **`src/editors/MarkdownWordEditorProvider.ts`** — Fixed `externalUpdate` webview message
+
 ## [1.2.0] - 2026-02-18
 
 ### Added
@@ -222,6 +259,8 @@ All notable changes to the RTF Markdown Editor extension will be documented in t
 
 - [ ] Markdown preview pane
 - [x] Export to HTML *(Added in v1.1.0)*
+- [x] Export to Word (DOCX) *(Added in v1.2.0)*
+- [x] Import from Word (DOCX → MD) *(Added in v2.0.0)*
 - [ ] Export to PDF
 - [ ] Collaborative editing
 - [ ] Plugin system
