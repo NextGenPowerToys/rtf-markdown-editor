@@ -1,8 +1,8 @@
 # RTF Markdown Editor
 
-**Word-like WYSIWYG Markdown Editor for VS Code** — RTL-first, Azure DevOps Mermaid, Export & Import Word/HTML, Autosave, **100% Offline**
+**Word-like WYSIWYG Markdown Editor for VS Code** — RTL-first, Azure DevOps Mermaid, Export & Import Word/HTML/PDF, Autosave, **100% Offline**
 
-A rich text editor extension for VS Code that provides a Microsoft Word / Google Docs-like editing experience for Markdown files, with special emphasis on right-to-left (RTL) languages like Hebrew and Arabic, automatic saving, Mermaid diagram support, and one-click export to HTML or Word (DOCX) — plus full **import from Word back to Markdown**.
+A rich text editor extension for VS Code that provides a Microsoft Word / Google Docs-like editing experience for Markdown files, with special emphasis on right-to-left (RTL) languages like Hebrew and Arabic, automatic saving, Mermaid diagram support, and one-click export to HTML, Word (DOCX), or PDF — plus **import from Word and PDF back to Markdown**.
 
 ## Features
 
@@ -94,6 +94,15 @@ A rich text editor extension for VS Code that provides a Microsoft Word / Google
 - **No External Dependencies**: Built entirely with Node.js built-ins — no additional packages
 - **Command**: `RTF Markdown: Convert to Word (DOCX)`
 
+### ✅ Export to PDF
+
+- **One-Click Export**: Right-click context menu or Command Palette
+- **High-Quality Rendering**: Uses Chrome/Chromium headless for pixel-perfect PDF output
+- **Mermaid as Embedded Images**: Diagrams pre-rendered to PNG before PDF generation
+- **RTL Preserved**: Right-to-left direction correctly applied in PDF layout
+- **Metadata Embedding**: Embeds original Markdown structure for lossless re-import
+- **Command**: `RTF Markdown: Convert to PDF`
+
 ### ✅ Export to Web Archive (HTML)
 
 - **One-Click Export**: Toolbar button, right-click context menu, or Command Palette
@@ -102,6 +111,17 @@ A rich text editor extension for VS Code that provides a Microsoft Word / Google
 - **RTL Preserved**: Right-to-left direction detected and applied
 - **Fully Offline**: No internet required — 100% standalone HTML output
 - **Command**: `RTF Markdown: Convert to Web Archive (HTML)`
+
+### ✅ Import from PDF (PDF → Markdown)
+
+- **Right-Click Import**: Right-click any `.pdf` file in the Explorer → **"Convert PDF to Markdown"**
+- **Command Palette**: `RTF Markdown: Convert PDF to Markdown`
+- **Advanced OCR Pipeline**: Multi-pass Tesseract.js OCR with Hebrew/English support
+- **Smart Structure Detection**: Automatically detects headings, tables, lists, and paragraphs from positioned text data
+- **Table Extraction**: Column-alignment-based table detection with cross-page table merging
+- **RTL/Hebrew First**: Optimized for Hebrew documents with misread correction and bidirectional text handling
+- **Hybrid Mode**: Uses text extraction first (fast), falls back to OCR for pages with broken fonts
+- **Lossless Round-Trip**: PDFs exported by this extension embed metadata for near-perfect re-import
 
 ### ✅ Import from Word (DOCX → Markdown)
 
@@ -215,6 +235,50 @@ The exported document preserves:
 - RTL text direction preserved
 
 **Round-trip workflow:** `.md` → Export as DOCX → Import as Markdown → `.md`
+
+### Importing from PDF
+
+**From Explorer (easiest):**
+
+1. Right-click a `.pdf` file in the VS Code Explorer
+2. Select **"Convert PDF to Markdown"**
+3. Choose where to save the resulting `.md` file
+4. The file opens automatically in the RTF Markdown Editor
+
+**From Command Palette:**
+
+1. Open Command Palette (Ctrl+Shift+P) → **"RTF Markdown: Convert PDF to Markdown"**
+2. Pick the `.pdf` file to import
+3. Choose where to save the resulting `.md` file
+4. The file opens automatically in the RTF Markdown Editor
+
+**What gets imported:**
+
+- All text content: headings, paragraphs, tables, lists
+- Bold and italic formatting (detected from font metadata)
+- Table structures (detected from column alignment in positioned text data)
+- Hebrew/Arabic RTL text with bidirectional correction
+- For extension-exported PDFs: near-lossless recovery via embedded metadata
+
+### Import Limitations (Word & PDF)
+
+> **Note:** Import from Word (DOCX) and PDF are best-effort conversions. These formats are inherently different from Markdown, and some information may be lost or approximated during conversion.
+
+**Word (DOCX) import limitations:**
+
+- Complex layouts (multi-column, text boxes) may not convert perfectly
+- Some advanced Word formatting (tracked changes, comments, footnotes) is not preserved
+- Embedded OLE objects and ActiveX controls are skipped
+
+**PDF import limitations:**
+
+- PDF is a visual format — it stores where text is drawn, not what it means semantically. Structure detection uses heuristics and may not always be accurate
+- Images embedded in PDFs are not extracted (only text content is converted)
+- Scanned/image-only PDFs require OCR, which depends on scan quality
+- Complex multi-column layouts may be misinterpreted
+- Custom font encodings without Unicode mappings fall back to OCR
+- OCR accuracy depends on document quality — handwritten text is not supported
+- Tables detected from position data may have alignment issues with irregular layouts
 
 ### Toolbar Controls
 
@@ -407,6 +471,8 @@ This extension is designed to work **completely offline**:
 - **Markdown**: markdown-it
 - **Diagrams**: Mermaid (bundled locally)
 - **DOCX**: Custom Open XML builder (no external library)
+- **PDF Import**: pdfjs-dist + Tesseract.js OCR with structure analysis
+- **PDF Export**: Puppeteer (Chrome headless) rendering
 - **Build**: esbuild
 - **Runtime**: Node.js (extension host), Browser (webview)
 
@@ -451,4 +517,4 @@ For issues, feature requests, or questions:
 
 ---
 
-**RTF Markdown Editor** — Offline, RTL-first, WYSIWYG Markdown editing for VS Code. Export to HTML and Word, import from Word — all with one click.
+**RTF Markdown Editor** — Offline, RTL-first, WYSIWYG Markdown editing for VS Code. Export to HTML, Word, and PDF. Import from Word and PDF — all with one click.

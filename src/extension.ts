@@ -6,6 +6,7 @@ import * as iconv from 'iconv-lite';
 import * as chardet from 'chardet';
 import { exportToHTML } from './utils/htmlExporter';
 import { importFromDOCX } from './utils/docxImporter';
+import { importFromPDF } from './utils/pdfImporter';
 import { extractMermaidBlocks } from './utils/markdownProcessor';
 import { renderMermaidToPng } from './utils/mermaidRenderer';
 
@@ -184,6 +185,55 @@ export function activate(context: vscode.ExtensionContext) {
         await vscode.commands.executeCommand('vscode.openWith', saveUri, 'rtf-markdown-editor.editor');
       } catch (error) {
         vscode.window.showErrorMessage(`Failed to import DOCX: ${error}`);
+      }
+    })
+  );
+
+  // Register command to import a PDF file and convert it to Markdown
+  context.subscriptions.push(
+    vscode.commands.registerCommand('rtf-markdown-editor.importPDF', async (uri?: vscode.Uri) => {
+      try {
+        let pdfUri: vscode.Uri | undefined = uri;
+
+        if (!pdfUri) {
+          const picked = await vscode.window.showOpenDialog({
+            canSelectMany: false,
+            filters: { 'PDF Files': ['pdf'] },
+            openLabel: 'Import PDF',
+          });
+          if (!picked || picked.length === 0) { return; }
+          pdfUri = picked[0];
+        }
+
+        const pdfPath = pdfUri.fsPath;
+        const docName = path.basename(pdfPath, path.extname(pdfPath));
+
+        const saveUri = await vscode.window.showSaveDialog({
+          defaultUri: vscode.Uri.file(path.join(path.dirname(pdfPath), `${docName}.md`)),
+          filters: { 'Markdown Files': ['md'] },
+        });
+        if (!saveUri) { return; }
+
+        let markdown = '';
+        await vscode.window.withProgress(
+          {
+            location: vscode.ProgressLocation.Notification,
+            title: `Converting "${docName}.pdf" to Markdown…`,
+            cancellable: false,
+          },
+          async (progressIndicator) => {
+            markdown = await importFromPDF(pdfPath, context, (message) => {
+              progressIndicator.report({ message });
+            });
+          }
+        );
+
+        fs.writeFileSync(saveUri.fsPath, markdown, 'utf8');
+
+        vscode.window.showInformationMessage(`Markdown saved to ${path.basename(saveUri.fsPath)}`);
+        await vscode.commands.executeCommand('vscode.openWith', saveUri, 'rtf-markdown-editor.editor');
+      } catch (error) {
+        vscode.window.showErrorMessage(`Failed to import PDF: ${error}`);
       }
     })
   );

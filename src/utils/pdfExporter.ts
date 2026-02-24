@@ -2,12 +2,27 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { exportToHTML, ExportOptions } from './htmlExporter';
+import { hasRTLCharacters, detectParagraphDirection } from './bidiHandler';
 
 export interface PdfExportOptions {
   title?: string;
   mermaidImages?: Record<string, string>;
   basePath?: string;
   rtl?: boolean;
+}
+
+interface PdfMetadataItem {
+  type: 'heading' | 'paragraph' | 'list' | 'ordered-list' | 'blank';
+  level?: number;
+  content?: string;
+}
+
+interface PdfMetadata {
+  version: string;
+  format: string;
+  rtl: boolean;
+  title?: string;
+  structure: PdfMetadataItem[];
 }
 
 function getChromePaths(): string[] {
@@ -47,6 +62,87 @@ function findChrome(): string {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Metadata extraction from markdown
+// ---------------------------------------------------------------------------
+
+/**
+ * Parses markdown to extract structure (headings, lists, paragraphs).
+ * This metadata is embedded in the PDF to enable lossless round-trip imports.
+ */
+function extractMarkdownStructure(markdown: string): PdfMetadataItem[] {
+  const lines = markdown.split('\n');
+  const structure: PdfMetadataItem[] = [];
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+
+    // Blank line
+    if (!trimmed) {
+      structure.push({ type: 'blank' });
+      continue;
+    }
+
+    // Heading: # ... or ## ... etc
+    const headingMatch = trimmed.match(/^(#{1,6})\s+(.+)$/);
+    if (headingMatch) {
+      const level = headingMatch[1].length;
+      const content = headingMatch[2].trim();
+      structure.push({ type: 'heading', level, content });
+      continue;
+    }
+
+    // Ordered list: "1. ..." or "- ..." etc
+    const orderedMatch = trimmed.match(/^(\d+|[a-zA-Z])[.)]\s+(.+)$/);
+    if (orderedMatch) {
+      const content = orderedMatch[2].trim();
+      structure.push({ type: 'ordered-list', content });
+      continue;
+    }
+
+    // Unordered list: "- ..."
+    if (trimmed.match(/^[-*+]\s+/)) {
+      const content = trimmed.replace(/^[-*+]\s+/, '');
+      structure.push({ type: 'list', content });
+      continue;
+    }
+
+    // Regular paragraph
+    structure.push({ type: 'paragraph', content: trimmed });
+  }
+
+  return structure;
+}
+
+/**
+ * Creates metadata object from markdown content
+ */
+function createPdfMetadata(markdown: string, title?: string): PdfMetadata {
+  return {
+    version: '1.0',
+    format: 'markdown',
+    rtl: hasRTLCharacters(markdown),
+    title,
+    structure: extractMarkdownStructure(markdown),
+  };
+}
+
+/**
+ * Injects metadata as an HTML comment at the start of the document
+ * This enables lossless re-import for PDFs created by this tool.
+ */
+function injectMetadataIntoHTML(html: string, metadata: PdfMetadata): string {
+  const metadataComment = `<!-- MDWE-METADATA: ${JSON.stringify(metadata)} -->\n`;
+  // Insert after opening body tag if it exists
+  const bodyMatch = html.match(/<body[^>]*>/i);
+  if (bodyMatch) {
+    const insertPos = html.indexOf(bodyMatch[0]) + bodyMatch[0].length;
+    return html.slice(0, insertPos) + metadataComment + html.slice(insertPos);
+  }
+  // Otherwise insert at the very beginning
+  return metadataComment + html;
+}
+
 export async function exportToPDF(
   markdown: string,
   options: PdfExportOptions = {}
@@ -54,7 +150,7 @@ export async function exportToPDF(
   const { title = 'Untitled', mermaidImages, basePath, rtl } = options;
 
   // Reuse the existing HTML pipeline — fully self-contained (base64 images + Mermaid PNGs)
-  const html = await exportToHTML(markdown, {
+  let html = await exportToHTML(markdown, {
     title,
     includeStyles: true,
     standalone: true,
@@ -63,6 +159,10 @@ export async function exportToPDF(
     mermaidImages,
     rtl,
   } as ExportOptions);
+
+  // Inject metadata for lossless round-trip imports
+  const metadata = createPdfMetadata(markdown, title);
+  html = injectMetadataIntoHTML(html, metadata);
 
   const executablePath = findChrome();
 

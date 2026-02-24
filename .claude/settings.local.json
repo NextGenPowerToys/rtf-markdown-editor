@@ -8,7 +8,27 @@
       "Bash(git -C /Users/alexk/Projects/NextGenPowerToys/rtf-markdown-editor diff --stat HEAD)",
       "Bash(git -C /Users/alexk/Projects/NextGenPowerToys/rtf-markdown-editor diff HEAD -- package.json CHANGELOG.md README.md)",
       "Bash(git -C /Users/alexk/Projects/NextGenPowerToys/rtf-markdown-editor show:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(npm install:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(node --version:*)",
+      "Bash(node -e:*)",
+      "Bash(pdftotext:*)",
+      "Bash(mutool:*)",
+      "Bash(brew install:*)",
+      "Bash(pdffonts:*)",
+      "Bash(pdftohtml:*)",
+      "Bash(npx tsc:*)",
+      "Bash(node:*)",
+      "Bash(npx jest:*)",
+      "Bash(npx vsce package)",
+      "Bash(npx vsce ls)",
+      "Bash(du -sh node_modules/pdf-parse/lib/*)",
+      "Bash(# Get production dependency tree for external packages cd /Users/alexk/Projects/NextGenPowerToys/rtf-markdown-editor npm ls puppeteer-core --production --all)",
+      "Bash(npx esbuild ./src/extension.ts --bundle --outfile=/tmp/test-extension2.js --external:vscode --external:pdfjs-dist --external:tesseract.js --external:canvas --format=cjs --platform=node --log-level=debug)"
+    ],
+    "additionalDirectories": [
+      "/private/tmp"
     ]
   }
 }

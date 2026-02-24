@@ -1,8 +1,8 @@
 {
   "name": "rtf-markdown-editor",
   "displayName": "RTF Markdown Editor",
-  "description": "Word-like WYSIWYG Markdown Editor — Export & Import Word (DOCX), Export HTML, RTL-first (Hebrew/Arabic), Azure DevOps Mermaid, Autosave, 100% Offline",
-  "version": "2.1.0",
+  "description": "Word-like WYSIWYG Markdown Editor — Export & Import Word (DOCX) and PDF, Export HTML, RTL-first (Hebrew/Arabic), Azure DevOps Mermaid, Autosave, 100% Offline",
+  "version": "2.2.1",
   "publisher": "NGPowerToys",
   "icon": "media/icons/RTFMD.png",
   "keywords": [
@@ -42,7 +42,14 @@
     "import",
     "convert",
     "docx-to-markdown",
-    "word-to-markdown"
+    "word-to-markdown",
+    "pdf",
+    "pdf-to-markdown",
+    "pdf-import",
+    "pdf-export",
+    "ocr",
+    "tesseract",
+    "pdf-converter"
   ],
   "repository": {
     "type": "git",
@@ -102,6 +109,11 @@
           "command": "rtf-markdown-editor.importDOCX",
           "when": "resourceExtname == .docx",
           "group": "1_modification"
+        },
+        {
+          "command": "rtf-markdown-editor.importPDF",
+          "when": "resourceExtname == .pdf",
+          "group": "1_modification"
         }
       ]
     },
@@ -129,6 +141,11 @@
       {
         "command": "rtf-markdown-editor.importDOCX",
         "title": "Convert to Markdown",
+        "category": "RTF Markdown"
+      },
+      {
+        "command": "rtf-markdown-editor.importPDF",
+        "title": "Convert PDF to Markdown",
         "category": "RTF Markdown"
       }
     ],
@@ -192,7 +209,7 @@
   "scripts": {
     "vscode:prepublish": "npm run copy:mermaid && npm run esbuild-base -- --minify",
     "copy:mermaid": "node -e \"require('fs').copyFileSync('node_modules/mermaid/dist/mermaid.min.js', 'media/mermaid.min.js')\"",
-    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --external:puppeteer-core --format=cjs --platform=node",
+    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --external:pdfjs-dist --external:tesseract.js --external:canvas --format=cjs --platform=node",
     "esbuild": "npm run esbuild-base -- --sourcemap",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
     "build:webview": "esbuild ./media/editor.ts --bundle --outfile=media/editor.bundle.js --format=iife --sourcemap",
@@ -242,6 +259,7 @@
     "@tiptap/extension-underline": "^2.1.0",
     "@tiptap/pm": "^2.1.0",
     "@tiptap/starter-kit": "^2.1.0",
+    "@types/pdf-parse": "^1.1.5",
     "adm-zip": "^0.5.16",
     "chardet": "^1.6.0",
     "he": "^1.2.0",
@@ -250,6 +268,11 @@
     "markdown-it": "^13.0.0",
     "markdown-it-front-matter": "^0.2.4",
     "mermaid": "^10.6.0",
-    "puppeteer-core": "^24.37.4"
+    "pdf-parse": "^1.1.1",
+    "canvas": "^3.1.0",
+    "pdfjs-dist": "^4.8.69",
+    "puppeteer-core": "^24.37.4",
+    "tesseract.js": "^5.1.1",
+    "turndown": "^7.2.2"
   }
 }

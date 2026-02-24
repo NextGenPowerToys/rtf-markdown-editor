@@ -2,6 +2,40 @@
 
 All notable changes to the RTF Markdown Editor extension will be documented in this file.
 
+## [2.2.0] - 2026-02-24
+
+### Added
+
+- **Import from PDF (PDF → Markdown)** — Advanced OCR-based PDF conversion with structure detection
+  - Right-click any `.pdf` file in Explorer → **"Convert PDF to Markdown"**
+  - Command Palette: `RTF Markdown: Convert PDF to Markdown`
+  - Integrated PDFOCR engine with full Hebrew/RTL support
+  - **pdfjs-dist v4** text extraction with position data, font metadata, and bold/italic detection
+  - **Multi-pass OCR** via Tesseract.js: Hebrew+English with Latin misread correction
+  - **Inverted text detection**: automatically detects and re-OCRs dark-background text regions
+  - **Smart structure analysis**: detects headers (font size, bold, Hebrew patterns), tables (column alignment), lists (numbered, Hebrew letters), and paragraphs
+  - **Cross-page table merging**: tables split across page breaks are automatically reassembled
+  - **Hybrid mode**: fast text extraction first, OCR fallback only for pages with broken font encodings
+  - **Lossless round-trip**: PDFs exported by this extension embed metadata for near-perfect re-import
+  - **Graceful fallback**: if the advanced pipeline fails, falls back to basic pdf-parse + heuristics
+
+- **Export to PDF** — One-click Markdown to PDF conversion
+  - Right-click context menu or Command Palette
+  - Chrome/Chromium headless rendering for high-quality output
+  - Mermaid diagrams pre-rendered as PNG images
+  - RTL direction preserved in PDF layout
+  - Embeds Markdown structure metadata for lossless re-import
+
+### Changed
+
+- **Upgraded pdfjs-dist** from v3 to v4 for better text extraction with coordinate data
+- **Added canvas dependency** for OCR image manipulation (inverted text correction, fallback page rendering)
+- **PDF import pipeline replaced** — the previous basic pipeline (pdf-parse + Puppeteer OCR) is now replaced by the PDFOCR engine with significantly better structure detection, table handling, and Hebrew support
+
+### Note
+
+- **Import from Word and PDF are limited** — these are best-effort conversions. PDF is a visual format and does not store semantic structure; Word documents may use formatting features that don't map to Markdown. See README for detailed limitations.
+
 ## [2.1.0] - 2026-02-19
 
 ### Changed
@@ -303,7 +337,8 @@ All notable changes to the RTF Markdown Editor extension will be documented in t
 - [x] Export to HTML *(Added in v1.1.0)*
 - [x] Export to Word (DOCX) *(Added in v1.2.0)*
 - [x] Import from Word (DOCX → MD) *(Added in v2.0.0)*
-- [ ] Export to PDF
+- [x] Export to PDF *(Added in v2.2.0)*
+- [x] Import from PDF (PDF → MD) *(Added in v2.2.0)*
 - [ ] Collaborative editing
 - [ ] Plugin system
 - [ ] Custom themes

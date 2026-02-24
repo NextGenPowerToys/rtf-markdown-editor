@@ -10,5 +10,56 @@ media/*.svg
 .github
 esbuild.config.js
 tsconfig.json
-browser-extension/dist.pem
-browser-extension/**/*.pem
+
+# Browser extension (separate project)
+browser-extension/
+
+# Dev config
+.claude/
+.vscode/
+.gitignore
+
+# Old tsc output (bundled extension.js is the only needed dist file)
+dist/*.d.ts
+dist/*.d.ts.map
+dist/*.js.map
+dist/editors/
+dist/services/
+dist/types/
+dist/utils/
+
+# Landing/sample pages
+landingPage/
+
+# OCR training data
+*.traineddata
+
+# Stale docs (keep README, CHANGELOG, LICENSE, QUICKSTART)
+BROWSER_EXTENSION_PLAN.md
+FINAL_REPORT.md
+IMPLEMENTATION_COMPLETE.md
+IMPLEMENTATION_SUMMARY.md
+IMPLEMENTATION_VERIFICATION_CHECKLIST.md
+MERMAID_SYNTAX_SUPPORT.md
+OFFLINE_EXPORT_GUIDE.md
+PDF_CONVERSION_STATUS.md
+PDF_TO_HTML_TO_MD_DESIGN.md
+PDF_WORK_PARKED.md
+QUICK_REFERENCE.md
+RELEASE_NOTES_*.md
+SAMPLE.md
+DOWNLOAD.md
+test-export.md
+
+# Test/debug scripts
+analyze-pdf.js
+test-bidi.js
+validate-bidi.js
+mermaid-extractor.js
+
+# KaTeX fonts — keep only woff2
+media/fonts/*.ttf
+media/fonts/*.woff
+
+# Source maps
+media/editor.bundle.js.map
