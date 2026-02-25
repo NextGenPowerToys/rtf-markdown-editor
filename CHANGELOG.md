@@ -2,6 +2,14 @@
 
 All notable changes to the RTF Markdown Editor extension will be documented in this file.
 
+## [2.3.0] - 2026-02-25
+
+### Changed
+
+- **RTL Detection Simplified** — Removed the "first 5 lines must contain 2+ RTL words" precondition from RTL auto-detection. Detection now uses a single rule: if ≥ 30% of non-whitespace characters are RTL (Hebrew, Arabic, Syriac, etc.), the document is treated as RTL. This fixes documents where RTL content doesn't appear in the first few lines being incorrectly displayed as LTR.
+
+- **Import Messaging Clarified** — README and feature descriptions now clearly state that Word (DOCX) and PDF import are **content extraction tools** designed for downstream AI analysis, search indexing, and content migration — not pixel-perfect format converters. The goal is to capture the textual substance and document structure, not reproduce the exact visual layout of the source.
+
 ## [2.2.0] - 2026-02-24
 
 ### Added

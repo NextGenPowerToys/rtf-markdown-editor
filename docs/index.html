@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Primary SEO -->
+    <title>RTF Markdown Editor — Word-like WYSIWYG Markdown Editor for VS Code</title>
+    <meta name="description" content="A free, 100% offline WYSIWYG Markdown editor for VS Code. Export to Word, PDF & HTML. Import from Word & PDF. RTL-first with Hebrew & Arabic support. Mermaid diagrams. No telemetry.">
+    <meta name="keywords" content="markdown editor, VS Code extension, WYSIWYG, RTL, Hebrew, Arabic, mermaid diagrams, export Word, export PDF, export HTML, import Word, import PDF, offline editor, autosave, rich text editor, markdown to docx, markdown to pdf, Azure DevOps, technical writing, documentation">
+    <meta name="author" content="NGPowerToys">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://nextgenpowertoys.github.io/rtf-markdown-editor/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://nextgenpowertoys.github.io/rtf-markdown-editor/">
+    <meta property="og:title" content="RTF Markdown Editor — Word-like WYSIWYG Markdown for VS Code">
+    <meta property="og:description" content="Free, offline WYSIWYG Markdown editor for VS Code. Export to Word, PDF & HTML. Import from Word & PDF. Full RTL support. Mermaid diagrams. Zero telemetry.">
+    <meta property="og:image" content="https://nextgenpowertoys.github.io/rtf-markdown-editor/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="RTF Markdown Editor — Word-like WYSIWYG Markdown for VS Code">
+    <meta name="twitter:description" content="Free, offline WYSIWYG Markdown editor for VS Code. Export to Word, PDF & HTML. Import from Word & PDF. Full RTL support.">
+    <meta name="twitter:image" content="https://nextgenpowertoys.github.io/rtf-markdown-editor/og-image.png">
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "RTF Markdown Editor",
+        "description": "Word-like WYSIWYG Markdown Editor for VS Code with export to Word, PDF & HTML, import from Word & PDF, RTL-first design for Hebrew & Arabic, Mermaid diagram support, and 100% offline operation.",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Windows, macOS, Linux",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        },
+        "author": {
+            "@type": "Organization",
+            "name": "NGPowerToys",
+            "url": "https://github.com/NextGenPowerToys"
+        },
+        "softwareVersion": "2.3.0",
+        "url": "https://marketplace.visualstudio.com/items?itemName=NGPowerToys.rtf-markdown-editor",
+        "downloadUrl": "https://marketplace.visualstudio.com/items?itemName=NGPowerToys.rtf-markdown-editor",
+        "screenshot": "https://nextgenpowertoys.github.io/rtf-markdown-editor/screenshots/editor-overview.png",
+        "featureList": "WYSIWYG Editing, Export to Word DOCX, Export to PDF, Export to HTML, Import from Word, Import from PDF with OCR, RTL Hebrew Arabic Support, Mermaid Diagrams, 100% Offline, Autosave, Azure DevOps Wiki Compatible"
+    }
+    </script>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="apple-touch-icon" href="icon.png">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* ===== Reset & Base ===== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #111827;
+            --bg-card: #1a2235;
+            --bg-card-hover: #1f2a40;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent: #3b82f6;
+            --accent-light: #60a5fa;
+            --accent-glow: rgba(59, 130, 246, 0.3);
+            --green: #10b981;
+            --purple: #8b5cf6;
+            --orange: #f59e0b;
+            --pink: #ec4899;
+            --border: rgba(255, 255, 255, 0.06);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        a { color: var(--accent-light); text-decoration: none; transition: color 0.2s; }
+        a:hover { color: #93bbfd; }
+
+        /* ===== Utility ===== */
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+
+        /* ===== Animated background ===== */
+        .bg-glow {
+            position: fixed; inset: 0; pointer-events: none; z-index: 0;
+            background:
+                radial-gradient(ellipse 800px 600px at 20% 10%, rgba(59,130,246,0.08), transparent),
+                radial-gradient(ellipse 600px 500px at 80% 50%, rgba(139,92,246,0.06), transparent),
+                radial-gradient(ellipse 700px 400px at 50% 90%, rgba(236,72,153,0.05), transparent);
+        }
+
+        /* ===== Nav ===== */
+        nav {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(10, 14, 26, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 24px;
+        }
+        .nav-inner {
+            max-width: 1200px; margin: 0 auto;
+            display: flex; align-items: center; justify-content: space-between;
+            height: 64px;
+        }
+        .nav-brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 1.1rem; }
+        .nav-brand img { width: 36px; height: 36px; border-radius: 8px; }
+        .nav-links { display: flex; gap: 32px; list-style: none; }
+        .nav-links a { color: var(--text-secondary); font-size: 0.9rem; font-weight: 500; transition: color 0.2s; }
+        .nav-links a:hover { color: var(--text-primary); }
+        .nav-cta {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--accent); color: #fff; padding: 8px 20px;
+            border-radius: 8px; font-weight: 600; font-size: 0.9rem;
+            transition: background 0.2s, transform 0.15s;
+        }
+        .nav-cta:hover { background: #2563eb; color: #fff; transform: translateY(-1px); }
+
+        /* Mobile nav */
+        .nav-toggle { display: none; background: none; border: none; color: var(--text-primary); cursor: pointer; padding: 8px; }
+        .nav-toggle svg { width: 24px; height: 24px; }
+
+        /* ===== Hero ===== */
+        .hero {
+            position: relative; z-index: 1;
+            padding: 100px 24px 80px;
+            text-align: center;
+        }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2);
+            padding: 6px 16px; border-radius: 100px;
+            font-size: 0.85rem; color: var(--accent-light); font-weight: 500;
+            margin-bottom: 24px;
+        }
+        .hero-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -0.03em;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero h1 span {
+            background: linear-gradient(135deg, var(--accent-light), var(--purple));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero-sub {
+            max-width: 680px; margin: 0 auto 40px;
+            font-size: 1.2rem; color: var(--text-secondary); line-height: 1.7;
+        }
+        .hero-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 56px; }
+        .btn-primary {
+            display: inline-flex; align-items: center; gap: 10px;
+            background: var(--accent); color: #fff;
+            padding: 14px 32px; border-radius: 12px;
+            font-weight: 700; font-size: 1.05rem;
+            border: none; cursor: pointer;
+            transition: all 0.2s; box-shadow: 0 4px 20px var(--accent-glow);
+        }
+        .btn-primary:hover { background: #2563eb; color: #fff; transform: translateY(-2px); box-shadow: 0 8px 30px var(--accent-glow); }
+        .btn-secondary {
+            display: inline-flex; align-items: center; gap: 10px;
+            background: rgba(255,255,255,0.05); color: var(--text-primary);
+            padding: 14px 32px; border-radius: 12px;
+            font-weight: 600; font-size: 1.05rem;
+            border: 1px solid var(--border); cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-secondary:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
+
+        /* Hero screenshot */
+        .hero-screenshot {
+            max-width: 960px; margin: 0 auto;
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 0 0 1px var(--border);
+            position: relative;
+        }
+        .hero-screenshot img {
+            width: 100%; height: auto; display: block;
+        }
+        .hero-screenshot::before {
+            content: '';
+            position: absolute; inset: 0;
+            border-radius: var(--radius);
+            background: linear-gradient(180deg, transparent 60%, var(--bg-primary) 100%);
+            pointer-events: none; z-index: 1;
+        }
+
+        /* ===== Stats Bar ===== */
+        .stats {
+            position: relative; z-index: 1;
+            padding: 40px 24px;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+        .stats-grid {
+            max-width: 900px; margin: 0 auto;
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 32px; text-align: center;
+        }
+        .stat-num { font-size: 2rem; font-weight: 800; color: var(--accent-light); }
+        .stat-label { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; }
+
+        /* ===== Sections ===== */
+        section { position: relative; z-index: 1; padding: 100px 24px; }
+        .section-label {
+            display: inline-flex; align-items: center; gap: 8px;
+            font-size: 0.8rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+            color: var(--accent-light); margin-bottom: 12px;
+        }
+        .section-title {
+            font-size: clamp(1.8rem, 4vw, 2.6rem);
+            font-weight: 800; line-height: 1.2;
+            letter-spacing: -0.02em; margin-bottom: 16px;
+        }
+        .section-desc {
+            font-size: 1.1rem; color: var(--text-secondary);
+            max-width: 600px; margin-bottom: 56px;
+        }
+
+        /* ===== Feature Grid ===== */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+        }
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 32px;
+            transition: all 0.3s;
+        }
+        .feature-card:hover {
+            background: var(--bg-card-hover);
+            border-color: rgba(59, 130, 246, 0.2);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+        .feature-icon {
+            width: 48px; height: 48px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; margin-bottom: 20px;
+        }
+        .feature-card h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 10px; }
+        .feature-card p { color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6; }
+
+        .icon-blue { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+        .icon-green { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+        .icon-purple { background: rgba(139, 92, 246, 0.15); color: #a78bfa; }
+        .icon-orange { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+        .icon-pink { background: rgba(236, 72, 153, 0.15); color: #f472b6; }
+        .icon-cyan { background: rgba(6, 182, 212, 0.15); color: #22d3ee; }
+
+        /* ===== Export/Import Workflow ===== */
+        .workflow-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px;
+        }
+        .workflow-card {
+            position: relative;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 40px 32px; text-align: center;
+            transition: all 0.3s;
+        }
+        .workflow-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+        .workflow-step {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: var(--accent); color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 1rem;
+            margin: 0 auto 20px;
+        }
+        .workflow-card h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 10px; }
+        .workflow-card p { font-size: 0.95rem; color: var(--text-secondary); }
+        .workflow-formats {
+            display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 16px;
+        }
+        .format-tag {
+            padding: 4px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;
+        }
+        .tag-blue { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+        .tag-green { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+        .tag-purple { background: rgba(139, 92, 246, 0.15); color: #a78bfa; }
+        .tag-orange { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+
+        /* ===== RTL Showcase ===== */
+        .rtl-showcase {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center;
+        }
+        .rtl-text-demo {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 32px;
+        }
+        .rtl-sample {
+            font-size: 1.4rem; direction: rtl; text-align: right;
+            line-height: 2; color: var(--text-primary); font-weight: 500;
+        }
+        .rtl-sample .latin { direction: ltr; color: var(--accent-light); }
+        .rtl-list { list-style: none; margin-top: 24px; }
+        .rtl-list li {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 0; font-size: 1rem; color: var(--text-secondary);
+        }
+        .rtl-list li .check {
+            width: 24px; height: 24px; border-radius: 6px;
+            background: rgba(16, 185, 129, 0.15); color: #34d399;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.85rem; flex-shrink: 0;
+        }
+
+        /* ===== Privacy ===== */
+        .privacy-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+        }
+        .privacy-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 32px; text-align: center;
+            transition: all 0.3s;
+        }
+        .privacy-card:hover { transform: translateY(-4px); }
+        .privacy-icon { font-size: 2.2rem; margin-bottom: 16px; }
+        .privacy-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; }
+        .privacy-card p { font-size: 0.9rem; color: var(--text-secondary); }
+
+        /* ===== Screenshots ===== */
+        .screenshots-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px;
+        }
+        .screenshot-frame {
+            border-radius: var(--radius); overflow: hidden;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            transition: all 0.3s;
+        }
+        .screenshot-frame:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.3); }
+        .screenshot-frame img { width: 100%; height: auto; display: block; }
+        .screenshot-caption {
+            padding: 16px 20px;
+            font-size: 0.9rem; color: var(--text-secondary); font-weight: 500;
+            border-top: 1px solid var(--border);
+        }
+
+        /* ===== CTA ===== */
+        .cta-section {
+            text-align: center;
+            padding: 100px 24px;
+            background: linear-gradient(180deg, var(--bg-primary) 0%, rgba(59, 130, 246, 0.05) 50%, var(--bg-primary) 100%);
+        }
+        .cta-section h2 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 800; margin-bottom: 16px;
+            background: linear-gradient(135deg, #fff, var(--accent-light));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .cta-section p {
+            font-size: 1.15rem; color: var(--text-secondary); margin-bottom: 40px; max-width: 540px; margin-left: auto; margin-right: auto;
+        }
+        .cta-install-box {
+            max-width: 480px; margin: 32px auto 0;
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 16px 24px;
+            display: flex; align-items: center; justify-content: space-between;
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.9rem; color: var(--text-secondary);
+        }
+        .cta-install-box code { color: var(--accent-light); }
+        .copy-btn {
+            background: none; border: none; color: var(--text-muted); cursor: pointer;
+            padding: 6px; border-radius: 6px; transition: all 0.2s;
+        }
+        .copy-btn:hover { color: var(--text-primary); background: rgba(255,255,255,0.1); }
+
+        /* ===== Footer ===== */
+        footer {
+            position: relative; z-index: 1;
+            border-top: 1px solid var(--border);
+            padding: 40px 24px;
+        }
+        .footer-inner {
+            max-width: 1200px; margin: 0 auto;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .footer-brand { display: flex; align-items: center; gap: 10px; }
+        .footer-brand img { width: 28px; height: 28px; border-radius: 6px; }
+        .footer-brand span { font-weight: 600; font-size: 0.95rem; }
+        .footer-links { display: flex; gap: 24px; }
+        .footer-links a { color: var(--text-muted); font-size: 0.85rem; }
+        .footer-links a:hover { color: var(--text-primary); }
+        .footer-copy { color: var(--text-muted); font-size: 0.8rem; }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 900px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .workflow-grid { grid-template-columns: 1fr; max-width: 480px; margin: 0 auto; }
+            .rtl-showcase { grid-template-columns: 1fr; }
+            .privacy-grid { grid-template-columns: 1fr; max-width: 480px; margin: 0 auto; }
+            .screenshots-grid { grid-template-columns: 1fr; max-width: 600px; margin: 0 auto; }
+        }
+        @media (max-width: 640px) {
+            .nav-links { display: none; }
+            .nav-toggle { display: block; }
+            .nav-links.open {
+                display: flex; flex-direction: column; gap: 0;
+                position: absolute; top: 64px; left: 0; right: 0;
+                background: rgba(10, 14, 26, 0.95); backdrop-filter: blur(20px);
+                border-bottom: 1px solid var(--border);
+                padding: 16px 24px;
+            }
+            .nav-links.open a { display: block; padding: 12px 0; }
+            .hero { padding: 60px 24px 40px; }
+            .hero-actions { flex-direction: column; align-items: center; }
+            .btn-primary, .btn-secondary { width: 100%; max-width: 320px; justify-content: center; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+            .stat-num { font-size: 1.5rem; }
+            .features-grid { grid-template-columns: 1fr; }
+            section { padding: 60px 24px; }
+            .footer-inner { flex-direction: column; gap: 16px; text-align: center; }
+            .footer-links { flex-wrap: wrap; justify-content: center; }
+        }
+
+        /* ===== Animations ===== */
+        .fade-up {
+            opacity: 0; transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .fade-up.visible { opacity: 1; transform: translateY(0); }
+    </style>
+</head>
+<body>
+
+<div class="bg-glow" aria-hidden="true"></div>
+
+<!-- ===== NAV ===== -->
+<nav>
+    <div class="nav-inner">
+        <a href="#" class="nav-brand" aria-label="RTF Markdown Editor Home">
+            <img src="icon.png" alt="RTF Markdown Editor icon" width="36" height="36">
+            <span>RTF Markdown Editor</span>
+        </a>
+        <ul class="nav-links" id="navLinks">
+            <li><a href="#features">Features</a></li>
+            <li><a href="#workflow">Workflow</a></li>
+            <li><a href="#rtl">RTL Support</a></li>
+            <li><a href="#privacy">Privacy</a></li>
+            <li><a href="#screenshots">Screenshots</a></li>
+        </ul>
+        <a href="https://marketplace.visualstudio.com/items?itemName=NGPowerToys.rtf-markdown-editor" class="nav-cta" target="_blank" rel="noopener">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M14 8a6 6 0 1 1-12 0 6 6 0 0 1 12 0ZM8 3.5a.5.5 0 0 0-.5.5v4a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 0-1H8.5V4a.5.5 0 0 0-.5-.5Z"/></svg>
+            Install Free
+        </a>
+        <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+        </button>
+    </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<header class="hero">
+    <div class="container">
+        <div class="hero-badge">
+            <span class="dot"></span>
+            v2.3.0 &mdash; Now with PDF Import &amp; Export
+        </div>
+        <h1>
+            Write Markdown.<br>
+            <span>Feel like Word.</span>
+        </h1>
+        <p class="hero-sub">
+            A free, <strong>100% offline</strong> WYSIWYG Markdown editor for VS Code.
+            Export to Word, PDF &amp; HTML. Import from Word &amp; PDF.
+            First-class RTL support for Hebrew &amp; Arabic. Zero telemetry.
+        </p>
+        <div class="hero-actions">
+            <a href="https://marketplace.visualstudio.com/items?itemName=NGPowerToys.rtf-markdown-editor" class="btn-primary" target="_blank" rel="noopener">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16Zm1 11.5a.75.75 0 0 1-1.5 0v-4.793l-1.146 1.147a.75.75 0 0 1-1.06-1.06l2.5-2.5a.75.75 0 0 1 1.06 0l2.5 2.5a.75.75 0 0 1-1.06 1.06L11 8.707V13.5Z" style="transform:rotate(180deg);transform-origin:center"/></svg>
+                Install from Marketplace
+            </a>
+            <a href="https://github.com/NextGenPowerToys/rtf-markdown-editor" class="btn-secondary" target="_blank" rel="noopener">
+                <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+                View on GitHub
+            </a>
+        </div>
+        <div class="hero-screenshot fade-up">
+            <img src="screenshots/editor-overview.png" alt="RTF Markdown Editor in VS Code showing WYSIWYG editing with toolbar, rich text formatting, headings, lists, and code blocks" width="960" height="540" loading="eager">
+        </div>
+    </div>
+</header>
+
+<!-- ===== STATS ===== -->
+<div class="stats">
+    <div class="stats-grid">
+        <div>
+            <div class="stat-num">6</div>
+            <div class="stat-label">Export &amp; Import Formats</div>
+        </div>
+        <div>
+            <div class="stat-num">10+</div>
+            <div class="stat-label">Mermaid Diagram Types</div>
+        </div>
+        <div>
+            <div class="stat-num">100%</div>
+            <div class="stat-label">Offline &amp; Private</div>
+        </div>
+        <div>
+            <div class="stat-num">0</div>
+            <div class="stat-label">Telemetry / Tracking</div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== FEATURES ===== -->
+<section id="features">
+    <div class="container">
+        <div class="section-label">Features</div>
+        <h2 class="section-title">Everything you need in a Markdown editor</h2>
+        <p class="section-desc">Word-like editing experience with powerful export, import, and diagramming built right in.</p>
+
+        <div class="features-grid">
+            <div class="feature-card fade-up">
+                <div class="feature-icon icon-blue">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                </div>
+                <h3>WYSIWYG Editing</h3>
+                <p>Real-time rich text editing powered by TipTap/ProseMirror. Bold, italic, headings, tables, code blocks, lists, colors &mdash; the full toolbar, just like Word or Google Docs.</p>
+            </div>
+
+            <div class="feature-card fade-up">
+                <div class="feature-icon icon-green">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                </div>
+                <h3>Export to Word (DOCX)</h3>
+                <p>One-click export to real .docx files. Opens natively in Microsoft Word, LibreOffice, and Google Docs. All styling, tables, and Mermaid diagrams preserved as embedded PNGs.</p>
+            </div>
+
+            <div class="feature-card fade-up">
+                <div class="feature-icon icon-purple">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><polyline points="14 2 14 8 20 8"/><path d="m9 15 2 2 4-4"/></svg>
+                </div>
+                <h3>Export to PDF</h3>
+                <p>High-quality PDF output via Chrome headless rendering. Mermaid diagrams pre-rendered as PNG. Embeds metadata for lossless re-import back into Markdown.</p>
+            </div>
+
+            <div class="feature-card fade-up">
+                <div class="feature-icon icon-orange">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 22h14a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v4"/><polyline points="14 2 14 8 20 8"/><path d="m3 15 2 2 4-4"/></svg>
+                </div>
+                <h3>Import from Word &amp; PDF</h3>
+                <p>Extract content from .docx and .pdf files into clean Markdown. OCR-powered PDF extraction with Hebrew support, table detection, and cross-page table merging.</p>
+            </div>
+
+            <div class="feature-card fade-up">
+                <div class="feature-icon icon-pink">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                </div>
+                <h3>Mermaid Diagrams</h3>
+                <p>Full Mermaid integration &mdash; flowcharts, sequence diagrams, Gantt charts, ERD, state machines, and more. Both GitHub and Azure DevOps Wiki syntax. Click to edit live.</p>
+            </div>
+
+            <div class="feature-card fade-up">
+                <div class="feature-icon icon-cyan">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4"/><path d="M12 16V8"/></svg>
+                </div>
+                <h3>Self-Contained HTML</h3>
+                <p>Export to a single, portable HTML file with all images embedded as base64, diagrams pre-rendered, and styles inlined. Share anywhere, view offline.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== WORKFLOW ===== -->
+<section id="workflow" style="background: rgba(255,255,255,0.01);">
+    <div class="container">
+        <div class="section-label">Workflow</div>
+        <h2 class="section-title">Full round-trip document conversion</h2>
+        <p class="section-desc">Import, edit, and export with a single tool. Your Markdown stays the source of truth.</p>
+
+        <div class="workflow-grid">
+            <div class="workflow-card fade-up">
+                <div class="workflow-step">1</div>
+                <h3>Import</h3>
+                <p>Bring in existing content from Word documents and PDFs. OCR extracts text from scanned PDFs. Right-click any file to convert.</p>
+                <div class="workflow-formats">
+                    <span class="format-tag tag-blue">.docx</span>
+                    <span class="format-tag tag-purple">.pdf</span>
+                </div>
+            </div>
+            <div class="workflow-card fade-up">
+                <div class="workflow-step">2</div>
+                <h3>Edit</h3>
+                <p>Write and format with the full WYSIWYG toolbar. Tables, diagrams, code blocks, colors, RTL &mdash; all in a familiar Word-like interface.</p>
+                <div class="workflow-formats">
+                    <span class="format-tag tag-green">.md</span>
+                </div>
+            </div>
+            <div class="workflow-card fade-up">
+                <div class="workflow-step">3</div>
+                <h3>Export</h3>
+                <p>One-click export to Word, PDF, or self-contained HTML. Diagrams pre-rendered, images embedded, RTL preserved. Share with anyone.</p>
+                <div class="workflow-formats">
+                    <span class="format-tag tag-blue">.docx</span>
+                    <span class="format-tag tag-purple">.pdf</span>
+                    <span class="format-tag tag-orange">.html</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== RTL ===== -->
+<section id="rtl">
+    <div class="container">
+        <div class="section-label">RTL-first</div>
+        <h2 class="section-title">First-class Hebrew &amp; Arabic support</h2>
+        <p class="section-desc">Not an afterthought. RTL support is built into every layer &mdash; editor, toolbar, export, and import.</p>
+
+        <div class="rtl-showcase">
+            <div class="rtl-text-demo fade-up">
+                <div class="rtl-sample">
+                    <div>&#1513;&#1500;&#1493;&#1501; &#1506;&#1493;&#1500;&#1501;! &#1494;&#1492; <span class="latin">Markdown</span> &#1489;&#1506;&#1489;&#1512;&#1497;&#1514;.</div>
+                    <div style="margin-top:12px; font-size:1.1rem; color:var(--text-secondary)">&#1499;&#1514;&#1497;&#1489;&#1492; &#1502;&#1497;&#1502;&#1497;&#1503; &#1500;&#1513;&#1502;&#1488;&#1500;, &#1506;&#1501; &#1514;&#1502;&#1497;&#1499;&#1492; &#1502;&#1500;&#1488;&#1492; &#1489;&#1491;&#1493;-&#1499;&#1497;&#1493;&#1493;&#1504;&#1497;&#1493;&#1514;.</div>
+                </div>
+            </div>
+            <div class="fade-up">
+                <ul class="rtl-list">
+                    <li><span class="check">&#10003;</span> Auto-detects Hebrew, Arabic, Persian &amp; Urdu content</li>
+                    <li><span class="check">&#10003;</span> One-click RTL/LTR toggle in toolbar</li>
+                    <li><span class="check">&#10003;</span> Bidirectional mixed-language text support</li>
+                    <li><span class="check">&#10003;</span> RTL preserved in Word, PDF &amp; HTML exports</li>
+                    <li><span class="check">&#10003;</span> Direction-aware alignment controls</li>
+                    <li><span class="check">&#10003;</span> OCR-powered PDF import with Hebrew correction</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== PRIVACY ===== -->
+<section id="privacy" style="background: rgba(255,255,255,0.01);">
+    <div class="container">
+        <div class="section-label">Privacy &amp; Security</div>
+        <h2 class="section-title">100% offline. Zero telemetry. Your data stays yours.</h2>
+        <p class="section-desc">Every feature works without an internet connection. Nothing is ever sent to external servers.</p>
+
+        <div class="privacy-grid">
+            <div class="privacy-card fade-up">
+                <div class="privacy-icon">&#128274;</div>
+                <h3>No Network Calls</h3>
+                <p>All dependencies bundled locally. No CDN, no fonts fetched, no runtime downloads. Works with network completely disabled.</p>
+            </div>
+            <div class="privacy-card fade-up">
+                <div class="privacy-icon">&#128065;&#8205;&#128488;</div>
+                <h3>Zero Telemetry</h3>
+                <p>No analytics, no tracking, no data collection of any kind. Strict Content Security Policy blocks external resource loading.</p>
+            </div>
+            <div class="privacy-card fade-up">
+                <div class="privacy-icon">&#9989;</div>
+                <h3>Self-Contained Exports</h3>
+                <p>Exported HTML, Word, and PDF files are fully standalone. No internet required to view them. Share freely.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== SCREENSHOTS ===== -->
+<section id="screenshots">
+    <div class="container">
+        <div class="section-label">In Action</div>
+        <h2 class="section-title">See it in action</h2>
+        <p class="section-desc">A familiar editing experience, right inside VS Code.</p>
+
+        <div class="screenshots-grid">
+            <div class="screenshot-frame fade-up">
+                <img src="screenshots/editor-blocks.png" alt="RTF Markdown Editor showing code blocks, tables, links, and block quotes in VS Code" width="640" height="360" loading="lazy">
+                <div class="screenshot-caption">Code blocks, tables, links &amp; block quotes</div>
+            </div>
+            <div class="screenshot-frame fade-up">
+                <img src="screenshots/mermaid-diagrams.png" alt="RTF Markdown Editor rendering Mermaid flowchart diagrams with both standard and Azure DevOps Wiki syntax" width="640" height="360" loading="lazy">
+                <div class="screenshot-caption">Mermaid diagrams with live editing</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== CTA ===== -->
+<section class="cta-section">
+    <div class="container">
+        <h2>Start editing Markdown<br>the way it should feel</h2>
+        <p>Free, open-source, and ready in under a minute. Install from the VS Code Marketplace.</p>
+        <div class="hero-actions" style="margin-bottom: 0;">
+            <a href="https://marketplace.visualstudio.com/items?itemName=NGPowerToys.rtf-markdown-editor" class="btn-primary" target="_blank" rel="noopener">
+                Install from Marketplace
+            </a>
+            <a href="https://github.com/NextGenPowerToys/rtf-markdown-editor" class="btn-secondary" target="_blank" rel="noopener">
+                <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+                Star on GitHub
+            </a>
+        </div>
+        <div class="cta-install-box">
+            <span>ext install <code>NGPowerToys.rtf-markdown-editor</code></span>
+            <button class="copy-btn" onclick="navigator.clipboard.writeText('ext install NGPowerToys.rtf-markdown-editor')" aria-label="Copy install command" title="Copy to clipboard">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+    <div class="footer-inner">
+        <div class="footer-brand">
+            <img src="icon.png" alt="" width="28" height="28">
+            <span>RTF Markdown Editor</span>
+        </div>
+        <div class="footer-links">
+            <a href="https://marketplace.visualstudio.com/items?itemName=NGPowerToys.rtf-markdown-editor" target="_blank" rel="noopener">VS Code Marketplace</a>
+            <a href="https://github.com/NextGenPowerToys/rtf-markdown-editor" target="_blank" rel="noopener">GitHub</a>
+            <a href="https://github.com/NextGenPowerToys/rtf-markdown-editor/issues" target="_blank" rel="noopener">Report Issue</a>
+        </div>
+        <div class="footer-copy">&copy; 2026 NGPowerToys. MIT License.</div>
+    </div>
+</footer>
+
+<!-- ===== Scripts ===== -->
+<script>
+    // Mobile nav toggle
+    document.getElementById('navToggle').addEventListener('click', () => {
+        document.getElementById('navLinks').classList.toggle('open');
+    });
+
+    // Scroll fade-in
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+    document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

@@ -2,7 +2,7 @@
 
 **Word-like WYSIWYG Markdown Editor for VS Code** — RTL-first, Azure DevOps Mermaid, Export & Import Word/HTML/PDF, Autosave, **100% Offline**
 
-A rich text editor extension for VS Code that provides a Microsoft Word / Google Docs-like editing experience for Markdown files, with special emphasis on right-to-left (RTL) languages like Hebrew and Arabic, automatic saving, Mermaid diagram support, and one-click export to HTML, Word (DOCX), or PDF — plus **import from Word and PDF back to Markdown**.
+A rich text editor extension for VS Code that provides a Microsoft Word / Google Docs-like editing experience for Markdown files, with special emphasis on right-to-left (RTL) languages like Hebrew and Arabic, automatic saving, Mermaid diagram support, and one-click export to HTML, Word (DOCX), or PDF — plus **content extraction from Word and PDF into Markdown** for AI analysis and content migration.
 
 ## Features
 
@@ -112,7 +112,9 @@ A rich text editor extension for VS Code that provides a Microsoft Word / Google
 - **Fully Offline**: No internet required — 100% standalone HTML output
 - **Command**: `RTF Markdown: Convert to Web Archive (HTML)`
 
-### ✅ Import from PDF (PDF → Markdown)
+### ✅ Import from PDF (PDF → Markdown) — Content Extraction
+
+> **Purpose:** Extract text content from PDFs into Markdown for downstream processing by AI agents, search indexing, or content migration. This is **not** a pixel-perfect PDF-to-Markdown converter — it is a content extraction tool designed to capture the substance of a document, not reproduce its exact visual layout.
 
 - **Right-Click Import**: Right-click any `.pdf` file in the Explorer → **"Convert PDF to Markdown"**
 - **Command Palette**: `RTF Markdown: Convert PDF to Markdown`
@@ -123,7 +125,9 @@ A rich text editor extension for VS Code that provides a Microsoft Word / Google
 - **Hybrid Mode**: Uses text extraction first (fast), falls back to OCR for pages with broken fonts
 - **Lossless Round-Trip**: PDFs exported by this extension embed metadata for near-perfect re-import
 
-### ✅ Import from Word (DOCX → Markdown)
+### ✅ Import from Word (DOCX → Markdown) — Content Extraction
+
+> **Purpose:** Extract text content from Word documents into Markdown for downstream processing by AI agents, search indexing, or content migration. This is **not** a 1:1 Word-to-Markdown converter — it is a content extraction tool that captures text, structure, and images, not the exact visual formatting of the original document.
 
 - **Full Round-Trip**: Export to Word, edit it, import back to Markdown
 - **Right-Click Import**: Right-click any `.docx` file in the Explorer → **"Convert to Markdown"**
@@ -211,7 +215,9 @@ The exported document preserves:
 - Mermaid diagrams as embedded PNG images
 - RTL text direction for Hebrew/Arabic documents
 
-### Importing from Word (DOCX)
+### Importing from Word (DOCX) — Content Extraction
+
+> Extracts text content from Word documents into Markdown. Designed for AI analysis, content migration, and search indexing — not for reproducing the exact visual layout of the original document.
 
 **From Explorer (easiest):**
 
@@ -227,7 +233,7 @@ The exported document preserves:
 3. Choose where to save the resulting `.md` file
 4. The file opens automatically in the RTF Markdown Editor
 
-**What gets imported:**
+**What gets extracted:**
 
 - All text content: headings, paragraphs, tables, lists, code blocks, blockquotes
 - Embedded images saved as real files in `.attachments/.<name>/` (referenced by relative path)
@@ -236,7 +242,9 @@ The exported document preserves:
 
 **Round-trip workflow:** `.md` → Export as DOCX → Import as Markdown → `.md`
 
-### Importing from PDF
+### Importing from PDF — Content Extraction
+
+> Extracts text content from PDFs into Markdown. Designed for AI analysis, content migration, and search indexing — not for reproducing the exact visual layout of the original document.
 
 **From Explorer (easiest):**
 
@@ -252,7 +260,7 @@ The exported document preserves:
 3. Choose where to save the resulting `.md` file
 4. The file opens automatically in the RTF Markdown Editor
 
-**What gets imported:**
+**What gets extracted:**
 
 - All text content: headings, paragraphs, tables, lists
 - Bold and italic formatting (detected from font metadata)
@@ -260,19 +268,22 @@ The exported document preserves:
 - Hebrew/Arabic RTL text with bidirectional correction
 - For extension-exported PDFs: near-lossless recovery via embedded metadata
 
-### Import Limitations (Word & PDF)
+### Import Philosophy & Limitations (Word & PDF)
 
-> **Note:** Import from Word (DOCX) and PDF are best-effort conversions. These formats are inherently different from Markdown, and some information may be lost or approximated during conversion.
+> **These are content extraction tools, not format converters.** The goal is to pull the textual content and document structure out of Word and PDF files into clean Markdown — so you can feed it to AI agents, run analysis, build search indexes, or migrate content into a Markdown-based workflow. They are **not** designed to reproduce the exact visual appearance of the source document.
 
-**Word (DOCX) import limitations:**
+**Word (DOCX) import — what to expect:**
 
+- Text, headings, tables, lists, code blocks, and blockquotes are extracted faithfully
+- Images are saved as separate files and referenced in the Markdown
 - Complex layouts (multi-column, text boxes) may not convert perfectly
-- Some advanced Word formatting (tracked changes, comments, footnotes) is not preserved
+- Advanced Word formatting (tracked changes, comments, footnotes) is not preserved
 - Embedded OLE objects and ActiveX controls are skipped
 
-**PDF import limitations:**
+**PDF import — what to expect:**
 
 - PDF is a visual format — it stores where text is drawn, not what it means semantically. Structure detection uses heuristics and may not always be accurate
+- Text, headings, tables, and lists are extracted with best-effort structure detection
 - Images embedded in PDFs are not extracted (only text content is converted)
 - Scanned/image-only PDFs require OCR, which depends on scan quality
 - Complex multi-column layouts may be misinterpreted
@@ -517,4 +528,4 @@ For issues, feature requests, or questions:
 
 ---
 
-**RTF Markdown Editor** — Offline, RTL-first, WYSIWYG Markdown editing for VS Code. Export to HTML, Word, and PDF. Import from Word and PDF — all with one click.
+**RTF Markdown Editor** — Offline, RTL-first, WYSIWYG Markdown editing for VS Code. Export to HTML, Word, and PDF. Extract content from Word and PDF into Markdown for AI analysis — all with one click.

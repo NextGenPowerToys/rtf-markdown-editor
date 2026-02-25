@@ -25,7 +25,11 @@
       "Bash(npx vsce ls)",
       "Bash(du -sh node_modules/pdf-parse/lib/*)",
       "Bash(# Get production dependency tree for external packages cd /Users/alexk/Projects/NextGenPowerToys/rtf-markdown-editor npm ls puppeteer-core --production --all)",
-      "Bash(npx esbuild ./src/extension.ts --bundle --outfile=/tmp/test-extension2.js --external:vscode --external:pdfjs-dist --external:tesseract.js --external:canvas --format=cjs --platform=node --log-level=debug)"
+      "Bash(npx esbuild ./src/extension.ts --bundle --outfile=/tmp/test-extension2.js --external:vscode --external:pdfjs-dist --external:tesseract.js --external:canvas --format=cjs --platform=node --log-level=debug)",
+      "Bash(npx @vscode/vsce package)",
+      "Bash(curl -s http://localhost:8765/)",
+      "Bash(python3 -c \":*)",
+      "Bash(pkill -f \"python3 -m http.server 8765\")"
     ],
     "additionalDirectories": [
       "/private/tmp"

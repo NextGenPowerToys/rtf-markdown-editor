@@ -14,47 +14,14 @@ export class WebviewRTLService {
    */
   public static readonly RTL_CHAR_PATTERN = /[\u0590-\u05FF\u0600-\u06FF\u0700-\u074F\u0750-\u077F]/;
   /**
-   * Detect if text should be treated as RTL based on specific rules:
-   * 1. One of the first 5 non-empty lines must have at least 2 RTL words
-   * 2. At least 30% of the total text content must be RTL characters
+   * Detect if text should be treated as RTL based on character density:
+   * At least 30% of the total text content must be RTL characters
    * @param text - The text to check
-   * @returns true if RTL conditions are met
+   * @returns true if RTL condition is met
    */
   static detectRTLCharacters(text: string): boolean {
     if (!text) return false;
 
-    const lines = text.split('\n');
-    let hasRTLHeader = false;
-    let checkedLines = 0;
-
-    // Check condition 1: First 5 lines
-    for (const line of lines) {
-      const trimmedLine = line.trim();
-      if (!trimmedLine) continue;
-
-      if (checkedLines >= 5) break;
-      checkedLines++;
-
-      // Count RTL words in this line
-      const words = trimmedLine.split(/\s+/);
-      let rtlWordCount = 0;
-      for (const word of words) {
-        if (WebviewRTLService.RTL_CHAR_PATTERN.test(word)) {
-          rtlWordCount++;
-        }
-      }
-
-      if (rtlWordCount >= 2) {
-        hasRTLHeader = true;
-        break;
-      }
-    }
-
-    if (!hasRTLHeader) {
-      return false;
-    }
-
-    // Check condition 2: 30% threshold
     // Strip all whitespace to compare actual content
     const cleanText = text.replace(/\s/g, '');
     if (cleanText.length === 0) return false;
