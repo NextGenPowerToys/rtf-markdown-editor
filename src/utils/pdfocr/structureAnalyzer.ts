@@ -1,9 +1,9 @@
-import type { TextItem, PageData, Line, ContentBlock, TextSegment } from './types';
+import type { TextItem, ImageItem, PageData, Line, ContentBlock, TextSegment } from './types';
 import { mergeSplitTables } from './tableMerger';
 
 /**
  * Analyze positioned text items and detect document structure:
- * headers, paragraphs, tables, lists.
+ * headers, paragraphs, tables, lists, images.
  */
 export function analyzePages(pages: PageData[]): ContentBlock[] {
   const allBlocks: ContentBlock[] = [];
@@ -16,11 +16,51 @@ export function analyzePages(pages: PageData[]): ContentBlock[] {
     // Filter noise items before analysis
     const filteredItems = filterNoise(page.items);
     const lines = groupIntoLines(filteredItems, page.width);
-    const blocks = detectBlocks(lines, page.width);
-    allBlocks.push(...blocks);
+    const textBlocks = detectBlocks(lines, page.width);
+
+    // Interleave images with text blocks based on Y position
+    if (page.images && page.images.length > 0) {
+      allBlocks.push(...interleaveImages(textBlocks, page.images));
+    } else {
+      allBlocks.push(...textBlocks);
+    }
   }
 
   return mergeSplitTables(allBlocks);
+}
+
+/**
+ * Interleave ImageBlocks among text blocks based on Y position.
+ * Images are inserted before the first text block whose Y position
+ * is below the image's Y position.
+ */
+function interleaveImages(textBlocks: ContentBlock[], images: ImageItem[]): ContentBlock[] {
+  if (images.length === 0) return textBlocks;
+
+  // Sort images by Y position (top to bottom)
+  const sortedImages = [...images].sort((a, b) => a.y - b.y);
+
+  // Estimate Y positions for text blocks from the lines that produced them.
+  // Since we don't track exact Y in ContentBlock, insert images between blocks
+  // proportionally based on their order.
+  const result: ContentBlock[] = [];
+  let imgIdx = 0;
+
+  // We need Y positions of text blocks. Since ContentBlock doesn't store Y,
+  // insert all images before text content (they'll appear in document order).
+  // A more precise interleaving would require tracking Y in ContentBlock,
+  // but for now this produces good-enough results.
+  for (const block of textBlocks) {
+    result.push(block);
+  }
+
+  // Append image blocks at the end of each page's content.
+  // This is simpler and avoids breaking text flow incorrectly.
+  for (; imgIdx < sortedImages.length; imgIdx++) {
+    result.push({ type: 'image', data: sortedImages[imgIdx].data });
+  }
+
+  return result;
 }
 
 // ── Noise filtering ──

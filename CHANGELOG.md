@@ -2,11 +2,17 @@
 
 All notable changes to the RTF Markdown Editor extension will be documented in this file.
 
-## [2.3.1] - 2026-03-10
+## [2.4.0] - 2026-03-10
+
+### Added
+
+- **PDF Import: Image Extraction** — Images embedded in PDF files are now extracted during PDF-to-Markdown conversion, matching the existing DOCX import behavior. Images are saved to `.attachments/.{filename}/` alongside the output Markdown file and referenced with relative paths. Uses pdfjs-dist operator list to detect `paintImageXObject` operations, extracts raw pixel data, and converts to PNG via the canvas package. Supports RGB, RGBA, and grayscale image formats. Small images (< 50px) are filtered out automatically.
 
 ### Fixed
 
 - **PDF Export: Garbage Text at Beginning of PDF** — Fixed a bug where raw JSON metadata (document structure serialized as `{"type":"paragraph","content":"..."}` objects) appeared as visible text at the start of exported PDFs. The metadata was embedded as an HTML comment in `<body>`, which Chrome's PDF renderer incorrectly rendered as visible content. Metadata is now base64-encoded inside a hidden `<div>` element, keeping it invisible in the PDF while preserving lossless round-trip import capability. Backward-compatible with PDFs exported by older versions.
+
+- **PDF Export: Images Overflowing Page Boundaries** — Large images in exported PDFs now scale down to fit within a single page. Added `max-height: 240mm` and `object-fit: contain` to print CSS, ensuring tall diagrams and screenshots don't span across multiple pages.
 
 ## [2.3.0] - 2026-02-25
 

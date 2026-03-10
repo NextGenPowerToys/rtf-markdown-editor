@@ -8,7 +8,7 @@ export { analyzePages } from './structureAnalyzer';
 export { generateHtml } from './htmlGenerator';
 export { extractPdfText, pageHasText } from './pdfExtractor';
 export { OcrEngine } from './ocrEngine';
-export type { PageData, TextItem, ContentBlock, ExtractionMode, ConvertOptions } from './types';
+export type { PageData, TextItem, ImageItem, ContentBlock, ExtractionMode, ConvertOptions } from './types';
 
 export interface ConvertPdfOptions {
   /** Extraction mode: 'text' (fast), 'ocr' (force OCR), 'hybrid' (text first, OCR fallback) */

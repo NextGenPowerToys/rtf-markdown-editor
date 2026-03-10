@@ -224,7 +224,7 @@ export function activate(context: vscode.ExtensionContext) {
           async (progressIndicator) => {
             markdown = await importFromPDF(pdfPath, context, (message) => {
               progressIndicator.report({ message });
-            });
+            }, saveUri.fsPath);
           }
         );
 

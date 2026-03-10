@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { convertPdfToHtml } from './pdfocr';
 import { htmlToMarkdown } from './htmlToMarkdown';
@@ -11,16 +12,18 @@ import { applyBidiReconstruction, hasRTLCharacters } from './bidiHandler';
  * 1. Try MDWE metadata recovery (lossless round-trip for PDFs we exported)
  * 2. Extract text with position data via pdfjs-dist
  * 3. OCR pages that lack text (hybrid mode: text first, OCR fallback)
- * 4. Analyze document structure (headers, tables, lists, paragraphs)
+ * 4. Analyze document structure (headers, tables, lists, paragraphs, images)
  * 5. Generate semantic HTML → convert to Markdown via Turndown
  *
  * Also supports:
  * - Bidi text reconstruction for RTL content
+ * - Image extraction to .attachments/ folder (matching DOCX import pattern)
  */
 export async function importFromPDF(
   pdfPath: string,
   context?: vscode.ExtensionContext,
-  progress?: (message: string) => void
+  progress?: (message: string) => void,
+  outputMarkdownPath?: string,
 ): Promise<string> {
   const buffer = fs.readFileSync(pdfPath);
 
@@ -40,9 +43,16 @@ export async function importFromPDF(
       progress,
     });
 
-    // Step 2: Convert HTML to Markdown
+    let html = result.html;
+
+    // Step 2: Save embedded data-URI images to .attachments/ folder
+    if (outputMarkdownPath) {
+      html = saveDataUriImages(html, outputMarkdownPath);
+    }
+
+    // Step 3: Convert HTML to Markdown
     progress?.('Converting to Markdown...');
-    const markdown = await htmlToMarkdown(result.html, { rtl: result.isRTL });
+    const markdown = await htmlToMarkdown(html, { rtl: result.isRTL });
     return markdown;
   } catch (error) {
     console.warn('PDFOCR pipeline failed, falling back to heuristics:', error);
@@ -51,6 +61,45 @@ export async function importFromPDF(
     // Fallback: basic pdf-parse + heuristics
     return await fallbackConvert(buffer, progress);
   }
+}
+
+/**
+ * Find all data-URI images in the HTML, save each to the .attachments/ folder,
+ * and replace the src with a relative path. This matches the DOCX import pattern.
+ */
+function saveDataUriImages(html: string, outputMarkdownPath: string): string {
+  const mdDir = path.dirname(outputMarkdownPath);
+  const mdBaseName = path.basename(outputMarkdownPath, path.extname(outputMarkdownPath));
+  const attachDir = path.join(mdDir, '.attachments', `.${mdBaseName}`);
+
+  let imgCounter = 0;
+  let attachDirCreated = false;
+
+  return html.replace(
+    /src="data:image\/([^;]+);base64,([^"]+)"/gi,
+    (_match, mimeSubtype, base64Data) => {
+      const extMap: Record<string, string> = {
+        jpeg: 'jpg', jpg: 'jpg', png: 'png', gif: 'gif',
+        webp: 'webp', bmp: 'bmp', tiff: 'tiff', 'svg+xml': 'svg',
+      };
+      const rawExt = mimeSubtype.toLowerCase();
+      const ext = extMap[rawExt] ?? rawExt.replace('+', '');
+      imgCounter++;
+      const fileName = `image_${imgCounter}.${ext}`;
+
+      if (!attachDirCreated) {
+        fs.mkdirSync(attachDir, { recursive: true });
+        attachDirCreated = true;
+      }
+
+      const absPath = path.join(attachDir, fileName);
+      fs.writeFileSync(absPath, Buffer.from(base64Data, 'base64'));
+
+      // Compute relative path from the markdown file's directory
+      const relativePath = path.relative(mdDir, absPath).replace(/\\/g, '/');
+      return `src="${relativePath}"`;
+    },
+  );
 }
 
 // ---------------------------------------------------------------------------

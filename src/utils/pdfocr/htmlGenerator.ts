@@ -159,9 +159,16 @@ function renderBlock(block: ContentBlock): string {
       return renderListItem(block);
     case 'page-break':
       return `<div class="page-break"></div>`;
+    case 'image':
+      return renderImage(block);
     default:
       return '';
   }
+}
+
+function renderImage(block: { data: Buffer }): string {
+  const base64 = block.data.toString('base64');
+  return `  <p><img src="data:image/png;base64,${base64}" alt=""></p>`;
 }
 
 function renderHeader(block: { level: 1 | 2 | 3; text: string }): string {

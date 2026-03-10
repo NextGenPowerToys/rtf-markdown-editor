@@ -12,12 +12,23 @@ export interface TextItem {
   confidence?: number;
 }
 
+// ── Extracted image from PDF ──
+export interface ImageItem {
+  /** PNG-encoded image data */
+  data: Buffer;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 // ── Page data from extractor ──
 export interface PageData {
   pageNumber: number;
   width: number;
   height: number;
   items: TextItem[];
+  images: ImageItem[];
 }
 
 // ── Grouped line of text items ──
@@ -42,7 +53,8 @@ export type ContentBlock =
   | ParagraphBlock
   | TableBlock
   | ListItemBlock
-  | PageBreakBlock;
+  | PageBreakBlock
+  | ImageBlock;
 
 export interface HeaderBlock {
   type: 'header';
@@ -70,6 +82,12 @@ export interface ListItemBlock {
 export interface PageBreakBlock {
   type: 'page-break';
   pageNumber: number;
+}
+
+export interface ImageBlock {
+  type: 'image';
+  /** PNG-encoded image data */
+  data: Buffer;
 }
 
 // ── Extraction mode ──

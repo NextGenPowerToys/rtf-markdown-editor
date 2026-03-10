@@ -122,6 +122,7 @@ A rich text editor extension for VS Code that provides a Microsoft Word / Google
 - **Smart Structure Detection**: Automatically detects headings, tables, lists, and paragraphs from positioned text data
 - **Table Extraction**: Column-alignment-based table detection with cross-page table merging
 - **RTL/Hebrew First**: Optimized for Hebrew documents with misread correction and bidirectional text handling
+- **Image Extraction**: Embedded images extracted and saved to `.attachments/.<name>/` as PNG files with relative Markdown references
 - **Hybrid Mode**: Uses text extraction first (fast), falls back to OCR for pages with broken fonts
 - **Lossless Round-Trip**: PDFs exported by this extension embed metadata for near-perfect re-import
 
@@ -283,8 +284,7 @@ The exported document preserves:
 **PDF import — what to expect:**
 
 - PDF is a visual format — it stores where text is drawn, not what it means semantically. Structure detection uses heuristics and may not always be accurate
-- Text, headings, tables, and lists are extracted with best-effort structure detection
-- Images embedded in PDFs are not extracted (only text content is converted)
+- Text, headings, tables, lists, and embedded images are extracted with best-effort structure detection
 - Scanned/image-only PDFs require OCR, which depends on scan quality
 - Complex multi-column layouts may be misinterpreted
 - Custom font encodings without Unicode mappings fall back to OCR

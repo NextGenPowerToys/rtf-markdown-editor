@@ -353,6 +353,9 @@ html[dir="rtl"] img.align-right {
   
   img {
     max-width: 100%;
+    /* Fit tall images within a single printed page (A4 content area minus margins) */
+    max-height: 240mm;
+    object-fit: contain;
   }
 }
 `;
