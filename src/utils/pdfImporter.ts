@@ -64,9 +64,14 @@ async function tryMetadataRecovery(buffer: Buffer): Promise<string | null> {
     const data = await pdfParse(buffer);
     const text = data.text || '';
 
-    const metadataMatch = text.match(/<!-- MDWE-METADATA: ({[^}]*}) -->/);
-    if (metadataMatch) {
-      const metadata = JSON.parse(metadataMatch[1]);
+    // Try new base64 format first, then legacy HTML comment format
+    const b64Match = text.match(/MDWE-METADATA:([A-Za-z0-9+/=]+)/);
+    const legacyMatch = !b64Match ? text.match(/<!-- MDWE-METADATA: ({[^}]*}) -->/) : null;
+    const metadataJson = b64Match
+      ? Buffer.from(b64Match[1], 'base64').toString('utf-8')
+      : legacyMatch?.[1] ?? null;
+    if (metadataJson) {
+      const metadata = JSON.parse(metadataJson);
       if (metadata.structure && metadata.structure.length > 0) {
         return reconstructFromMetadata(text, metadata);
       }
@@ -89,7 +94,9 @@ interface PdfMetadata {
 }
 
 function reconstructFromMetadata(extractedText: string, metadata: PdfMetadata): string {
-  const cleanText = extractedText.replace(/<!-- MDWE-METADATA: ({[^}]*}) -->\n?/, '');
+  const cleanText = extractedText
+    .replace(/MDWE-METADATA:[A-Za-z0-9+/=]+\n?/, '')
+    .replace(/<!-- MDWE-METADATA: ({[^}]*}) -->\n?/, '');
 
   if (metadata.structure && metadata.structure.length > 0) {
     const out: string[] = [];

@@ -128,19 +128,23 @@ function createPdfMetadata(markdown: string, title?: string): PdfMetadata {
 }
 
 /**
- * Injects metadata as an HTML comment at the start of the document
- * This enables lossless re-import for PDFs created by this tool.
+ * Injects metadata as a hidden element in the document.
+ * Uses a <meta> tag in <head> plus a hidden <div> in <body> so that
+ * pdf-parse can still extract the marker text for lossless round-trip imports.
+ * The hidden div is not rendered visually in the PDF.
  */
 function injectMetadataIntoHTML(html: string, metadata: PdfMetadata): string {
-  const metadataComment = `<!-- MDWE-METADATA: ${JSON.stringify(metadata)} -->\n`;
-  // Insert after opening body tag if it exists
+  const json = JSON.stringify(metadata);
+  const encoded = Buffer.from(json).toString('base64');
+  const hiddenDiv = `<div id="mdwe-metadata" style="display:none;position:absolute;overflow:hidden;width:0;height:0" data-mdwe-metadata="${encoded}">MDWE-METADATA:${encoded}</div>\n`;
+
+  // Insert hidden div after opening body tag
   const bodyMatch = html.match(/<body[^>]*>/i);
   if (bodyMatch) {
     const insertPos = html.indexOf(bodyMatch[0]) + bodyMatch[0].length;
-    return html.slice(0, insertPos) + metadataComment + html.slice(insertPos);
+    return html.slice(0, insertPos) + hiddenDiv + html.slice(insertPos);
   }
-  // Otherwise insert at the very beginning
-  return metadataComment + html;
+  return hiddenDiv + html;
 }
 
 export async function exportToPDF(
