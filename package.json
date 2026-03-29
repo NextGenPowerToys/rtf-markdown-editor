@@ -145,7 +145,7 @@
       },
       {
         "command": "rtf-markdown-editor.importPDF",
-        "title": "Convert PDF to Markdown",
+        "title": "Extract text from PDF to Markdown",
         "category": "RTF Markdown"
       }
     ],
