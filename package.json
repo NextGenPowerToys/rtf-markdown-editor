@@ -2,7 +2,7 @@
   "name": "rtf-markdown-editor",
   "displayName": "RTF Markdown Editor",
   "description": "Word-like WYSIWYG Markdown Editor — Export & Import Word (DOCX) and PDF, Export HTML, RTL-first (Hebrew/Arabic), Azure DevOps Mermaid, Autosave, 100% Offline",
-  "version": "2.3.0",
+  "version": "2.5.0",
   "publisher": "NGPowerToys",
   "icon": "media/icons/RTFMD.png",
   "keywords": [

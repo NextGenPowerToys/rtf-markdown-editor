@@ -2,6 +2,31 @@
 
 All notable changes to the RTF Markdown Editor extension will be documented in this file.
 
+## [2.5.0] - 2026-03-29
+
+### Fixed
+
+- **RTL Detection Overhaul** — Fixed multiple interacting bugs that caused inconsistent RTL behavior
+  - Fixed missing `break` in message handler switch statement (`setContent` fell through into `setConfig`, re-applying config and resetting RTL state)
+  - Changed hardcoded `dir="rtl"` in standalone HTML and `dir="ltr"` in webview template to `dir="auto"`, eliminating brief direction flash on load
+  - Fixed RTL auto-detection threshold inconsistency: editor used "any RTL character" while backend used 30% density — now both use the same threshold
+  - RTL detection now strips fenced code blocks before counting, preventing code-heavy documents from diluting the RTL character ratio below the threshold
+  - Lowered RTL detection threshold from 30% to 10% for better sensitivity with mixed-language documents
+  - All export paths (HTML, DOCX, PDF) now pass explicit `rtl` flag based on content analysis, instead of relying on fallback auto-detection buried inside exporters
+
+- **PDF Export — Chrome/Edge Detection** — `findChrome()` now detects Microsoft Edge in addition to Chrome/Chromium on Windows, macOS, and Linux, fixing "Chrome not installed" error on machines with only Edge
+
+- **PDF Export — Metadata Not Visible** — PDF metadata marker changed from an HTML comment (which Chrome's PDF engine rendered as visible text) to a hidden `<div>` with base64-encoded content
+
+- **DOCX Import — Relative Image Paths** — Fixed `file://` URL handling in image path conversion: replaced manual `src.slice(7)` with `fileURLToPath()` which correctly handles the leading `/` on Windows paths and decodes percent-encoded characters (e.g., Hebrew filenames)
+
+- **Build — Missing esbuild Externals** — Added `--external:puppeteer-core --external:adm-zip --external:turndown --external:mammoth` to the esbuild command, fixing "Could not resolve" build errors
+
+### Changed
+
+- **PDF Import Renamed** — Command renamed from "Convert PDF to Markdown" to "Extract text from PDF to Markdown" to better reflect that this is a text extraction tool, not a visual format converter
+- **PDF Import — Removed Image Extraction** — Removed the non-functional image extraction step from PDF import; the command now focuses on text content extraction
+
 ## [2.3.0] - 2026-02-25
 
 ### Changed
