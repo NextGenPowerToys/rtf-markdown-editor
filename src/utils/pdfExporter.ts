@@ -31,15 +31,21 @@ function getChromePaths(): string[] {
       '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
       '/Applications/Chromium.app/Contents/MacOS/Chromium',
       path.join(os.homedir(), 'Applications/Google Chrome.app/Contents/MacOS/Google Chrome'),
+      '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
     ];
   }
   if (process.platform === 'win32') {
     const local = process.env.LOCALAPPDATA || '';
+    const programFiles = process.env['ProgramFiles'] || 'C:\\Program Files';
+    const programFilesX86 = process.env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)';
     return [
-      'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-      'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+      path.join(programFiles, 'Google\\Chrome\\Application\\chrome.exe'),
+      path.join(programFilesX86, 'Google\\Chrome\\Application\\chrome.exe'),
       path.join(local, 'Google\\Chrome\\Application\\chrome.exe'),
-      'C:\\Program Files\\Chromium\\Application\\chrome.exe',
+      path.join(programFiles, 'Chromium\\Application\\chrome.exe'),
+      path.join(programFilesX86, 'Microsoft\\Edge\\Application\\msedge.exe'),
+      path.join(programFiles, 'Microsoft\\Edge\\Application\\msedge.exe'),
+      path.join(local, 'Microsoft\\Edge\\Application\\msedge.exe'),
     ].filter(Boolean);
   }
   // Linux / other POSIX
@@ -49,6 +55,8 @@ function getChromePaths(): string[] {
     '/usr/bin/chromium',
     '/usr/bin/chromium-browser',
     '/snap/bin/chromium',
+    '/usr/bin/microsoft-edge',
+    '/usr/bin/microsoft-edge-stable',
   ];
 }
 
@@ -57,8 +65,8 @@ function findChrome(): string {
     if (fs.existsSync(p)) { return p; }
   }
   throw new Error(
-    'PDF export requires Google Chrome or Chromium to be installed.\n' +
-    'Please install it from https://www.google.com/chrome and try again.'
+    'PDF export requires Google Chrome, Chromium, or Microsoft Edge to be installed.\n' +
+    'Please install one from https://www.google.com/chrome and try again.'
   );
 }
 
@@ -128,19 +136,23 @@ function createPdfMetadata(markdown: string, title?: string): PdfMetadata {
 }
 
 /**
- * Injects metadata as an HTML comment at the start of the document
- * This enables lossless re-import for PDFs created by this tool.
+ * Injects metadata as a hidden element in the document.
+ * Uses a hidden <div> in <body> so that pdf-parse can still extract
+ * the marker text for lossless round-trip imports.
+ * The hidden div is not rendered visually in the PDF.
  */
 function injectMetadataIntoHTML(html: string, metadata: PdfMetadata): string {
-  const metadataComment = `<!-- MDWE-METADATA: ${JSON.stringify(metadata)} -->\n`;
-  // Insert after opening body tag if it exists
+  const json = JSON.stringify(metadata);
+  const encoded = Buffer.from(json).toString('base64');
+  const hiddenDiv = `<div id="mdwe-metadata" style="display:none;position:absolute;overflow:hidden;width:0;height:0" data-mdwe-metadata="${encoded}">MDWE-METADATA:${encoded}</div>\n`;
+
+  // Insert hidden div after opening body tag
   const bodyMatch = html.match(/<body[^>]*>/i);
   if (bodyMatch) {
     const insertPos = html.indexOf(bodyMatch[0]) + bodyMatch[0].length;
-    return html.slice(0, insertPos) + metadataComment + html.slice(insertPos);
+    return html.slice(0, insertPos) + hiddenDiv + html.slice(insertPos);
   }
-  // Otherwise insert at the very beginning
-  return metadataComment + html;
+  return hiddenDiv + html;
 }
 
 export async function exportToPDF(

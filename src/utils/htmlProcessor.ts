@@ -1,6 +1,7 @@
 import { MermaidBlock } from '../types';
 import * as path from 'path';
 import * as he from 'he';
+import { fileURLToPath } from 'url';
 
 /**
  * Convert HTML back to Markdown
@@ -362,7 +363,11 @@ function convertToRelativePath(src: string, documentPath?: string): string {
       return src;
     }
   } else if (src.startsWith('file://')) {
-    filePath = src.slice(7); // Remove file:// prefix
+    try {
+      filePath = fileURLToPath(src);
+    } catch {
+      filePath = src.slice(7);
+    }
   }
 
   // Normalize path separators for cross-platform compatibility
