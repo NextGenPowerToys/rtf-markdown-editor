@@ -2,7 +2,7 @@
   "name": "rtf-markdown-editor",
   "displayName": "RTF Markdown Editor",
   "description": "Word-like WYSIWYG Markdown Editor — Export & Import Word (DOCX) and PDF, Export HTML, RTL-first (Hebrew/Arabic), Azure DevOps Mermaid, Autosave, 100% Offline",
-  "version": "2.5.0",
+  "version": "2.5.2",
   "publisher": "NGPowerToys",
   "icon": "media/icons/RTFMD.png",
   "keywords": [
@@ -209,7 +209,7 @@
   "scripts": {
     "vscode:prepublish": "npm run copy:mermaid && npm run esbuild-base -- --minify",
     "copy:mermaid": "node -e \"require('fs').copyFileSync('node_modules/mermaid/dist/mermaid.min.js', 'media/mermaid.min.js')\"",
-    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --external:pdfjs-dist --external:tesseract.js --external:canvas --external:puppeteer-core --external:adm-zip --external:turndown --external:mammoth --format=cjs --platform=node",
+    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --external:canvas --format=cjs --platform=node",
     "esbuild": "npm run esbuild-base -- --sourcemap",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
     "build:webview": "esbuild ./media/editor.ts --bundle --outfile=media/editor.bundle.js --format=iife --sourcemap",
