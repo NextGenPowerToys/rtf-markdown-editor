@@ -30,9 +30,14 @@ export function activate(context: vscode.ExtensionContext) {
   // Register command to open editor
   context.subscriptions.push(
     vscode.commands.registerCommand('rtf-markdown-editor.openEditor', async (resource: vscode.Uri) => {
-      if (resource) {
-        await vscode.commands.executeCommand('vscode.openWith', resource, 'rtf-markdown-editor.editor');
+      const target = resource ?? (vscode.window.activeTextEditor
+        ? vscode.Uri.file(vscode.window.activeTextEditor.document.uri.fsPath)
+        : undefined);
+      if (!target || !/\.(md|markdown)$/i.test(target.fsPath)) {
+        vscode.window.showErrorMessage('Please open or select a Markdown file first');
+        return;
       }
+      await vscode.commands.executeCommand('vscode.openWith', target, 'rtf-markdown-editor.editor');
     })
   );
 
