@@ -122,6 +122,7 @@ A rich text editor extension for VS Code that provides a Microsoft Word / Google
 - **Chat Participant**: A `@pdfmd` participant is registered with the VS Code Chat API. The menu opens chat and pre-invokes it with the chosen PDF; you can also type `@pdfmd convert /path/to/file.pdf to markdown` directly into chat.
 - **Local PDF Read**: Text + positions are extracted **locally** with pdfjs-dist before the prompt is sent — the model never has to read the file from disk. Hebrew / Arabic / CJK paths and content are all supported.
 - **Chunked Send**: The document is split into page-aligned chunks (40 K chars each) so the entire PDF is processed — no character-count truncation. Each chunk is sent in its own request and the responses are concatenated in order.
+- **Diagrams & Images Extracted**: Embedded images (architecture diagrams, sequence diagrams, charts, illustrations) are pulled out locally and saved as PNGs to `.attachments/.<pdfBaseName>/image_<N>.png` next to the output Markdown — the **same `.attachments/` convention as the DOCX importer**. The final `.md` references them with real `![](.attachments/…)` links so they render inline in the RTF Markdown editor.
 - **Saved Next to the PDF**: The streamed Markdown is collected silently, wrapping `````markdown`` fences and pre-amble prose are stripped, and the result is written to `<pdfBaseName>.md` next to the original PDF, then opened in the RTF Markdown editor.
 - **Chat as a Status Surface**: Chat shows only progress + the final `Saved Markdown to …` link. The document body is never echoed there.
 
@@ -268,6 +269,7 @@ The exported document preserves:
 
 - The extension ships a PDF processing **skill** at `resources/skills/pdf/SKILL.md`. The chat participant loads it on every invocation as the model's authoritative guide for headings/lists/tables/RTL handling.
 - Text + positional data are extracted locally with pdfjs-dist — Copilot never has to read the file from disk.
+- **Embedded images** are pulled out at the same time and written as PNGs to `<mdDir>/.attachments/.<pdfBaseName>/image_<N>.png`. The prompt to the model marks each image's location on its page with an `[IMAGE: <relative_path>]` line so Copilot places a real `![](…)` reference at the right structural position. This mirrors the DOCX importer's attachment layout.
 - The PDF is split into page-aligned chunks (~40 K chars each) so the entire document is processed; nothing is truncated.
 - Each chunk is sent to Copilot in its own request along with the skill; the streamed responses are concatenated, sanitised (any wrapping ` ```markdown ` fence stripped), saved to `<pdfBaseName>.md`, and the file is opened in the RTF Markdown Editor.
 - Chat is a **status surface only** — progress messages while converting + a single final "Saved Markdown to …" link. The document body itself is not echoed into chat.
@@ -287,11 +289,12 @@ The exported document preserves:
 **PDF → Markdown (Copilot) — what to expect:**
 
 - The extension extracts text + positions locally with pdfjs-dist, then hands the per-page text dump to GitHub Copilot Chat along with the bundled PDF skill. The model reconstructs structure (headings, lists, tables, bold labels, RTL reading order) from the positional dump.
-- Result quality depends on the model behind Copilot Chat. A current Copilot Premium model handles the easysend.pdf reference document (Hebrew, mixed Latin, nested numbered sections, tables, mermaid placeholder pages) to near-parity with a hand-crafted Markdown version.
+- **Embedded images become real attachments.** Diagrams and other raster images in the PDF are extracted locally and written to `.attachments/.<pdfBaseName>/image_<N>.png` next to the output Markdown; the final `.md` references them with `![](.attachments/…)` links — the same convention as the DOCX importer, so attachments work identically across both flows.
+- Result quality depends on the model behind Copilot Chat. A current Copilot Premium model handles the easysend.pdf reference document (Hebrew, mixed Latin, nested numbered sections, tables, embedded diagrams) to near-parity with a hand-crafted Markdown version.
 - **Requires GitHub Copilot Chat** — the menu entry is hidden when Copilot isn't installed and the command refuses to run.
 - **Counts toward your Copilot usage.** Long PDFs are chunked and sent in multiple LM requests; this is regular Copilot Chat traffic.
-- Scanned/image-only PDFs have no extractable text, so Copilot has nothing to convert. Such pages are emitted as `*(diagram)*` placeholders. Run them through an external OCR step first if you need their content.
-- Diagrams that were rendered to images at PDF export time cannot be reconstructed as live mermaid source without a vision-capable model; the skill instructs Copilot to leave them as placeholders.
+- Scanned/image-only PDFs have no extractable text, so Copilot has nothing to convert from text. Embedded images on those pages are still extracted into `.attachments/` and referenced from the Markdown, but textual content within the scan won't be transcribed — run those through an external OCR step first if you need the words.
+- Diagrams that were rendered to images at PDF export time are preserved as image references rather than reconstructed as live mermaid source — that would need a vision-capable model.
 
 ### Toolbar Controls
 

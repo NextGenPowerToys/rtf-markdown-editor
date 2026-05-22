@@ -260,7 +260,12 @@ function initializeEditor() {
 
       if (newHash !== contentHash) {
         contentHash = newHash;
-        debounceAutoSave(html);
+        // NOTE: per-keystroke autosave is intentionally disabled. The content
+        // is persisted only when the editor blurs, the webview is hidden, or
+        // the panel is closing (see `onBlur`, `visibilitychange`,
+        // `beforeunload`, and `pagehide` handlers). This avoids re-render
+        // loops where the autosave's disk write echoes back through the
+        // FileSystemWatcher and causes images to flicker mid-typing.
 
         // Track user changes (but not during initial content loading)
         if (!isLoadingContent) {
@@ -300,6 +305,9 @@ function initializeEditor() {
 
   // Setup paste and drop handlers for images
   setupImagePasteDropHandlers();
+
+  // Save on visibilitychange / pagehide / beforeunload — replaces per-keystroke autosave.
+  setupSaveOnCloseHandlers();
 
   // Setup auto-detection of RTL content
   if (editorConfig.autoDetectRtl) {
@@ -463,6 +471,18 @@ function createToolbar(container: HTMLElement) {
 
 function attachToolbarEventListeners() {
   if (!editor) return;
+
+  // Prevent toolbar buttons from stealing keyboard focus on `mousedown`.
+  // Browsers focus the clicked control before firing `click`, which makes
+  // ProseMirror clamp the editor selection and move the caret — most
+  // visibly when toggling lists from the toolbar. Calling preventDefault on
+  // mousedown leaves the editor's selection intact so the subsequent
+  // `chain().focus()` lands the caret exactly where it was. We deliberately
+  // do NOT apply this to the heading <select>: it needs the default focus
+  // behaviour to open its dropdown.
+  document.querySelectorAll('.toolbar-btn').forEach(el => {
+    el.addEventListener('mousedown', e => e.preventDefault());
+  });
 
   // Text formatting
   document.getElementById('bold-btn')?.addEventListener('click', () => editor!.chain().focus().toggleBold().run());
@@ -1399,13 +1419,22 @@ function saveMathFormula() {
   }
 }
 
-let autoSaveTimeout: NodeJS.Timeout;
-
-function debounceAutoSave(html: string) {
-  clearTimeout(autoSaveTimeout);
-  autoSaveTimeout = setTimeout(() => {
-    saveContent();
-  }, 750);
+// Autosave triggers — flushes the current editor content to the host.
+// We intentionally do NOT save on every keystroke. Instead, we save when:
+//   - the TipTap editor blurs (handled inline in the editor's onBlur)
+//   - the webview's `document` visibility becomes hidden (tab switched away)
+//   - the window is being unloaded (panel closing / VS Code reloading)
+function setupSaveOnCloseHandlers() {
+  // visibilitychange fires when the editor tab is hidden in VS Code.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      saveContent();
+    }
+  });
+  // pagehide / beforeunload are the last chance to persist before the
+  // webview's renderer process is torn down (panel closed, VS Code reloading).
+  window.addEventListener('pagehide', () => { saveContent(); });
+  window.addEventListener('beforeunload', () => { saveContent(); });
 }
 
 function saveContent() {

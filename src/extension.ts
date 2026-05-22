@@ -46,13 +46,15 @@ export function activate(context: vscode.ExtensionContext) {
     console.warn('[rtf-markdown-editor] chat participant unavailable:', err);
   }
 
-  // Register command to open editor
+  // Register command to open editor.
+  // Callable from: Explorer context menu, Command Palette, and the
+  // `editor/title` button. Each route passes the target through a slightly
+  // different shape (raw Uri, tab-input object with a `uri` field, nothing
+  // at all), so we resolve by walking every plausible source.
   context.subscriptions.push(
-    vscode.commands.registerCommand('rtf-markdown-editor.openEditor', async (resource: vscode.Uri) => {
-      const target = resource ?? (vscode.window.activeTextEditor
-        ? vscode.Uri.file(vscode.window.activeTextEditor.document.uri.fsPath)
-        : undefined);
-      if (!target || !/\.(md|markdown)$/i.test(target.fsPath)) {
+    vscode.commands.registerCommand('rtf-markdown-editor.openEditor', async (...args: any[]) => {
+      const target = resolveMarkdownTarget(args);
+      if (!target) {
         vscode.window.showErrorMessage('Please open or select a Markdown file first');
         return;
       }
@@ -269,6 +271,58 @@ export function activate(context: vscode.ExtensionContext) {
 /**
  * Detect character encoding
  */
+/**
+ * Resolve which Markdown file the `openEditor` command should act on. The
+ * command is reachable from multiple entry points and VS Code passes the
+ * target in slightly different shapes for each:
+ *
+ *   - Explorer context menu             → Uri as the 1st arg
+ *   - Command Palette                   → no args at all
+ *   - `editor/title` button (text)      → Uri as the 1st arg
+ *   - `editor/title` button (custom)    → a TabInputCustom-like object
+ *
+ * On top of that, when the user hasn't actually focused the editor (e.g. the
+ * Explorer tree still has focus after they clicked the title button) the
+ * old code's `activeTextEditor` would be `undefined` and the command would
+ * incorrectly say "open or select a Markdown file first" even though one is
+ * clearly selected. We resolve by walking, in order: args → activeTextEditor
+ * → the active tab in any tab group.
+ */
+function resolveMarkdownTarget(args: any[]): vscode.Uri | undefined {
+  const matchesMd = (u: vscode.Uri | undefined): u is vscode.Uri =>
+    !!u && /\.(md|markdown)$/i.test(u.fsPath);
+  const fromArg = (a: any): vscode.Uri | undefined => {
+    if (!a) return undefined;
+    if (a instanceof vscode.Uri) return a;
+    if (typeof a === 'string') {
+      try { return vscode.Uri.file(a); } catch { return undefined; }
+    }
+    if (typeof a === 'object') {
+      if (a.uri instanceof vscode.Uri) return a.uri;
+      if (a.resource instanceof vscode.Uri) return a.resource;
+      if (typeof a.fsPath === 'string') return vscode.Uri.file(a.fsPath);
+    }
+    return undefined;
+  };
+
+  for (const a of args) {
+    const u = fromArg(a);
+    if (matchesMd(u)) return u;
+  }
+  if (vscode.window.activeTextEditor) {
+    const u = vscode.window.activeTextEditor.document.uri;
+    if (matchesMd(u)) return u;
+  }
+  for (const group of vscode.window.tabGroups.all) {
+    const active = group.activeTab;
+    if (!active) continue;
+    const input: any = active.input;
+    const u = fromArg(input);
+    if (matchesMd(u)) return u;
+  }
+  return undefined;
+}
+
 function detectCharset(buffer: Buffer): string {
   const config = vscode.workspace.getConfiguration('rtf-markdown-editor');
   const autoDetect = config.get<boolean>('detectCharsetAutomatically', true);

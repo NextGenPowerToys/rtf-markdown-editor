@@ -2,6 +2,9 @@
 	"folders": [
 		{
 			"path": "."
+		},
+		{
+			"path": "../../../Mermaid Live Editor"
 		}
 	],
 	"settings": {

@@ -115,13 +115,24 @@
           "when": "resourceExtname == .pdf && rtf-markdown-editor.aiChatAvailable",
           "group": "1_modification"
         }
+      ],
+      "editor/title": [
+        {
+          "command": "rtf-markdown-editor.openEditor",
+          "when": "(resourceExtname == .md || resourceExtname == .markdown) && activeCustomEditorId != 'rtf-markdown-editor.editor'",
+          "group": "navigation@1"
+        }
       ]
     },
     "commands": [
       {
         "command": "rtf-markdown-editor.openEditor",
         "title": "Edit with RTF Markdown Editor",
-        "category": "RTF Markdown"
+        "category": "RTF Markdown",
+        "icon": {
+          "light": "media/icons/RTFMD.png",
+          "dark": "media/icons/RTFMD.png"
+        }
       },
       {
         "command": "rtf-markdown-editor.exportHTMLSelfContained",

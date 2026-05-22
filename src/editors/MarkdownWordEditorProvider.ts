@@ -638,6 +638,13 @@ class WebviewDocument extends vscode.Disposable implements vscode.CustomDocument
   private _mermaidSources: Record<string, string> = {};
   private _watcher: vscode.FileSystemWatcher | null = null;
   private _metadata: MarkdownMetadata; // RFC 7763 metadata
+  // Epoch (ms) until which `FileSystemWatcher` events should be ignored
+  // because we just wrote the file ourselves. Without this, the disk
+  // round-trip through `iconv.encode/decode` can produce a slightly
+  // different hash than the in-memory copy and the watcher fires an
+  // `externalUpdate` that rebuilds the whole webview document — visibly
+  // re-fetching every `<img>` and causing flicker while typing.
+  private _suppressWatcherUntil = 0;
 
   onDidChange: vscode.Event<WebviewDocumentChangeEvent>;
 
@@ -774,6 +781,10 @@ class WebviewDocument extends vscode.Disposable implements vscode.CustomDocument
     try {
       // Encode with the document's charset (RFC 7763 Section 2)
       const buffer = iconv.encode(this._documentData, this._metadata.charset);
+      // The FileSystemWatcher will fire ~immediately after `writeFileSync`
+      // returns. Suppress it for a short window so the resulting echo can't
+      // round-trip back into the webview as an `externalUpdate`.
+      this._suppressWatcherUntil = Date.now() + 1500;
       fs.writeFileSync(this._uri.fsPath, buffer);
       this._contentHash = hashContent(this._documentData);
     } catch (error) {
@@ -785,6 +796,14 @@ class WebviewDocument extends vscode.Disposable implements vscode.CustomDocument
     this._watcher = vscode.workspace.createFileSystemWatcher(this._uri.fsPath);
 
     this._watcher.onDidChange(() => {
+      // Drop the event if it was triggered by our own write — that's just
+      // the disk echo of the autosave we just performed. Without this guard
+      // the watcher can fire `externalUpdate` on every keystroke and the
+      // webview re-renders all images, causing visible flicker.
+      if (Date.now() < this._suppressWatcherUntil) {
+        return;
+      }
+
       const buffer = fs.readFileSync(this._uri.fsPath);
       const newContent = iconv.decode(buffer, this._metadata.charset);
       const newHash = hashContent(newContent);

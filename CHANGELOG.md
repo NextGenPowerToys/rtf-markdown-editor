@@ -18,6 +18,7 @@ All notable changes to the RTF Markdown Editor extension will be documented in t
 - **`resources/skills/pdf/SKILL.md`** ships with the extension (copied from `.agents/skills/pdf/` at build time via the new `copy:skill` script). The chat participant loads it on every invocation.
 - **`@pdfmd` chat participant** — registered via the VS Code Chat Participant API. Can be invoked directly from chat: `@pdfmd convert /path/to/file.pdf to markdown`.
 - **`onStartupFinished` activation event** so the `aiChatAvailable` context key is published in time for the Explorer context menu's `when` clause.
+- **Diagram / image extraction in the AI-driven flow.** Images embedded in the source PDF (architecture diagrams, sequence diagrams, charts, illustrations…) are now extracted locally, saved as PNGs to `<mdDir>/.attachments/.<pdfBaseName>/image_<N>.png` next to the output Markdown, and referenced in the final document with real `![](.attachments/…)` markdown links. The chat prompt injects `[IMAGE: <relative_path>]` marker lines per page so the model places the image references at the right structural position. Mirrors the existing DOCX-import attachment convention byte-for-byte, so attachments behave identically across DOCX and PDF imports. Pages that have no extractable text *and* no image still emit `*(diagram)*` as a placeholder.
 
 ### Fixed
 
