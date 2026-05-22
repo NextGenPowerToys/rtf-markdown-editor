@@ -48,7 +48,7 @@
             "name": "NGPowerToys",
             "url": "https://github.com/NextGenPowerToys"
         },
-        "softwareVersion": "3.0.0",
+        "softwareVersion": "3.1.0",
         "url": "https://marketplace.visualstudio.com/items?itemName=NGPowerToys.rtf-markdown-editor",
         "downloadUrl": "https://marketplace.visualstudio.com/items?itemName=NGPowerToys.rtf-markdown-editor",
         "screenshot": "https://nextgenpowertoys.github.io/rtf-markdown-editor/screenshots/editor-overview.png",
@@ -56,6 +56,8 @@
         "featureList": [
             "Word-like WYSIWYG Markdown editing",
             "RTL-first design with Hebrew / Arabic / bidi support",
+            "Smart per-paragraph RTL/LTR detection (mixed-language docs, AI chat paste)",
+            "Manual cursor-direction toggle (Ctrl/Cmd+Shift+X) for empty-paragraph writing",
             "Mermaid diagram editing (Azure DevOps Wiki compatible)",
             "AI-powered PDF → Markdown via GitHub Copilot Chat (@pdfmd chat participant)",
             "HTML → Markdown import (offline)",
@@ -520,7 +522,7 @@
     <div class="container">
         <div class="hero-badge">
             <span class="dot"></span>
-            v3.0.0 &mdash; AI PDF&nbsp;&rarr;&nbsp;Markdown via Copilot, Documents side panel, HTML import
+            v3.1.0 &mdash; Smart per-paragraph RTL/LTR, manual cursor-direction toggle
         </div>
         <h1>
             Write Markdown.<br>
@@ -687,7 +689,10 @@
             <div class="fade-up">
                 <ul class="rtl-list">
                     <li><span class="check">&#10003;</span> Auto-detects Hebrew, Arabic, Persian &amp; Urdu content</li>
-                    <li><span class="check">&#10003;</span> One-click RTL/LTR toggle in toolbar</li>
+                    <li><span class="check">&#10003;</span> <strong>Smart per-paragraph direction</strong> (v3.1.0) &mdash; each line picks its own dir from content; mixed-language docs &amp; AI-chat paste keep their structure</li>
+                    <li><span class="check">&#10003;</span> Not "first-character" based &mdash; <code>React &#1575;&#1740;&#1705; &#1576;&#1729;&#1578;&#1585;&#1740;&#1606; &#1604;&#1575;&#1574;&#1576;&#1585;&#1740;&#1585;&#1740; &#1729;&#1746;</code> correctly renders RTL</li>
+                    <li><span class="check">&#10003;</span> <strong>Manual cursor toggle</strong> (Ctrl/Cmd+Shift+X) cycles current block: auto &rarr; LTR &rarr; RTL &rarr; auto</li>
+                    <li><span class="check">&#10003;</span> Global RTL/LTR toggle still available in the toolbar</li>
                     <li><span class="check">&#10003;</span> Bidirectional mixed-language text support</li>
                     <li><span class="check">&#10003;</span> RTL preserved in Word, PDF &amp; HTML exports</li>
                     <li><span class="check">&#10003;</span> Direction-aware alignment controls</li>

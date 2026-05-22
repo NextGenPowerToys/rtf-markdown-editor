@@ -112,6 +112,63 @@ html[dir="rtl"] .toolbar-group:first-child {
   border-left: none;
 }
 
+/* ─── Smart per-block direction (issue #4) ──────────────────────────────
+   Each paragraph/heading/list-item/blockquote carries its own `dir`
+   attribute set by the smart-direction extension. Make those win over the
+   global document direction so mixed-language docs render correctly
+   line-by-line. */
+.ProseMirror [dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+  unicode-bidi: plaintext;
+}
+
+.ProseMirror [dir="ltr"] {
+  direction: ltr;
+  text-align: left;
+  unicode-bidi: plaintext;
+}
+
+/* Inside an RTL block, lists and blockquote indentation flip to the
+   correct side without needing the global html[dir=rtl] wrapper. */
+.ProseMirror li[dir="rtl"],
+.ProseMirror [dir="rtl"] > ul,
+.ProseMirror [dir="rtl"] > ol {
+  padding-right: 2.5em;
+  padding-left: 0;
+}
+
+.ProseMirror blockquote[dir="rtl"] {
+  border-left: none;
+  border-right: 3px solid #999999;
+  padding-left: 0;
+  padding-right: 12px;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* When manually overridden, give a faint colored indicator so the user
+   can tell they pinned the direction. */
+.ProseMirror [data-dir-mode="manual"] {
+  position: relative;
+}
+.ProseMirror [data-dir-mode="manual"][dir="rtl"]::before,
+.ProseMirror [data-dir-mode="manual"][dir="ltr"]::before {
+  content: '';
+  position: absolute;
+  top: 0.3em;
+  width: 2px;
+  height: 1em;
+  background: #0078d4;
+  opacity: 0.35;
+}
+.ProseMirror [data-dir-mode="manual"][dir="rtl"]::before {
+  right: -8px;
+}
+.ProseMirror [data-dir-mode="manual"][dir="ltr"]::before {
+  left: -8px;
+}
+
 /* Typography */
 .ProseMirror h1 {
   font-size: 2em;

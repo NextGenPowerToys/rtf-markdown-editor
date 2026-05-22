@@ -11,7 +11,7 @@ import Table from '@tiptap/extension-table';
 import TableRow from '@tiptap/extension-table-row';
 import TableHeader from '@tiptap/extension-table-header';
 import TableCell from '@tiptap/extension-table-cell';
-import { Node } from '@tiptap/core';
+import { Node, Extension } from '@tiptap/core';
 
 import { MessageFromWebview, MessageToWebview, EditorConfig } from '../types';
 import { MathBlock, MathInline, renderMathBlocks, convertMarkdownMath } from './mathExtension';
@@ -59,6 +59,8 @@ const icons = {
   pdf: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M4 3h8.5L16 6.5V17H4V3zm1.5 1.5v11h9V7.5H12V4.5H5.5zm8 .5 1.5 1.5H13.5V5zM7 10h6v1.5H7V10zm0 2.5h4.5V14H7v-1.5z"/></svg>',
   // RTL toggle — lines with right-pointing arrow
   rtl: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M3 5h13v1.5H3V5zm0 4.5h8v1.5H3V9.5zm0 4.5h13v1.5H3V14zm10-5 2.5 2.5L13 14v-1.5H9.5v-2H13V7.5z"/></svg>',
+  // Cursor direction — bidirectional arrows + I-beam caret
+  cursorDir: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M9 3h2v14H9V3zm-1 0H7v1H6V3H5v1H4v1h1v10H4v1h1v1h1v-1h1v-1H6V5h1V4h1V3zm4 0h1v1h1v1h-1v10h1v1h-1v1h-1v-1h-1v-1h1V5h-1V4h1V3z" opacity="0.55"/><path d="M2 9.5h2.5l-1-1L4 8l2 2-2 2-.5-.5 1-1H2v-1zm14 0h-2.5l1-1L14 8l2 2-2 2-.5-.5 1-1H16v-1z"/></svg>',
   // Math — Greek capital Sigma Σ (summation)
   math: '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M4 3.5h12v1.75L11 10l5 4.75V16.5H4V14.75h9.4L9 10.5v-1l4.4-4.25H4V3.5z"/></svg>',
 };
@@ -243,6 +245,180 @@ const MermaidPlaceholder = Node.create({
   },
 });
 
+// ─── Smart per-block text direction ──────────────────────────────────────
+//
+// Smart RTL: each paragraph/heading carries its own `dir` and `dirMode`
+// attribute so we can mix RTL prose with English code blocks in the same
+// document without forcing a single global direction.
+//
+// • `dirMode = 'auto'` (default) — direction is recomputed from the block's
+//   text content on every edit. The rule is "any RTL char → rtl, else ltr"
+//   (intentionally NOT first-character based — that's the Obsidian bug the
+//   user called out in issue #4).
+// • `dirMode = 'manual'` — user pressed the toggle (Ctrl+Shift+X / toolbar
+//   button); the block's direction is frozen at the chosen value and the
+//   auto-detector leaves it alone. Lets the user type into an empty
+//   paragraph with the cursor in their preferred direction *before* the
+//   first character lands.
+//
+// The `dir` attribute lives on the editor DOM only; it is stripped on
+// save by htmlProcessor's `<p[^>]*>` regex so the markdown file stays clean.
+const DIRECTION_TYPES = ['paragraph', 'heading', 'listItem', 'blockquote'];
+
+const TextDirection = Extension.create({
+  name: 'textDirection',
+
+  addGlobalAttributes() {
+    return [
+      {
+        types: DIRECTION_TYPES,
+        attributes: {
+          dir: {
+            default: null,
+            parseHTML: (el: HTMLElement) => el.getAttribute('dir') || null,
+            renderHTML: (attrs: any) => attrs.dir ? { dir: attrs.dir } : {},
+          },
+          dirMode: {
+            default: 'auto',
+            parseHTML: (el: HTMLElement) => el.getAttribute('data-dir-mode') || 'auto',
+            renderHTML: (attrs: any) => attrs.dirMode && attrs.dirMode !== 'auto'
+              ? { 'data-dir-mode': attrs.dirMode }
+              : {},
+          },
+        },
+      },
+    ];
+  },
+});
+
+/**
+ * Walk the doc and update `dir` on every `auto` block whose computed
+ * direction no longer matches its text content. Manually-overridden
+ * blocks are left untouched.
+ */
+function applySmartDirectionToDoc() {
+  if (!editor) return;
+  const { state } = editor;
+  const updates: { pos: number; attrs: any }[] = [];
+
+  state.doc.descendants((node, pos) => {
+    if (!DIRECTION_TYPES.includes(node.type.name)) return;
+    const mode = (node.attrs as any).dirMode || 'auto';
+    if (mode !== 'auto') return;
+
+    const text = node.textContent || '';
+    let nextDir: string | null;
+    if (!text.trim()) {
+      // Empty block: leave dir null so it inherits from parent / document.
+      nextDir = null;
+    } else if (WebviewRTLService.containsRTL(text)) {
+      // ANY RTL character → render the whole block RTL. This is the key
+      // fix vs. Obsidian: a sentence like "React ایک بہترین لائبریری ہے"
+      // gets dir=rtl even though it starts with a Latin word.
+      nextDir = 'rtl';
+    } else {
+      nextDir = 'ltr';
+    }
+
+    if ((node.attrs as any).dir !== nextDir) {
+      updates.push({ pos, attrs: { ...node.attrs, dir: nextDir } });
+    }
+  });
+
+  if (updates.length === 0) return;
+
+  const tr = state.tr;
+  // Disable history so smart-direction updates don't pollute the undo stack.
+  tr.setMeta('addToHistory', false);
+  for (const { pos, attrs } of updates) {
+    const node = tr.doc.nodeAt(pos);
+    if (node) tr.setNodeMarkup(pos, undefined, attrs);
+  }
+  editor.view.dispatch(tr);
+}
+
+/**
+ * Cycle the current block's direction: auto → ltr → rtl → auto.
+ * Triggered by the toolbar button and Ctrl/Cmd+Shift+X.
+ */
+function toggleCursorDirection() {
+  if (!editor) return;
+  const { state } = editor;
+  const { $from } = state.selection;
+
+  // Find nearest ancestor that owns a dir attribute.
+  let depth = $from.depth;
+  let targetNode: any = null;
+  let targetPos = -1;
+  while (depth >= 0) {
+    const node = $from.node(depth);
+    if (DIRECTION_TYPES.includes(node.type.name)) {
+      targetNode = node;
+      targetPos = depth === 0 ? 0 : $from.before(depth);
+      break;
+    }
+    depth--;
+  }
+  if (!targetNode) return;
+
+  const currentMode = (targetNode.attrs as any).dirMode || 'auto';
+  const currentDir = (targetNode.attrs as any).dir || null;
+
+  // Cycle: auto → ltr → rtl → auto
+  let nextMode: 'auto' | 'manual';
+  let nextDir: string | null;
+  if (currentMode === 'auto') {
+    nextMode = 'manual';
+    nextDir = 'ltr';
+  } else if (currentDir === 'ltr') {
+    nextMode = 'manual';
+    nextDir = 'rtl';
+  } else {
+    nextMode = 'auto';
+    nextDir = null; // applySmartDirectionToDoc will recompute
+  }
+
+  const tr = state.tr.setNodeMarkup(targetPos, undefined, {
+    ...targetNode.attrs,
+    dir: nextDir,
+    dirMode: nextMode,
+  });
+  editor.view.dispatch(tr);
+
+  if (nextMode === 'auto') {
+    // Recompute now that we cleared the manual override.
+    applySmartDirectionToDoc();
+  }
+
+  updateDirectionButtonUI();
+}
+
+/**
+ * Reflect the current block's direction state on the toolbar button so the
+ * user can tell at a glance whether they're in auto / forced-LTR /
+ * forced-RTL mode for the block their caret is in.
+ */
+function updateDirectionButtonUI() {
+  const btn = document.getElementById('cursor-dir-btn');
+  if (!btn || !editor) return;
+  const { $from } = editor.state.selection;
+  let depth = $from.depth;
+  let node: any = null;
+  while (depth >= 0) {
+    const n = $from.node(depth);
+    if (DIRECTION_TYPES.includes(n.type.name)) { node = n; break; }
+    depth--;
+  }
+  if (!node) return;
+  const mode = (node.attrs as any).dirMode || 'auto';
+  const dir = (node.attrs as any).dir || 'ltr';
+  btn.classList.toggle('active', mode === 'manual');
+  const label = mode === 'manual'
+    ? (dir === 'rtl' ? 'Cursor: RTL (manual)' : 'Cursor: LTR (manual)')
+    : `Cursor: auto (${dir})`;
+  btn.setAttribute('title', `${label} — Ctrl+Shift+X to cycle (auto → LTR → RTL)`);
+}
+
 // Type definitions for VSCode API
 interface VSCodeApi {
   postMessage(message: any): void;
@@ -391,6 +567,7 @@ function initializeEditor() {
       MermaidPlaceholder,
       MathBlock,
       MathInline,
+      TextDirection,
     ],
     content: '<p></p>',
     onUpdate: ({ editor: e }) => {
@@ -425,6 +602,16 @@ function initializeEditor() {
 
       // Render math blocks and inline math
       setTimeout(() => renderMathBlocks(), 150);
+
+      // Smart RTL/LTR auto-detection — runs per change, but only dispatches
+      // a transaction when a block's computed direction actually changes,
+      // so it costs ~nothing in the steady state.
+      applySmartDirectionToDoc();
+    },
+    onSelectionUpdate: () => {
+      // Keep the cursor-direction toolbar indicator in sync with whatever
+      // block the caret currently sits in.
+      updateDirectionButtonUI();
     },
     onBlur: () => {
       saveContent();
@@ -604,7 +791,8 @@ function createToolbar(container: HTMLElement) {
     <button class="toolbar-btn" id="export-self-contained-btn" title="Export Self-Contained HTML (images embedded)">${icons.archive}</button>
     <button class="toolbar-btn" id="export-docx-btn" title="Export as Word Document (DOCX)"><svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M4 3h8.5L16 6.5V17H4V3zm1.5 1.5v11h9V7.5H12V4.5H5.5zm8 .5 1.5 1.5H13.5V5z" opacity="0.9"/><path d="M7 9h1.2l.8 3.5.9-2.3.9 2.3.8-3.5H12.8l-1.7 6H9.7l-.7-2-.7 2H6.7L5 9h2z"/></svg></button>
     <button class="toolbar-btn" id="export-pdf-btn" title="Export as PDF">${icons.pdf}</button>
-    <button class="toolbar-btn ${editorConfig.rtl ? 'active' : ''}" id="rtl-btn" title="Toggle RTL/LTR">${icons.rtl}</button>
+    <button class="toolbar-btn" id="cursor-dir-btn" title="Cursor direction — Ctrl+Shift+X to cycle (auto → LTR → RTL)">${icons.cursorDir}</button>
+    <button class="toolbar-btn ${editorConfig.rtl ? 'active' : ''}" id="rtl-btn" title="Toggle document RTL/LTR">${icons.rtl}</button>
   `;
   container.appendChild(rtlGroup);
 }
@@ -884,6 +1072,23 @@ function attachToolbarEventListeners() {
     const alignment = WebviewRTLService.getDefaultAlignment(editorConfig.rtl);
     editor!.chain().focus().setTextAlign(alignment).run();
   });
+
+  // Cursor direction toggle (per-block): auto → LTR → RTL → auto
+  document.getElementById('cursor-dir-btn')?.addEventListener('click', () => {
+    editor!.chain().focus().run();
+    toggleCursorDirection();
+  });
+
+  // Keyboard shortcut: Ctrl/Cmd+Shift+X cycles cursor direction.
+  // Listening at the window level (with capture) makes it work whether the
+  // caret is in the editor or the user just clicked the toolbar.
+  window.addEventListener('keydown', (e) => {
+    const isToggle = (e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'X' || e.key === 'x');
+    if (!isToggle) return;
+    e.preventDefault();
+    e.stopPropagation();
+    toggleCursorDirection();
+  }, true);
 }
 
 function setupMermaidHandlers() {
@@ -1639,6 +1844,9 @@ function handleMessageFromExtension(message: MessageToWebview) {
 
         // Process code blocks after content is set
         setTimeout(() => processCodeBlocks(), 100);
+
+        // Smart RTL: compute per-block direction for the freshly loaded doc.
+        setTimeout(() => applySmartDirectionToDoc(), 60);
       }
       if (message.mermaidSources) {
         mermaidSources = message.mermaidSources;
@@ -1671,6 +1879,7 @@ function handleMessageFromExtension(message: MessageToWebview) {
         editor.commands.setContent(convertedHtml, false);
         setTimeout(() => {
           isLoadingContent = false;
+          applySmartDirectionToDoc();
         }, 100);
       }
       if (message.mermaidSources) {

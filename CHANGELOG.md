@@ -2,6 +2,21 @@
 
 All notable changes to the RTF Markdown Editor extension will be documented in this file.
 
+## [3.1.0] - 2026-05-22
+
+> Smart per-paragraph RTL/LTR — each line now picks its own direction from its content, so a single document can mix Arabic/Hebrew/Urdu prose with English code and technical terms without forcing the whole file in one direction. Adds a manual cursor-direction toggle (button + `Ctrl/Cmd+Shift+X`) so you can choose direction in an empty paragraph *before* you start typing.
+
+### Added
+
+- **Smart per-block direction detection ([#4](https://github.com/NextGenPowerToys/rtf-markdown-editor/issues/4)).** Every paragraph, heading, list item, and blockquote carries its own `dir` attribute, recomputed live from the block's text content. Rule: **any RTL character in the block → `dir="rtl"`, otherwise `dir="ltr"`**. This is intentionally *not* "first strong character" (which is the long-standing Obsidian bug the issue called out): a sentence like `React ایک بہترین لائبریری ہے` now correctly renders RTL even though it starts with a Latin word. Pure-English paragraphs and code blocks stay LTR even inside RTL documents — so you can finally paste a ChatGPT/Gemini response with mixed Urdu explanations + English code snippets and have each line keep its correct direction.
+- **Manual cursor-direction toggle.** New "Cursor direction" toolbar button (next to the existing global RTL button) and a keyboard shortcut **`Ctrl+Shift+X`** / **`Cmd+Shift+X`**. Cycles the block under the caret through three states: `auto` → `LTR (manual)` → `RTL (manual)` → `auto`. Manually-pinned blocks get a subtle blue tick at the margin and are skipped by the auto-detector, so the choice survives subsequent edits. Lets you pick a direction in an empty paragraph *before* the first character lands — the long-missing piece for comfortable mixed-language writing.
+- **Smart paste preserves per-line direction.** Pasted content from AI chats (ChatGPT, Gemini, Claude) and other mixed-direction sources is re-evaluated paragraph by paragraph immediately after paste — no manual fix-up required.
+
+### Notes
+
+- The `dir` attribute is webview-only. The HTML→Markdown converter strips it on save, so saved Markdown files stay clean (no `<p dir="rtl">` clutter) and direction is re-derived from content on reload.
+- The existing global RTL toggle is unchanged and remains available; per-block detection runs alongside it and fine-tunes individual blocks (so English paragraphs no longer get force-aligned right inside a globally-RTL document).
+
 ## [3.0.0] - 2026-05-22
 
 > Major release. PDF → Markdown is now AI-driven via GitHub Copilot Chat; a new **Documents** side panel surfaces every `.md` / `.pdf` / `.docx` / `.html` in the workspace with one-click open / convert; HTML → Markdown import is added; the editor title bar gains an "Edit with RTF Markdown Editor" quick action; per-keystroke autosave is replaced with event-driven save to eliminate image flicker; minimum VS Code engine raised to 1.93.0.

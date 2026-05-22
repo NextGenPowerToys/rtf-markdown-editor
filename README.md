@@ -53,12 +53,12 @@ A rich text editor extension for VS Code that provides a Microsoft Word / Google
 ### ✅ RTL (Right-to-Left) Language Support
 - **Hebrew**: Full first-class support
 - **Arabic**: Full support (Persian, Urdu, etc.)
-- **Automatic Detection**: Language detection from content
-- **RTL Toggle Button**: Manual RTL/LTR switching
-- **Proper Alignment**: Direction-aware alignment controls
-- **Cursor Behavior**: Correct cursor movement in RTL text
-- **Bidirectional Text**: Mixed LTR/RTL content support
-- **RTL in Exports**: RTL direction preserved in both HTML and DOCX exports
+- **Smart per-paragraph direction** (v3.1.0): each block (paragraph / heading / list item / blockquote) picks its own `dir` from its content. Mix Arabic/Hebrew/Urdu prose with English code and technical terms in the same document — every line keeps the correct direction without needing `<div dir="rtl">` wrappers.
+- **Not "first-character" based**: a sentence like `React ایک بہترین لائبریری ہے` correctly renders RTL even though it starts with a Latin word (fixes the Obsidian-style failure mode).
+- **Smart paste**: pasted content from ChatGPT / Gemini / Claude is re-evaluated line-by-line on paste — mixed-language chat responses keep their structure.
+- **Manual cursor toggle** (v3.1.0): `Ctrl/Cmd+Shift+X` or the toolbar's *Cursor direction* button cycles the current block through `auto → LTR → RTL → auto`. Lets you pick a direction in an empty paragraph *before* you start typing.
+- **Global RTL toggle**: still available — forces the whole document right-to-left when you want it.
+- **RTL in Exports**: direction preserved in both HTML and DOCX exports.
 
 ### ✅ Diagram Support
 - **Mermaid Diagrams**: Full integration with all Mermaid diagram types:
