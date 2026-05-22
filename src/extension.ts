@@ -6,9 +6,11 @@ import * as iconv from 'iconv-lite';
 import * as chardet from 'chardet';
 import { exportToHTML } from './utils/htmlExporter';
 import { importFromDOCX } from './utils/docxImporter';
+import { htmlToMarkdown } from './utils/htmlToMarkdown';
 import { extractMermaidBlocks } from './utils/markdownProcessor';
 import { renderMermaidToPng } from './utils/mermaidRenderer';
 import { detectAiChat, refreshAvailabilityContext, registerPdfChatParticipant } from './pdfChat';
+import { MarkdownExplorerProvider } from './explorer/MarkdownExplorerProvider';
 
 export function activate(context: vscode.ExtensionContext) {
   const provider = new MarkdownWordEditorProvider(context);
@@ -45,6 +47,32 @@ export function activate(context: vscode.ExtensionContext) {
   } catch (err) {
     console.warn('[rtf-markdown-editor] chat participant unavailable:', err);
   }
+
+  // Activity-bar side panel that lists every Markdown file in the open
+  // workspace. Selecting a file in the tree opens it directly in the RTF
+  // Markdown editor (via the `vscode.openWith` command wired into each
+  // TreeItem). A FileSystemWatcher refreshes the tree when .md / .markdown
+  // files are added / removed / renamed anywhere in the workspace.
+  const explorerProvider = new MarkdownExplorerProvider();
+  context.subscriptions.push(
+    vscode.window.createTreeView('rtfMarkdownEditor.files', {
+      treeDataProvider: explorerProvider,
+      showCollapseAll: true,
+    }),
+  );
+  context.subscriptions.push(
+    vscode.commands.registerCommand('rtf-markdown-editor.refreshFiles', () => explorerProvider.refresh()),
+  );
+  const mdWatcher = vscode.workspace.createFileSystemWatcher('**/*.{md,markdown,pdf,docx,html,htm}');
+  context.subscriptions.push(
+    mdWatcher,
+    mdWatcher.onDidCreate(() => explorerProvider.refresh()),
+    mdWatcher.onDidDelete(() => explorerProvider.refresh()),
+    mdWatcher.onDidChange(() => explorerProvider.refresh()),
+  );
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeWorkspaceFolders(() => explorerProvider.refresh()),
+  );
 
   // Register command to open editor.
   // Callable from: Explorer context menu, Command Palette, and the
@@ -213,6 +241,55 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.window.showErrorMessage(`Failed to import DOCX: ${error}`);
       }
     })
+  );
+
+  // Register command to import an HTML file and convert it to Markdown.
+  // Reads the .html locally, runs it through the same turndown-based
+  // converter used elsewhere in the extension, saves the result as a
+  // sibling `.md`, and opens it in the RTF Markdown editor.
+  context.subscriptions.push(
+    vscode.commands.registerCommand('rtf-markdown-editor.importHTML', async (uri?: vscode.Uri) => {
+      try {
+        let htmlUri: vscode.Uri | undefined = uri;
+        if (!htmlUri) {
+          const picked = await vscode.window.showOpenDialog({
+            canSelectMany: false,
+            filters: { 'HTML Files': ['html', 'htm'] },
+            openLabel: 'Import HTML',
+          });
+          if (!picked || picked.length === 0) { return; }
+          htmlUri = picked[0];
+        }
+
+        const htmlPath = htmlUri.fsPath;
+        const docName = path.basename(htmlPath, path.extname(htmlPath));
+        const saveUri = await vscode.window.showSaveDialog({
+          defaultUri: vscode.Uri.file(path.join(path.dirname(htmlPath), `${docName}.md`)),
+          filters: { 'Markdown Files': ['md'] },
+        });
+        if (!saveUri) { return; }
+
+        let markdown = '';
+        await vscode.window.withProgress(
+          {
+            location: vscode.ProgressLocation.Notification,
+            title: `Converting "${path.basename(htmlPath)}" to Markdown…`,
+            cancellable: false,
+          },
+          async () => {
+            const buf = fs.readFileSync(htmlPath);
+            const html = buf.toString('utf8');
+            markdown = await htmlToMarkdown(html);
+          },
+        );
+
+        fs.writeFileSync(saveUri.fsPath, markdown, 'utf8');
+        vscode.window.showInformationMessage(`Markdown saved to ${path.basename(saveUri.fsPath)}`);
+        await vscode.commands.executeCommand('vscode.openWith', saveUri, 'rtf-markdown-editor.editor');
+      } catch (error) {
+        vscode.window.showErrorMessage(`Failed to import HTML: ${error}`);
+      }
+    }),
   );
 
   // Register command to import a PDF file. The conversion itself is handled

@@ -1,55 +1,43 @@
 {
   "name": "rtf-markdown-editor",
   "displayName": "RTF Markdown Editor",
-  "description": "Word-like WYSIWYG Markdown Editor — Export Word/HTML/PDF, Import Word, AI-driven PDF → Markdown (via GitHub Copilot Chat), RTL-first (Hebrew/Arabic), Azure DevOps Mermaid, Autosave",
-  "version": "2.6.0",
+  "description": "Word-like WYSIWYG Markdown editor for VS Code — RTL/Hebrew/Arabic first, Mermaid diagrams, AI-powered PDF → Markdown via GitHub Copilot Chat, one-click HTML/DOCX/PDF import, Word/HTML/PDF export, dedicated Documents side panel, autosave.",
+  "version": "3.0.0",
   "publisher": "NGPowerToys",
   "icon": "media/icons/RTFMD.png",
   "keywords": [
     "markdown",
-    "editor",
-    "editors",
+    "markdown-editor",
     "wysiwyg",
+    "wysiwyg-editor",
     "rtl",
     "hebrew",
     "arabic",
-    "persian",
-    "urdu",
-    "bidirectional",
     "bidi",
     "mermaid",
-    "diagrams",
-    "flowchart",
-    "sequence-diagram",
     "diagram",
-    "export",
-    "html",
-    "docx",
-    "word",
-    "microsoft-word",
-    "document",
-    "offline",
-    "autosave",
-    "word-like",
-    "rich-text",
-    "wysiwyg-editor",
-    "markdown-editor",
-    "github",
+    "flowchart",
     "azure-devops",
-    "technical-writing",
-    "documentation",
-    "rfc-7763",
-    "import",
-    "convert",
-    "docx-to-markdown",
-    "word-to-markdown",
+    "github-copilot",
+    "copilot-chat",
+    "chat-participant",
+    "ai",
+    "language-model",
     "pdf",
     "pdf-to-markdown",
-    "pdf-import",
-    "pdf-export",
-    "ocr",
-    "tesseract",
-    "pdf-converter"
+    "ai-pdf",
+    "docx",
+    "docx-to-markdown",
+    "word",
+    "html",
+    "html-to-markdown",
+    "convert",
+    "document-converter",
+    "side-panel",
+    "documentation",
+    "technical-writing",
+    "autosave",
+    "offline"
   ],
   "repository": {
     "type": "git",
@@ -59,8 +47,10 @@
     "vscode": "^1.93.0"
   },
   "categories": [
-    "Notebooks",
+    "AI",
+    "Chat",
     "Formatters",
+    "Notebooks",
     "Visualization"
   ],
   "activationEvents": [
@@ -68,6 +58,30 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "rtfMarkdownEditor",
+          "title": "RTF Markdown Editor",
+          "icon": "media/icons/RTFMD.png"
+        }
+      ]
+    },
+    "views": {
+      "rtfMarkdownEditor": [
+        {
+          "id": "rtfMarkdownEditor.files",
+          "name": "Documents",
+          "contextualTitle": "RTF Markdown Editor"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "rtfMarkdownEditor.files",
+        "contents": "No Markdown, PDF, DOCX, or HTML files found in this workspace.\n\nSelect a `.md` file to open it in the RTF editor, or a `.pdf` / `.docx` / `.html` file to convert it to Markdown.\n\n[$(refresh) Rescan workspace](command:rtf-markdown-editor.refreshFiles)"
+      }
+    ],
     "customEditors": [
       {
         "viewType": "rtf-markdown-editor.editor",
@@ -111,6 +125,11 @@
           "group": "1_modification"
         },
         {
+          "command": "rtf-markdown-editor.importHTML",
+          "when": "resourceExtname == .html || resourceExtname == .htm",
+          "group": "1_modification"
+        },
+        {
           "command": "rtf-markdown-editor.importPDF",
           "when": "resourceExtname == .pdf && rtf-markdown-editor.aiChatAvailable",
           "group": "1_modification"
@@ -121,6 +140,13 @@
           "command": "rtf-markdown-editor.openEditor",
           "when": "(resourceExtname == .md || resourceExtname == .markdown) && activeCustomEditorId != 'rtf-markdown-editor.editor'",
           "group": "navigation@1"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "rtf-markdown-editor.refreshFiles",
+          "when": "view == rtfMarkdownEditor.files",
+          "group": "navigation"
         }
       ]
     },
@@ -133,6 +159,12 @@
           "light": "media/icons/RTFMD.png",
           "dark": "media/icons/RTFMD.png"
         }
+      },
+      {
+        "command": "rtf-markdown-editor.refreshFiles",
+        "title": "Rescan Workspace",
+        "category": "RTF Markdown",
+        "icon": "$(refresh)"
       },
       {
         "command": "rtf-markdown-editor.exportHTMLSelfContained",
@@ -152,6 +184,11 @@
       {
         "command": "rtf-markdown-editor.importDOCX",
         "title": "Convert to Markdown",
+        "category": "RTF Markdown"
+      },
+      {
+        "command": "rtf-markdown-editor.importHTML",
+        "title": "Convert HTML to Markdown",
         "category": "RTF Markdown"
       },
       {

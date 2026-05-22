@@ -1,8 +1,8 @@
 # RTF Markdown Editor
 
-**Word-like WYSIWYG Markdown Editor for VS Code** — RTL-first, Azure DevOps Mermaid, Export Word/HTML/PDF, Import Word, **AI-driven PDF → Markdown (via GitHub Copilot Chat)**, Autosave, mostly **Offline**
+**Word-like WYSIWYG Markdown Editor for VS Code** — RTL-first, Azure DevOps Mermaid, Export Word/HTML/PDF, Import **Word / HTML**, **AI-driven PDF → Markdown (via GitHub Copilot Chat)**, dedicated **Documents side panel**, Autosave, mostly **Offline**
 
-A rich text editor extension for VS Code that provides a Microsoft Word / Google Docs-like experience for Markdown files, with special emphasis on right-to-left (RTL) languages like Hebrew and Arabic, automatic saving, Mermaid diagram support, and one-click export to HTML, Word (DOCX), or PDF. Word → Markdown import runs fully offline; **PDF → Markdown is now powered by GitHub Copilot Chat** through the bundled PDF processing skill and the `@pdfmd` chat participant.
+A rich text editor extension for VS Code that provides a Microsoft Word / Google Docs-like experience for Markdown files, with special emphasis on right-to-left (RTL) languages like Hebrew and Arabic, automatic saving, Mermaid diagram support, and one-click export to HTML, Word (DOCX), or PDF. Word → Markdown and HTML → Markdown imports run fully offline; **PDF → Markdown is powered by GitHub Copilot Chat** through the bundled PDF processing skill and the `@pdfmd` chat participant. A dedicated **Documents** Activity Bar panel lists every Markdown, PDF, DOCX, and HTML file in the workspace — single-click any of them to edit or convert.
 
 ## Features
 
@@ -140,22 +140,55 @@ A rich text editor extension for VS Code that provides a Microsoft Word / Google
 - **Correct Bullet Import**: Bullet lists from standard Word documents import with proper formatting (fixes Word "List Paragraph" style artifact)
 - **Offline**: No external tools or internet required
 
-### 🔒 100% Offline & Secure
-- **No Internet Required**: All dependencies bundled locally
-- **No CDN Calls**: Fonts, scripts, and styles are embedded
-- **No Network Calls**: Extension functions completely offline
-- **No Telemetry**: No data collection or tracking
-- **Strict CSP**: Content Security Policy prevents external resource loading
-- **No Runtime Downloads**: Everything needed is in the extension package
+### ✅ Import from HTML (HTML → Markdown)
+
+> **Purpose:** Convert standalone HTML files (web archives, exported Confluence pages, scraped documentation, etc.) into Markdown so the content can be edited in the RTF editor or fed to downstream tools.
+
+- **Right-Click Import**: Right-click any `.html` / `.htm` file in the Explorer → **"Convert HTML to Markdown"**
+- **Command Palette**: `RTF Markdown: Convert HTML to Markdown`
+- **Documents Side Panel**: A single click on an HTML entry in the side panel runs the same conversion
+- **Reuses the extension's HTML→Markdown pipeline**: Same turndown-based converter that powers the GFM-table rule used elsewhere
+- **Saved Next to the Source**: Output `.md` lands beside the original `.html` and opens in the RTF Markdown editor
+- **Offline**: No external tools or internet required
+
+### 📁 Documents Side Panel
+
+> A dedicated Activity Bar panel that lists every supported document in the workspace and gives you one-click "open" / "convert" actions — no context-menu hunt required.
+
+- **Activity Bar Icon**: Click the RTFMD icon on VS Code's Activity Bar to open the **Documents** view
+- **Auto-discovers** every `.md` / `.markdown` / `.pdf` / `.docx` / `.html` / `.htm` file in your workspace (respects `files.exclude`, skips `node_modules` / `.git` / `dist` / `out` / `.vscode-test`)
+- **Type-specific click action**:
+  - `.md` / `.markdown` → opens in the **RTF Markdown Editor**
+  - `.pdf` → runs **Convert PDF to Markdown (via GitHub Copilot Chat)** — requires GitHub Copilot Chat
+  - `.docx` → runs **Convert DOCX to Markdown** (offline)
+  - `.html` / `.htm` → runs **Convert HTML to Markdown** (offline)
+- **Type-specific icons + `… → MD` descriptions** so it's obvious at a glance which entries are editable vs. convertible
+- **Workspace folder layout**: Single workspace folder surfaces its files at the top; multiple folders each appear as a collapsible group
+- **Live refresh**: A `FileSystemWatcher` keeps the tree in sync with creates / renames / deletes; a `$(refresh)` button on the view title bar forces a manual rescan
+- **Welcome screen** on empty workspaces with a quick "Rescan workspace" action
+
+### ✅ Editor Title-Bar Quick Action
+
+- When a `.md` / `.markdown` file is open in any **non**-RTF editor (default text editor, plain `vscode.open`, another custom editor), the RTFMD icon appears in the top-right of the editor's title bar
+- Click it to switch the file into the **RTF Markdown editor** without opening a context menu
+- Hidden when the file is already in the RTF editor
+
+### 🔒 Mostly Offline & Secure
+- **Editor & Export Run Offline**: WYSIWYG editing, autosave, and exports to Word / HTML / PDF need no network access
+- **Word / HTML Import Run Offline**: DOCX → MD and HTML → MD conversion both work without any external service
+- **PDF → MD Uses GitHub Copilot Chat**: The only feature that contacts an external service; menu entry is hidden unless GitHub Copilot Chat is installed, conversion counts toward your Copilot usage, traffic is whatever Copilot itself emits
+- **All Other Dependencies Bundled Locally**: No CDN, no runtime downloads, fonts/scripts/styles embedded
+- **No Telemetry**: No data collection or tracking by this extension
+- **Strict CSP**: Content Security Policy prevents external resource loading in the editor webview
 - **Complete Independence**: Works without VS Code Marketplace connection
 
 ### ✅ Autosave & Session Management
-- **Automatic Saving**: 750ms debounce after changes stop
-- **Smart Triggers**: Save on:
-  - Editor blur (loses focus)
-  - Tab hidden
-  - File close
-  - Window focus lost
+- **Event-Driven Save (No Keystroke Save)**: As of 2.6.0, autosave does NOT run on every keystroke. The document is persisted only at natural "done interacting" moments — this eliminates a self-echo loop through the `FileSystemWatcher` that was rebuilding the ProseMirror document on every save and causing embedded images to flicker mid-typing.
+- **Save Triggers**:
+  - Editor loses focus (TipTap `onBlur` — e.g. clicking outside the editing surface)
+  - Webview tab is hidden (`visibilitychange → hidden` — user switches to a different VS Code tab)
+  - Webview is being torn down (`pagehide` / `beforeunload` — panel closed, VS Code reloading)
+- **Self-Write Echo Guard**: After our own write, the file watcher ignores its own immediate `onDidChange` event so the disk round-trip can't bounce back as an `externalUpdate` and re-render the document
 - **Content Hashing**: Prevents unnecessary saves if no changes made
 - **No Confirmation**: Seamless auto-save without dialogs
 - **Preserves State**: Undo/redo history maintained during save
@@ -533,4 +566,18 @@ For issues, feature requests, or questions:
 
 ---
 
-**RTF Markdown Editor** — Offline, RTL-first, WYSIWYG Markdown editing for VS Code. Export to HTML, Word, and PDF. Extract content from Word and PDF into Markdown for AI analysis — all with one click.
+**RTF Markdown Editor** — A mostly-offline, RTL-first, WYSIWYG Markdown editor for VS Code. AI-powered PDF → Markdown via GitHub Copilot Chat. One-click HTML / DOCX / PDF import, Word / HTML / PDF export, Mermaid diagrams, dedicated Documents side panel — all from one extension.
+
+## Tags
+
+`markdown editor` · `markdown-editor` · `wysiwyg` · `wysiwyg markdown editor` ·
+`vs code extension` · `vscode extension` · `vscode markdown editor` ·
+`rtl markdown` · `hebrew markdown` · `arabic markdown` · `bidi` ·
+`mermaid` · `mermaid editor` · `flowchart` · `azure devops wiki` ·
+`github copilot` · `copilot chat` · `chat participant` · `@pdfmd` · `ai markdown` · `language model api` ·
+`pdf to markdown` · `pdf to md` · `ai pdf converter` · `ai pdf to markdown` · `convert pdf to markdown` ·
+`docx to markdown` · `word to markdown` ·
+`html to markdown` · `html converter` ·
+`document converter` · `document management` · `documents side panel` · `file tree` ·
+`technical writing` · `documentation` · `markdown editor for documentation` ·
+`autosave` · `offline editor` · `rfc 7763` · `attachments` · `image extraction`

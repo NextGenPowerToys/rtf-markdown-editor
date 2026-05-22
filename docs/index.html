@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- Primary SEO -->
-    <title>RTF Markdown Editor — Word-like WYSIWYG Markdown Editor for VS Code</title>
-    <meta name="description" content="A free, 100% offline WYSIWYG Markdown editor for VS Code. Export to Word, PDF & HTML. Import from Word & PDF. RTL-first with Hebrew & Arabic support. Mermaid diagrams. No telemetry.">
-    <meta name="keywords" content="markdown editor, VS Code extension, WYSIWYG, RTL, Hebrew, Arabic, mermaid diagrams, export Word, export PDF, export HTML, import Word, import PDF, offline editor, autosave, rich text editor, markdown to docx, markdown to pdf, Azure DevOps, technical writing, documentation">
+    <title>RTF Markdown Editor — Word-like WYSIWYG Markdown Editor with AI PDF → Markdown (GitHub Copilot Chat) for VS Code</title>
+    <meta name="description" content="Word-like WYSIWYG Markdown editor for VS Code — RTL/Hebrew/Arabic first, Mermaid diagrams, AI-powered PDF → Markdown via GitHub Copilot Chat, one-click HTML/DOCX/PDF import, Word/HTML/PDF export, dedicated Documents side panel, autosave.">
+    <meta name="keywords" content="markdown editor, markdown-editor, wysiwyg markdown editor, vs code extension, vscode extension, rtl markdown, hebrew markdown, arabic markdown, bidi, mermaid editor, mermaid diagrams, flowchart, azure devops, github copilot, copilot chat, chat participant, ai markdown, language model api, pdf to markdown, pdf to md, ai pdf converter, ai pdf to markdown, docx to markdown, word to markdown, html to markdown, document converter, side panel, documents view, technical writing, documentation, autosave, offline editor, rfc 7763">
     <meta name="author" content="NGPowerToys">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://nextgenpowertoys.github.io/rtf-markdown-editor/">
@@ -15,16 +15,16 @@
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://nextgenpowertoys.github.io/rtf-markdown-editor/">
-    <meta property="og:title" content="RTF Markdown Editor — Word-like WYSIWYG Markdown for VS Code">
-    <meta property="og:description" content="Free, offline WYSIWYG Markdown editor for VS Code. Export to Word, PDF & HTML. Import from Word & PDF. Full RTL support. Mermaid diagrams. Zero telemetry.">
+    <meta property="og:title" content="RTF Markdown Editor — Word-like WYSIWYG Markdown with AI PDF → Markdown (Copilot) for VS Code">
+    <meta property="og:description" content="WYSIWYG Markdown editor for VS Code — RTL/Hebrew/Arabic first, Mermaid diagrams, AI-powered PDF → Markdown via GitHub Copilot Chat, one-click HTML/DOCX/PDF import, Word/HTML/PDF export, Documents side panel, autosave.">
     <meta property="og:image" content="https://nextgenpowertoys.github.io/rtf-markdown-editor/og-image.png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="RTF Markdown Editor — Word-like WYSIWYG Markdown for VS Code">
-    <meta name="twitter:description" content="Free, offline WYSIWYG Markdown editor for VS Code. Export to Word, PDF & HTML. Import from Word & PDF. Full RTL support.">
+    <meta name="twitter:title" content="RTF Markdown Editor — WYSIWYG Markdown with AI PDF → Markdown (Copilot)">
+    <meta name="twitter:description" content="WYSIWYG Markdown editor for VS Code — RTL/Hebrew/Arabic, Mermaid, AI PDF → Markdown via GitHub Copilot Chat, HTML/DOCX/PDF import, Word/HTML/PDF export, Documents side panel, autosave.">
     <meta name="twitter:image" content="https://nextgenpowertoys.github.io/rtf-markdown-editor/og-image.png">
 
     <!-- Structured Data -->
@@ -33,8 +33,10 @@
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
         "name": "RTF Markdown Editor",
-        "description": "Word-like WYSIWYG Markdown Editor for VS Code with export to Word, PDF & HTML, import from Word & PDF, RTL-first design for Hebrew & Arabic, Mermaid diagram support, and 100% offline operation.",
+        "alternateName": "RTFMD",
+        "description": "Word-like WYSIWYG Markdown editor for VS Code with RTL-first design (Hebrew/Arabic), Mermaid diagram support, AI-powered PDF → Markdown conversion via GitHub Copilot Chat, one-click HTML / DOCX / PDF import, Word / HTML / PDF export, and a dedicated Documents side panel that lists every supported document in the workspace.",
         "applicationCategory": "DeveloperApplication",
+        "applicationSubCategory": "Markdown Editor",
         "operatingSystem": "Windows, macOS, Linux",
         "offers": {
             "@type": "Offer",
@@ -46,11 +48,28 @@
             "name": "NGPowerToys",
             "url": "https://github.com/NextGenPowerToys"
         },
-        "softwareVersion": "2.5.4",
+        "softwareVersion": "3.0.0",
         "url": "https://marketplace.visualstudio.com/items?itemName=NGPowerToys.rtf-markdown-editor",
         "downloadUrl": "https://marketplace.visualstudio.com/items?itemName=NGPowerToys.rtf-markdown-editor",
         "screenshot": "https://nextgenpowertoys.github.io/rtf-markdown-editor/screenshots/editor-overview.png",
-        "featureList": "WYSIWYG Editing, Export to Word DOCX, Export to PDF, Export to HTML, Import from Word, Import from PDF with OCR, RTL Hebrew Arabic Support, Mermaid Diagrams, 100% Offline, Autosave, Azure DevOps Wiki Compatible"
+        "softwareRequirements": "Visual Studio Code 1.93+; GitHub Copilot Chat required only for the AI-powered PDF → Markdown command.",
+        "featureList": [
+            "Word-like WYSIWYG Markdown editing",
+            "RTL-first design with Hebrew / Arabic / bidi support",
+            "Mermaid diagram editing (Azure DevOps Wiki compatible)",
+            "AI-powered PDF → Markdown via GitHub Copilot Chat (@pdfmd chat participant)",
+            "HTML → Markdown import (offline)",
+            "DOCX → Markdown import with image attachment extraction (offline)",
+            "PDF / DOCX / HTML diagrams extracted as .attachments/ image references",
+            "Export to Word (DOCX), HTML, and PDF",
+            "Documents side panel (Activity Bar) listing every .md / .pdf / .docx / .html in the workspace",
+            "Editor title-bar quick action to switch a .md from any editor into the RTF editor",
+            "Event-driven autosave (blur / tab-hidden / pagehide / beforeunload)",
+            "RFC 7763 charset & variant detection",
+            "Custom editor providers for .md and .markdown files",
+            "Mostly offline — only PDF → Markdown talks to Copilot Chat"
+        ],
+        "keywords": "markdown editor, wysiwyg markdown editor, vs code, vscode extension, rtl markdown, hebrew, arabic, bidi, mermaid, azure devops, github copilot, copilot chat, chat participant, ai pdf to markdown, pdf converter, docx to markdown, html to markdown, document converter, side panel, technical writing, documentation, autosave, offline editor"
     }
     </script>
 
@@ -501,16 +520,18 @@
     <div class="container">
         <div class="hero-badge">
             <span class="dot"></span>
-            v2.5.4 &mdash; Save reliability, RTL &amp; PDF improvements
+            v3.0.0 &mdash; AI PDF&nbsp;&rarr;&nbsp;Markdown via Copilot, Documents side panel, HTML import
         </div>
         <h1>
             Write Markdown.<br>
             <span>Feel like Word.</span>
         </h1>
         <p class="hero-sub">
-            A free, <strong>100% offline</strong> WYSIWYG Markdown editor for VS Code.
-            Export to Word, PDF &amp; HTML. Import from Word &amp; PDF.
-            First-class RTL support for Hebrew &amp; Arabic. Zero telemetry.
+            A free, mostly-offline WYSIWYG Markdown editor for VS Code &mdash;
+            <strong>RTL/Hebrew/Arabic first</strong>, Mermaid diagrams,
+            <strong>AI-powered PDF&nbsp;&rarr;&nbsp;Markdown</strong> via GitHub Copilot Chat,
+            one-click HTML&nbsp;/&nbsp;DOCX&nbsp;/&nbsp;PDF import, Word&nbsp;/&nbsp;HTML&nbsp;/&nbsp;PDF export,
+            dedicated <strong>Documents side panel</strong>, autosave. Zero telemetry.
         </p>
         <div class="hero-actions">
             <a href="https://marketplace.visualstudio.com/items?itemName=NGPowerToys.rtf-markdown-editor" class="btn-primary" target="_blank" rel="noopener">
@@ -586,8 +607,8 @@
                 <div class="feature-icon icon-orange">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 22h14a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v4"/><polyline points="14 2 14 8 20 8"/><path d="m3 15 2 2 4-4"/></svg>
                 </div>
-                <h3>Import from Word &amp; PDF</h3>
-                <p>Extract content from .docx and .pdf files into clean Markdown. OCR-powered PDF extraction with Hebrew support, table detection, and cross-page table merging.</p>
+                <h3>Import Word, HTML &amp; PDF</h3>
+                <p>One-click conversion of .docx, .html and .pdf files into clean Markdown. PDF is converted by GitHub Copilot Chat (the new <code>@pdfmd</code> chat participant) with embedded diagrams extracted as <code>.attachments/</code> images. DOCX and HTML run fully offline.</p>
             </div>
 
             <div class="feature-card fade-up">
@@ -620,10 +641,11 @@
             <div class="workflow-card fade-up">
                 <div class="workflow-step">1</div>
                 <h3>Import</h3>
-                <p>Bring in existing content from Word documents and PDFs. OCR extracts text from scanned PDFs. Right-click any file to convert.</p>
+                <p>Bring in existing content from Word, HTML, and PDF files. Word and HTML run offline; PDF is converted by GitHub Copilot Chat. Right-click in the Explorer or open the new Documents side panel.</p>
                 <div class="workflow-formats">
                     <span class="format-tag tag-blue">.docx</span>
                     <span class="format-tag tag-purple">.pdf</span>
+                    <span class="format-tag tag-blue">.html</span>
                 </div>
             </div>
             <div class="workflow-card fade-up">
@@ -669,7 +691,7 @@
                     <li><span class="check">&#10003;</span> Bidirectional mixed-language text support</li>
                     <li><span class="check">&#10003;</span> RTL preserved in Word, PDF &amp; HTML exports</li>
                     <li><span class="check">&#10003;</span> Direction-aware alignment controls</li>
-                    <li><span class="check">&#10003;</span> OCR-powered PDF import with Hebrew correction</li>
+                    <li><span class="check">&#10003;</span> AI-powered PDF import via Copilot Chat with Hebrew RTL handling</li>
                 </ul>
             </div>
         </div>

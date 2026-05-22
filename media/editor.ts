@@ -64,16 +64,101 @@ const icons = {
 };
 
 // Custom extension to preserve Mermaid placeholder divs
+/**
+ * Pre-process raw Mermaid source the same way the legacy
+ * `renderMermaidDiagrams()` path does: quote ambiguous participant aliases
+ * and convert `<br/>` to escaped newlines so the diagram parses cleanly.
+ */
+function preprocessMermaidSource(source: string): string {
+  let processed = source.replace(
+    /^[\t ]*participant\s+([a-zA-Z0-9_\-]+)\s+as\s+([^"\n]+?)(?:\s*)$/gm,
+    (match, id, alias) => {
+      const trimmed = (alias as string).trim();
+      if (trimmed.startsWith('"') && trimmed.endsWith('"')) return match;
+      return `\tparticipant ${id} as "${trimmed}"`;
+    },
+  );
+  processed = processed.replace(/<br\s*\/?>/gi, '\\n');
+  return processed;
+}
+
+/**
+ * Cache of already-rendered Mermaid SVG strings, keyed by mermaidId. When a
+ * NodeView is (re-)instantiated for a diagram we've already rendered, we
+ * paint the SVG synchronously from this cache so the diagram never visibly
+ * disappears even if ProseMirror destroys and re-creates the NodeView.
+ *
+ * We also remember which `(id, sourceHash)` combination produced each SVG so
+ * we know to re-render when the user actually edits the source.
+ */
+const renderedMermaidSvg = new Map<string, { svg: string; sourceHash: number }>();
+
+function quickHash(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+  return h;
+}
+
+/** Render a Mermaid source into a given host element. Idempotent. */
+function renderMermaidInto(host: HTMLElement, mermaidId: string): void {
+  if (!mermaidId) return;
+  const source = mermaidSources[mermaidId];
+  if (!source) return;
+
+  const sourceHash = quickHash(source);
+  const cached = renderedMermaidSvg.get(mermaidId);
+
+  // Paint from cache immediately — synchronous, no flicker — whenever we've
+  // already rendered this exact source before.
+  if (cached && cached.sourceHash === sourceHash) {
+    if (host.innerHTML !== cached.svg) host.innerHTML = cached.svg;
+    return;
+  }
+
+  // If the host already has the right SVG and we just haven't cached it
+  // (initial-load races), record it and bail.
+  const existing = host.querySelector('svg');
+  if (existing && cached?.sourceHash === sourceHash) return;
+
+  if (typeof mermaid === 'undefined') return;
+
+  const diagramId = `mermaid-${mermaidId}`;
+  const processedSource = preprocessMermaidSource(source);
+  mermaid.render(diagramId, processedSource)
+    .then(({ svg }) => {
+      renderedMermaidSvg.set(mermaidId, { svg, sourceHash });
+      host.innerHTML = svg;
+      const inner = host.querySelector('svg');
+      if (inner) {
+        inner.removeAttribute('width');
+        inner.removeAttribute('height');
+        (inner as SVGElement).style.maxWidth = '100%';
+        (inner as SVGElement).style.height = 'auto';
+      }
+    })
+    .catch((err: unknown) => {
+      host.innerHTML = `<pre class="mermaid-error" style="color:#c33;font-family:monospace;white-space:pre-wrap;">Mermaid error: ${
+        (err as Error).message ?? String(err)
+      }</pre>`;
+    });
+}
+
 const MermaidPlaceholder = Node.create({
   name: 'mermaidPlaceholder',
   group: 'block',
   atom: true,
+  selectable: true,
+  draggable: false,
 
   addAttributes() {
     return {
       'data-id': {
         default: '',
         parseHTML: element => element.getAttribute('data-id'),
+      },
+      'data-fence-type': {
+        default: 'backtick',
+        parseHTML: element => element.getAttribute('data-fence-type') || 'backtick',
       },
     };
   },
@@ -93,15 +178,69 @@ const MermaidPlaceholder = Node.create({
     ];
   },
 
+  // Static renderHTML — used for serialization (getHTML()) only. The visible
+  // DOM in the editor is produced by `addNodeView()` below.
   renderHTML({ HTMLAttributes }) {
-    return ['div', { ...HTMLAttributes, 'data-mdwe': 'mermaid', 'data-fence-type': HTMLAttributes['data-fence-type'] || 'backtick', class: 'mermaid-placeholder' }];
+    return ['div', {
+      ...HTMLAttributes,
+      'data-mdwe': 'mermaid',
+      'data-fence-type': HTMLAttributes['data-fence-type'] || 'backtick',
+      class: 'mermaid-placeholder',
+    }];
   },
 
-  parseDOM: [
-    {
-      tag: 'div[data-mdwe="mermaid"]',
-    },
-  ],
+  // ─── NodeView ────────────────────────────────────────────────────────────
+  // Owns the on-screen DOM for each mermaid block so the rendered SVG isn't
+  // wiped on every keystroke. Without this, ProseMirror's MutationObserver
+  // would treat the SVG we inject as "unexpected DOM" and re-sync the node
+  // from the model — re-creating an empty div and forcing a re-render
+  // (visible as flicker while typing in other parts of the document).
+  addNodeView() {
+    return ({ node }) => {
+      const dom = document.createElement('div');
+      const mermaidId = (node.attrs['data-id'] as string) || '';
+      dom.setAttribute('data-mdwe', 'mermaid');
+      dom.setAttribute('data-id', mermaidId);
+      dom.setAttribute('data-fence-type', (node.attrs['data-fence-type'] as string) || 'backtick');
+      dom.className = 'mermaid-placeholder';
+
+      // Paint synchronously from the global SVG cache if we have one — this
+      // is what kills the flicker: even if ProseMirror destroys and re-
+      // creates this NodeView between keystrokes (which it does for atom
+      // blocks adjacent to the typing position), the diagram appears at the
+      // new DOM node instantly, with no async gap.
+      const source = mermaidSources[mermaidId];
+      const cached = source ? renderedMermaidSvg.get(mermaidId) : undefined;
+      if (cached && source && cached.sourceHash === quickHash(source)) {
+        dom.innerHTML = cached.svg;
+      } else {
+        // No cache yet: defer to next tick so Mermaid library finishes
+        // loading on cold pages.
+        setTimeout(() => renderMermaidInto(dom, mermaidId), 0);
+      }
+
+      return {
+        dom,
+        // Ignore SVG-internal DOM mutations (mermaid mutates the SVG it
+        // injects). ProseMirror would otherwise try to re-sync the node.
+        ignoreMutation: () => true,
+        // Don't propagate inner clicks / keyboard events to ProseMirror.
+        stopEvent: () => true,
+        // Tell ProseMirror this NodeView handles its own updates — it
+        // shouldn't destroy + recreate us on every editor update.
+        update: (newNode) => {
+          if (newNode.type.name !== 'mermaidPlaceholder') return false;
+          const newId = (newNode.attrs['data-id'] as string) || '';
+          if (newId !== mermaidId) {
+            dom.setAttribute('data-id', newId);
+            dom.innerHTML = '';
+            renderMermaidInto(dom, newId);
+          }
+          return true;
+        },
+      };
+    };
+  },
 });
 
 // Type definitions for VSCode API
@@ -280,8 +419,9 @@ function initializeEditor() {
       // Add IDs to headings for anchor links
       addHeadingIds();
 
-      // Render Mermaid diagrams after content updates
-      setTimeout(() => renderMermaidDiagrams(), 100);
+      // Mermaid diagrams are now rendered by the MermaidPlaceholder NodeView
+      // — no per-keystroke re-render needed. (Initial load + externalUpdate
+      // still call renderMermaidDiagrams as a belt-and-suspenders pass.)
 
       // Render math blocks and inline math
       setTimeout(() => renderMathBlocks(), 150);
@@ -1613,112 +1753,18 @@ function handleMessageFromExtension(message: MessageToWebview) {
   }
 }
 
+/**
+ * Legacy entry point — called by the `setContent` / `externalUpdate`
+ * message handlers as a belt-and-suspenders pass after a full document
+ * replace. Delegates to the same `renderMermaidInto` helper the NodeView
+ * uses, so both paths share the same SVG cache and produce identical DOM.
+ */
 function renderMermaidDiagrams() {
-  if (typeof mermaid === 'undefined') {
-    console.error('[Mermaid] Mermaid library not available');
-    return;
-  }
-
   const elements = document.querySelectorAll('[data-mdwe="mermaid"]');
-  console.log(`[Mermaid] Found ${elements.length} placeholder elements`);
-
-  if (elements.length === 0) {
-    return;
-  }
-
   elements.forEach((element) => {
-    const mermaidId = element.getAttribute('data-id');
-
-    if (!mermaidId || !mermaidSources[mermaidId]) {
-      return;
-    }
-
-    // Check if already has SVG
-    const existingSvg = element.querySelector('svg');
-    if (existingSvg) {
-      console.log(`[Mermaid] SVG already exists for ${mermaidId}`);
-      return;
-    }
-
-    const source = mermaidSources[mermaidId];
-    console.log(`[Mermaid] Rendering ${mermaidId}`);
-
-    try {
-      const diagramId = `mermaid-${mermaidId}`;
-
-      // Preprocess source:
-      // 1. Sanitize participant aliases by quoting them if they contain special characters (like parentheses)
-      //    This fixes parsing errors where Mermaid misinterprets unquoted aliases.
-      let processedSource = source.replace(
-        /^[\t ]*participant\s+([a-zA-Z0-9_\-]+)\s+as\s+([^"\n]+?)(?:\s*)$/gm,
-        (match, id, alias) => {
-          const trimmedAlias = alias.trim();
-          // If already quoted, leave it alone
-          if (trimmedAlias.startsWith('"') && trimmedAlias.endsWith('"')) {
-            return match;
-          }
-          return `\tparticipant ${id} as "${trimmedAlias}"`;
-        }
-      );
-
-      // 2. Convert <br/> tags to escaped newlines for plain text mode (when htmlLabels: false)
-      processedSource = processedSource.replace(/<br\s*\/?>/gi, '\\n');
-
-      mermaid.render(diagramId, processedSource)
-        .then(({ svg }) => {
-          console.log(`[Mermaid] Got SVG for ${mermaidId}, length: ${svg.length}`);
-          // Clear element and insert SVG
-          element.innerHTML = '';
-          element.innerHTML = svg;
-          console.log(`[Mermaid] Injected SVG into ${mermaidId}`);
-
-          // Fix SVG display issues by ensuring it has proper dimensions
-          // This is critical for diagrams with HTML tags like <br/> in component labels
-          const injectedSvg = element.querySelector('svg');
-          if (injectedSvg) {
-            // Wait for text content to fully render before applying styles
-            setTimeout(() => {
-              try {
-                // Remove inline width/height to let viewBox and CSS handle sizing
-                injectedSvg.removeAttribute('width');
-                injectedSvg.removeAttribute('height');
-
-                // Apply CSS for responsive sizing
-                // Trust Mermaid's viewBox calculation
-                injectedSvg.style.width = '100%';
-                injectedSvg.style.height = 'auto';
-                injectedSvg.style.display = 'block';
-                injectedSvg.style.overflow = 'visible';
-
-                // Ensure container allows natural sizing
-                element.style.overflow = 'visible';
-                element.style.width = 'auto';
-                element.style.height = 'auto';
-
-                console.log(`[Mermaid] Finalized ${mermaidId}:`, {
-                  viewBox: injectedSvg.getAttribute('viewBox'),
-                  style: {
-                    width: injectedSvg.style.width,
-                    height: injectedSvg.style.height,
-                    overflow: injectedSvg.style.overflow,
-                  }
-                });
-              } catch (err) {
-                console.error(`[Mermaid] Error finalizing SVG for ${mermaidId}:`, err);
-              }
-            }, 100);
-          } else {
-            console.warn(`[Mermaid] SVG element NOT found in DOM after injection for ${mermaidId}`);
-          }
-        })
-        .catch((err) => {
-          console.error(`[Mermaid] Error rendering ${mermaidId}:`, err);
-          element.innerHTML = `<div style="color: #d13438; padding: 12px; background: #fff4f4; border: 1px solid #f0adac; border-radius: 4px; font-size: 12px; word-break: break-all;">Error: ${err.message || String(err)}</div>`;
-        });
-    } catch (error) {
-      console.error(`[Mermaid] Error processing diagram ${mermaidId}:`, error);
-      element.innerHTML = `<div style="color: #d13438; padding: 12px; background: #fff4f4; border: 1px solid #f0adac; border-radius: 4px; font-size: 12px;">Error: ${error instanceof Error ? error.message : String(error)}</div>`;
-    }
+    const mermaidId = element.getAttribute('data-id') ?? '';
+    if (!mermaidId) return;
+    renderMermaidInto(element as HTMLElement, mermaidId);
   });
 }
 

@@ -34,6 +34,29 @@ landingPage/
 # OCR training data
 *.traineddata
 
+# Build helpers / sample sources not needed at runtime
+tools/
+docs/
+samples/
+.agents/
+skills-lock.json
+rtf-markdown-editor.code-workspace
+probe-*.js
+probe-*.ts
+test-*.js
+test-*.ts
+run-*.js
+run-*.ts
+pdf.worker.mjs
+
+# Large planning artefacts (kept in repo, not shipped)
+PDF_TO_HTML_TO_MD_DESIGN1.md
+PDF_TO_HTML_TO_MD_DESIGN.html
+PDF_TO_HTML_TO_MD_DESIGN.docx
+PDF_CONVERSION_STATUS.pdf
+PDF_CONVERSION_STATUSPDF.md
+QUICKSTART.md
+
 # Stale docs (keep README, CHANGELOG, LICENSE, QUICKSTART)
 BROWSER_EXTENSION_PLAN.md
 FINAL_REPORT.md

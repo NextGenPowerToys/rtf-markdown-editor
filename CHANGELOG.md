@@ -2,7 +2,9 @@
 
 All notable changes to the RTF Markdown Editor extension will be documented in this file.
 
-## [2.6.0] - 2026-05-22
+## [3.0.0] - 2026-05-22
+
+> Major release. PDF → Markdown is now AI-driven via GitHub Copilot Chat; a new **Documents** side panel surfaces every `.md` / `.pdf` / `.docx` / `.html` in the workspace with one-click open / convert; HTML → Markdown import is added; the editor title bar gains an "Edit with RTF Markdown Editor" quick action; per-keystroke autosave is replaced with event-driven save to eliminate image flicker; minimum VS Code engine raised to 1.93.0.
 
 ### Changed
 
@@ -19,10 +21,16 @@ All notable changes to the RTF Markdown Editor extension will be documented in t
 - **`@pdfmd` chat participant** — registered via the VS Code Chat Participant API. Can be invoked directly from chat: `@pdfmd convert /path/to/file.pdf to markdown`.
 - **`onStartupFinished` activation event** so the `aiChatAvailable` context key is published in time for the Explorer context menu's `when` clause.
 - **Diagram / image extraction in the AI-driven flow.** Images embedded in the source PDF (architecture diagrams, sequence diagrams, charts, illustrations…) are now extracted locally, saved as PNGs to `<mdDir>/.attachments/.<pdfBaseName>/image_<N>.png` next to the output Markdown, and referenced in the final document with real `![](.attachments/…)` markdown links. The chat prompt injects `[IMAGE: <relative_path>]` marker lines per page so the model places the image references at the right structural position. Mirrors the existing DOCX-import attachment convention byte-for-byte, so attachments behave identically across DOCX and PDF imports. Pages that have no extractable text *and* no image still emit `*(diagram)*` as a placeholder.
+- **Activity Bar side panel: "Documents".** A new RTFMD icon on the VS Code Activity Bar opens a side view that lists every supported document in the open workspace — `.md` / `.markdown` for direct editing, `.pdf` / `.docx` / `.html` / `.htm` for one-click conversion to Markdown. Each entry has a type-specific icon (markdown, file-pdf, file-text, symbol-misc), a `… → MD` description label for non-Markdown formats, and a single-click action: Markdown files open straight in the RTF Markdown editor; PDF / DOCX / HTML files invoke their conversion command and the resulting `.md` is saved alongside the source and opened. A `FileSystemWatcher` keeps the tree in sync with creates / deletes / renames; a `Rescan Workspace` button on the view's title-bar forces a refresh. Layout mirrors the pattern used by Mermaid Live Editor (single workspace folder surfaces its children at the top; multiple folders list each as a collapsible group).
+- **HTML → Markdown import.** New `rtf-markdown-editor.importHTML` command (also reachable via right-click on `.html` / `.htm` in the Explorer). Reads the file locally and runs it through the same turndown-based converter the rest of the extension uses (including the GFM-table rule), saves the result alongside the source as a sibling `.md`, and opens it in the RTF Markdown editor.
+- **Editor title-bar quick action.** When a `.md` / `.markdown` file is open in any non-RTF editor (default text editor or another custom editor), the RTFMD icon now appears in the top-right of the editor title bar. Clicking it switches the file into the RTF Markdown editor. Hidden when the file is already in the RTF editor.
+- **Robust `openEditor` argument handling.** The command now accepts every shape VS Code passes for the target file — raw `Uri`, plain string path, tab-input objects with `uri` / `resource` / `fsPath` fields — and falls back to the active text editor or any active tab in any tab group. Eliminates the "select a Markdown file first" toast when the title-bar button is invoked on a custom-editor host.
 
 ### Fixed
 
 - **pdfjs-dist worker resolution in the extension host.** `extractPdfText` now sets `GlobalWorkerOptions.workerSrc` by probing for `pdf.worker.mjs` via `require.resolve('pdfjs-dist/legacy/build/pdf.worker.mjs')` and several relative paths from `dist/extension.js`. Without this, the host's Node runtime threw `No GlobalWorkerOptions.workerSrc specified` on every conversion.
+- **Image flicker while typing in markdown files containing embedded images.** Autosave was running on every keystroke; the resulting disk write echoed back through the `FileSystemWatcher` as an `externalUpdate`, which rebuilt the whole ProseMirror document and re-fetched every `<img>` DOM node. Two-part fix: (1) the watcher now drops events that occur within a short window after our own write so the self-echo can never round-trip back to the webview; (2) per-keystroke autosave is removed entirely — content is persisted only when the editor blurs, the webview tab is hidden, or the panel is closing (`visibilitychange` / `pagehide` / `beforeunload`). Result: images stay rock-steady through editing.
+- **Toolbar buttons stealing the editor's caret position.** Clicking the bullet / numbered-list (and other toolbar buttons) used to drop the caret onto the next row — the button was stealing focus on `mousedown`, ProseMirror clamped the now-orphan selection, and `chain().focus()` couldn't restore it. The toolbar now `preventDefault`s `mousedown` on every `.toolbar-btn`, so the editor's selection is preserved across the click and toggle commands land on the line the caret was actually on.
 
 ### Removed
 
