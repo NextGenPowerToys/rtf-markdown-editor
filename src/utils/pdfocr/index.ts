@@ -19,6 +19,12 @@ export interface ConvertPdfOptions {
   scale?: number;
   /** Progress callback */
   progress?: (message: string) => void;
+  /**
+   * Absolute path to the extension's installation directory. Required for OCR
+   * — used to locate the bundled tesseract-core WASM and traineddata files so
+   * the engine never reaches out to a CDN.
+   */
+  extensionRoot?: string;
 }
 
 export interface ConvertPdfResult {
@@ -50,6 +56,7 @@ export async function convertPdfToHtml(
     ocrLanguage = 'heb+eng',
     scale = 3,
     progress,
+    extensionRoot,
   } = options;
 
   // Step 1: Extract text with position data
@@ -64,8 +71,14 @@ export async function convertPdfToHtml(
       : pages.map((p, i) => pageHasText(p) ? -1 : i).filter(i => i >= 0);
 
     if (pagesNeedingOcr.length > 0) {
+      if (!extensionRoot) {
+        throw new Error(
+          'OCR requested but extensionRoot was not provided. Offline OCR needs ' +
+          'the extension installation path to locate bundled tesseract assets.',
+        );
+      }
       progress?.(`Running OCR on ${pagesNeedingOcr.length} page(s)...`);
-      await runOcr(pdfPath, pages, pagesNeedingOcr, mode, ocrLanguage, scale, progress);
+      await runOcr(pdfPath, pages, pagesNeedingOcr, mode, ocrLanguage, scale, extensionRoot, progress);
     } else if (mode === 'hybrid') {
       progress?.('All pages have text content, skipping OCR');
     }
@@ -95,38 +108,53 @@ async function runOcr(
   mode: ExtractionMode,
   ocrLanguage: string,
   scale: number,
+  extensionRoot: string,
   progress?: (message: string) => void,
 ): Promise<void> {
+  // OCR failures must NEVER abort the conversion. Pages that can't be OCR'd
+  // (e.g. mermaid-diagram pages on hosts where `canvas` isn't available)
+  // should just yield zero OCR items; the rest of the document still
+  // converts correctly via the pdfjs-dist text extraction path. Catching
+  // here prevents the whole pipeline from falling back to plain pdf-parse.
   let ocrEngine: OcrEngine | null = null;
   try {
-    ocrEngine = new OcrEngine(ocrLanguage, progress);
+    ocrEngine = new OcrEngine(ocrLanguage, extensionRoot, progress);
     await ocrEngine.initialize();
+  } catch (err) {
+    progress?.(`OCR engine init failed (${(err as Error).message}); continuing with text-only extraction`);
+    return;
+  }
 
+  try {
     for (const pageIdx of pagesNeedingOcr) {
       const page = pages[pageIdx];
       progress?.(`OCR page ${page.pageNumber} of ${pages.length}...`);
 
-      const ocrItems = await ocrEngine.ocrPage(
-        pdfPath,
-        page.pageNumber,
-        page.width,
-        page.height,
-        scale,
-        page.items, // pass PDF text items for gap-filling in inverted regions
-      );
+      try {
+        const ocrItems = await ocrEngine.ocrPage(
+          pdfPath,
+          page.pageNumber,
+          page.width,
+          page.height,
+          scale,
+          page.items, // pass PDF text items for gap-filling in inverted regions
+        );
 
-      if (mode === 'ocr') {
-        page.items = ocrItems;
-      } else {
-        // Hybrid: merge OCR items with existing text items
-        page.items = [...page.items, ...ocrItems];
+        if (mode === 'ocr') {
+          page.items = ocrItems;
+        } else {
+          // Hybrid: merge OCR items with existing text items
+          page.items = [...page.items, ...ocrItems];
+        }
+
+        progress?.(`OCR found ${ocrItems.length} text items on page ${page.pageNumber}`);
+      } catch (err) {
+        progress?.(`OCR failed on page ${page.pageNumber} (${(err as Error).message}); skipping`);
       }
-
-      progress?.(`OCR found ${ocrItems.length} text items on page ${page.pageNumber}`);
     }
   } finally {
     if (ocrEngine) {
-      await ocrEngine.terminate();
+      try { await ocrEngine.terminate(); } catch { /* ignore */ }
     }
   }
 }

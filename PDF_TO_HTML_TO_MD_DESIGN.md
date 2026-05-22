@@ -1,17 +1,30 @@
 # Improved PDF to Markdown Conversion - PDF → HTML → MD Pipeline
 ## Overview
+
+---
+
 **NEW APPROACH:** Instead of trying to reconstruct everything from plain text, convert PDF → HTML → Markdown. This preserves much more semantic information and handles styling, tables, lists, and formatting correctly.
+
 ## Why This Works Better
-### Original Approach (Plain Text Extraction)
+
+> sdsadas
+> dsdasdas
+
+---
+
+> dwqdqwd
 ```
-PDF → pdf-parse → Plain Text → Heuristic Markdown Detection
+dfq
+```
+- Original Approach (Plain Text Extraction)
+
+- PDF → pdf-parse → Plain Text → Heuristic Markdown Detection
 ❌ Loses all formatting, tables, images, structure
 ❌ Only recovers ~67% of content
 ❌ All styling lost (bold, italic, code blocks)
 ❌ Tables become scrambled text
 ❌ Lists lose structure
 
-```
 ### New Approach (HTML Intermediate)
 ```
 PDF → pdf-parse → Plain Text → Semantic HTML Detection → Turndown → Markdown
@@ -34,6 +47,7 @@ const extractedText = data.text; // Plain text from pdf-parse
 ### Step 2: Convert Text to Semantic HTML
 **File:** `src/utils/pdfHtmlConverter.ts`
 Analyzes the extracted text and converts it to structured HTML:
+
 - Detects headings (numbered, ALL-CAPS, isolated RTL lines)
 
 - Detects lists (ordered, unordered, with indentation)
@@ -47,6 +61,7 @@ Analyzes the extracted text and converts it to structured HTML:
 - Preserves RTL content direction
 
 **Key Functions:**
+
 - `pdfTextToHtml()` - Main conversion
 
 - `detectHeading()` - Recognizes heading patterns
@@ -58,6 +73,7 @@ Analyzes the extracted text and converts it to structured HTML:
 - `escapeHtml()` - Sanitizes content
 
 **Example:**
+
 ```
 PDF Text Input:
 1. Getting Started
@@ -78,6 +94,7 @@ Expected HTML Output:
 ### Step 3: Apply RTL Text Reconstruction
 **File:** `src/utils/bidiHandler.ts`
 Applies bidirectional text reordering to fix reversed RTL text:
+
 ```typescript
 const bidiCorrected = applyBidiReconstruction(pdfText);
 // Hebrew/Arabic text properly reordered from visual to logical order
@@ -86,6 +103,7 @@ const bidiCorrected = applyBidiReconstruction(pdfText);
 ### Step 4: Convert HTML to Markdown
 **File:** `src/utils/htmlToMarkdown.ts` (uses `turndown` library)
 Uses the Turndown library to convert HTML to proper Markdown:
+
 - Converts h1-h6 to `#` markdown headings
 
 - Converts ul/ol to markdown lists
@@ -99,6 +117,7 @@ Uses the Turndown library to convert HTML to proper Markdown:
 - Cleans up whitespace and formatting
 
 **Key Features:**
+
 - Custom rules for better semantic preservation
 
 - RTL-aware processing
@@ -106,6 +125,7 @@ Uses the Turndown library to convert HTML to proper Markdown:
 - Fallback for malformed HTML
 
 **Example:**
+
 ```html
 Input: <h1>Title</h1><p><strong>Bold</strong> text</p><code>code</code>
 Output: # Title
@@ -172,6 +192,7 @@ Return markdown string
 ```
 ## Error Handling
 **Graceful Fallback:**
+
 ```typescript
 try {
   // Try HTML pipeline
@@ -186,8 +207,10 @@ try {
 
 ```
 If the HTML pipeline encounters issues, automatically falls back to simpler heuristic-based conversion.
+
 ## Dependencies
 **New/Updated:**
+
 - `turndown` - HTML to Markdown library (installed)
 
 - `bidiHandler.ts` - RTL text reconstruction (custom)
@@ -197,6 +220,7 @@ If the HTML pipeline encounters issues, automatically falls back to simpler heur
 - `htmlToMarkdown.ts` - HTML to Markdown (custom)
 
 **Existing:**
+
 - `pdf-parse` - PDF text extraction
 
 - `markdown-it` - Markdown processing
@@ -204,6 +228,7 @@ If the HTML pipeline encounters issues, automatically falls back to simpler heur
 ## Testing &amp; Validation
 ### Test Cases Covered:
 - **Basic PDF import:**
+
 - ✅ Simple paragraphs
 
 - ✅ Headings (numbered, ALL-CAPS, outlined)
@@ -215,6 +240,7 @@ If the HTML pipeline encounters issues, automatically falls back to simpler heur
 - ✅ Code blocks
 
 - **RTL Content:**
+
 - ✅ Hebrew text reconstruction
 
 - ✅ Arabic text support
@@ -222,11 +248,13 @@ If the HTML pipeline encounters issues, automatically falls back to simpler heur
 - ✅ Mixed LTR/RTL documents
 
 - **MDWE PDFs:**
+
 - ✅ Metadata recovery (lossless)
 
 - ✅ Fallback to HTML pipeline
 
 - **Edge Cases:**
+
 - ✅ Empty PDFs
 
 - ✅ Malformed HTML
@@ -235,6 +263,7 @@ If the HTML pipeline encounters issues, automatically falls back to simpler heur
 
 ### Example Validation
 **Input:** `EasySend-Bank-Integration-HLAD-HE.pdf`
+
 - Original Markdown: 445 lines
 
 - Old conversion: 299 lines (~67% recovery)
@@ -245,6 +274,7 @@ If the HTML pipeline encounters issues, automatically falls back to simpler heur
 
 ## Expected Results
 After applying this update, PDF imports will:
+
 | Feature | Before | After |
 | --- | --- | --- |
 | Headings | Lost | ✅ Preserved |
@@ -259,15 +289,19 @@ After applying this update, PDF imports will:
 
 ## Limitations
 - **Images in PDFs:** Still lost (pdf-parse doesn't extract images)
+
 - Solution: Would require PDF image extraction library (future work)
 
 - **Complex layouts:** Tables with merged cells may not convert perfectly
+
 - Solution: HTML table detection works well for simple/moderate complexity
 
 - **OCR not included:** If PDF is scanned image rather than text-based
+
 - Solution: User should provide text-based PDFs or use OCR separately
 
 - **Some formatting:** Underlines, strikethrough may not always recover
+
 - Solution: PDF text doesn't contain this information
 
 ## Future Enhancements
@@ -295,6 +329,10 @@ After applying this update, PDF imports will:
 - 📋 Documentation updates
 
 - 🚀 Release
+
+- dsadas
+
+- sadas
 
 ## Code Quality
 - ✅ TypeScript type-safe

@@ -1,8 +1,9 @@
 # Test Export with Diagrams
-
 This is a test document with a Mermaid diagram.
 
-## Simple Flowchart
+?
+
+Simple Flowchart
 
 ```mermaid
 graph TD
@@ -22,4 +23,4 @@ pie title Pet adoption by percentage
     "Rats" : 15
 ```
 
-Regular text continues here. The diagrams above should be rendered when you export this.
+> Regular text continues here. The diagrams above should be rendered when you export th

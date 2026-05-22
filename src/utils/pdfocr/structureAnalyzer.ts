@@ -1,4 +1,4 @@
-import type { TextItem, ImageItem, PageData, Line, ContentBlock, TextSegment } from './types';
+import type { TextItem, ImageItem, PageData, Line, ContentBlock, TextSegment, ParagraphBlock } from './types';
 import { mergeSplitTables } from './tableMerger';
 
 /**
@@ -7,26 +7,61 @@ import { mergeSplitTables } from './tableMerger';
  */
 export function analyzePages(pages: PageData[]): ContentBlock[] {
   const allBlocks: ContentBlock[] = [];
+  const allRightEdges: number[] = [];
 
   for (const page of pages) {
     if (page.pageNumber > 1) {
       allBlocks.push({ type: 'page-break', pageNumber: page.pageNumber });
+      allRightEdges.push(NaN);
     }
 
     // Filter noise items before analysis
     const filteredItems = filterNoise(page.items);
     const lines = groupIntoLines(filteredItems, page.width);
-    const textBlocks = detectBlocks(lines, page.width);
+    const { blocks: textBlocks, rightEdges: textEdges } = detectBlocks(lines, page.width);
 
     // Interleave images with text blocks based on Y position
     if (page.images && page.images.length > 0) {
-      allBlocks.push(...interleaveImages(textBlocks, page.images));
+      const withImages = interleaveImages(textBlocks, page.images);
+      // Images get NaN right-edges (not paragraphs).
+      while (textEdges.length < withImages.length) textEdges.push(NaN);
+      allBlocks.push(...withImages);
+      allRightEdges.push(...textEdges);
     } else {
       allBlocks.push(...textBlocks);
+      allRightEdges.push(...textEdges);
     }
   }
 
-  return mergeSplitTables(allBlocks);
+  const merged = mergeSplitTables(allBlocks);
+  // After table merging the block list may have shrunk; recompute right-edges
+  // for the (now shorter) list by re-aligning paragraphs in order.
+  const mergedRightEdges = realignRightEdges(merged, allBlocks, allRightEdges);
+  const bulletized = convertBulletRuns(merged, mergedRightEdges);
+  return bulletized.map(boldifyLabels);
+}
+
+function realignRightEdges(
+  merged: ContentBlock[],
+  original: ContentBlock[],
+  originalEdges: number[],
+): number[] {
+  // Walk both lists in lock-step. For paragraph blocks we transfer the
+  // original right-edge; for any block whose identity isn't paragraph in
+  // `merged` we record NaN.
+  const out: number[] = new Array(merged.length).fill(NaN);
+  const paraEdgesQueue: number[] = [];
+  for (let i = 0; i < original.length; i++) {
+    if (original[i].type === 'paragraph' && !Number.isNaN(originalEdges[i])) {
+      paraEdgesQueue.push(originalEdges[i]);
+    }
+  }
+  for (let i = 0; i < merged.length; i++) {
+    if (merged[i].type === 'paragraph' && paraEdgesQueue.length > 0) {
+      out[i] = paraEdgesQueue.shift()!;
+    }
+  }
+  return out;
 }
 
 /**
@@ -114,21 +149,153 @@ function groupIntoLines(items: TextItem[], _pageWidth: number): Line[] {
 }
 
 function buildLine(items: TextItem[]): Line {
-  // Sort items right-to-left (RTL) by X position descending
-  const sorted = [...items].sort((a, b) => b.x - a.x);
-  const avgFontSize = sorted.reduce((s, i) => s + i.fontSize, 0) / sorted.length;
-  const avgY = sorted.reduce((s, i) => s + i.y, 0) / sorted.length;
-  const allBold = sorted.every(i => i.isBold);
+  // Reorder items into logical reading order, honoring mixed RTL/LTR runs.
+  const logical = reorderToLogical(items);
+  const avgFontSize = logical.reduce((s, i) => s + i.fontSize, 0) / logical.length;
+  const avgY = logical.reduce((s, i) => s + i.y, 0) / logical.length;
+  const allBold = logical.every(i => i.isBold);
 
-  const text = mergeLineText(sorted);
+  const text = mergeLineText(logical);
 
   return {
     y: avgY,
-    items: sorted,
+    items: logical,
     fontSize: avgFontSize,
     isBold: allBold,
     text,
   };
+}
+
+// ── Mixed-direction (bidi) reordering ──
+
+type StrongDir = 'rtl' | 'ltr';
+
+function itemDir(text: string): StrongDir | 'neutral' {
+  for (const ch of text) {
+    const c = ch.charCodeAt(0);
+    if (c >= 0x0590 && c <= 0x07ff) return 'rtl';
+    if ((c >= 0x0041 && c <= 0x005a) || (c >= 0x0061 && c <= 0x007a) || (c >= 0x0030 && c <= 0x0039)) return 'ltr';
+  }
+  return 'neutral';
+}
+
+/**
+ * Reorder text items from PDF.js stream order (typically visual, X-ascending)
+ * into logical reading order, handling mixed RTL/LTR runs.
+ *
+ * Algorithm (simplified Unicode bidi for visually-stored text):
+ *   1. Sort items by X-ascending (visual left-to-right).
+ *   2. Determine line direction from majority of strong-directional items.
+ *   3. Group consecutive items by strong direction; neutrals attach to the
+ *      preceding group (or the line's base direction at the start).
+ *   4. For RTL line: reverse group order. Within RTL groups, reverse items
+ *      (visual→logical). LTR groups keep their stream/visual order.
+ *      For LTR line: keep group order. RTL groups internally reverse.
+ */
+function reorderToLogical(items: TextItem[]): TextItem[] {
+  if (items.length <= 1) return [...items];
+
+  const visual = [...items].sort((a, b) => a.x - b.x);
+
+  // If the line contains ANY RTL strong character, treat the line as RTL.
+  // Pure-Latin lines stay LTR. This matches how mixed-direction text reads
+  // inside an RTL document: embedded LTR runs are still kept in their natural
+  // order via the per-group rule below.
+  let baseRTL = false;
+  outer: for (const it of visual) {
+    for (const ch of it.text) {
+      const c = ch.charCodeAt(0);
+      if (c >= 0x0590 && c <= 0x07ff) { baseRTL = true; break outer; }
+    }
+  }
+
+  // Resolve each item's effective direction. Strong items keep their own
+  // class. For neutrals we use a position-based heuristic: attach to whichever
+  // adjacent strong item is HORIZONTALLY closer in the visual layout. This
+  // matches how brackets/quotes/periods are spatially placed in PDFs — they
+  // sit immediately next to one strong run, so geometry is more reliable than
+  // generic bidi rules.
+  const raw: (StrongDir | 'neutral')[] = visual.map(it => itemDir(it.text));
+  const resolved: StrongDir[] = raw.map((c, i) => {
+    if (c !== 'neutral') return c;
+    let prevIdx = -1;
+    for (let j = i - 1; j >= 0; j--) {
+      if (raw[j] !== 'neutral') { prevIdx = j; break; }
+    }
+    let nextIdx = -1;
+    for (let j = i + 1; j < visual.length; j++) {
+      if (raw[j] !== 'neutral') { nextIdx = j; break; }
+    }
+    if (prevIdx === -1 && nextIdx === -1) return baseRTL ? 'rtl' : 'ltr';
+    if (prevIdx === -1) return raw[nextIdx] as StrongDir;
+    if (nextIdx === -1) return raw[prevIdx] as StrongDir;
+    if (raw[prevIdx] === raw[nextIdx]) return raw[prevIdx] as StrongDir;
+    // Different-direction neighbors. Pick the spatially closer side.
+    const me = visual[i];
+    const prev = visual[prevIdx];
+    const next = visual[nextIdx];
+    const distPrev = me.x - (prev.x + prev.width);
+    const distNext = next.x - (me.x + me.width);
+    return distPrev <= distNext ? (raw[prevIdx] as StrongDir) : (raw[nextIdx] as StrongDir);
+  });
+
+  type Group = { items: TextItem[]; direction: StrongDir };
+  const groups: Group[] = [];
+  for (let i = 0; i < visual.length; i++) {
+    const d = resolved[i];
+    const tail = groups[groups.length - 1];
+    if (tail && tail.direction === d) {
+      tail.items.push(visual[i]);
+    } else {
+      groups.push({ items: [visual[i]], direction: d });
+    }
+  }
+
+  const orderedGroups = baseRTL ? [...groups].reverse() : groups;
+  const out: TextItem[] = [];
+  for (const g of orderedGroups) {
+    let groupItems: TextItem[];
+    if (g.direction === 'rtl') {
+      groupItems = [...g.items].reverse();
+    } else if (baseRTL && isNumericLTRRun(g.items)) {
+      // Numeric LTR runs (digits + periods only) inside an RTL paragraph are
+      // often laid out with the period(s) to the LEFT of the digits (right-
+      // aligned section numbering). Stream X-ascending would yield ".1" or
+      // ".1.1"; reverse to recover the natural "1." or "1.1" form.
+      groupItems = [...g.items].reverse();
+    } else if (baseRTL && g.items.length >= 3
+        && g.items[0].text === ':'
+        && g.items[g.items.length - 1].text === '.') {
+      // Bidi-flipped ".NET Core Backend:" — the leading "." of ".NET" and
+      // the trailing ":" of "Backend:" end up swapped in visual X order.
+      // Restore them to their natural positions and tighten the period so it
+      // attaches directly to the next letter without a phantom space.
+      const middle = g.items.slice(1, -1);
+      const period = { ...g.items[g.items.length - 1] };
+      const colon = { ...g.items[0] };
+      // Force the period's X just before the first content letter and the
+      // colon's X just after the last content letter so mergeLineText doesn't
+      // insert spaces around them.
+      if (middle.length > 0) {
+        period.x = middle[0].x - period.width;
+        colon.x = middle[middle.length - 1].x + middle[middle.length - 1].width;
+      }
+      groupItems = [period, ...middle, colon];
+    } else {
+      groupItems = g.items;
+    }
+    out.push(...groupItems);
+  }
+  return out;
+}
+
+function isNumericLTRRun(items: TextItem[]): boolean {
+  let hasDigit = false;
+  for (const it of items) {
+    if (!/^[\d.]+$/.test(it.text)) return false;
+    if (/\d/.test(it.text)) hasDigit = true;
+  }
+  return hasDigit;
 }
 
 function mergeLineText(items: TextItem[]): string {
@@ -139,12 +306,10 @@ function mergeLineText(items: TextItem[]): string {
   for (let i = 1; i < items.length; i++) {
     const prev = items[i - 1];
     const curr = items[i];
-    const gap = prev.x - (curr.x + curr.width);
-    const avgCharWidth = prev.fontSize * 0.4;
-
-    if (gap > avgCharWidth * 0.3) {
-      result += ' ';
-    }
+    // Visual gap between two items, regardless of which has higher X
+    const gap = Math.max(prev.x, curr.x) - Math.min(prev.x + prev.width, curr.x + curr.width);
+    const avgCharWidth = Math.max(prev.fontSize, curr.fontSize) * 0.4;
+    if (gap > avgCharWidth * 0.3) result += ' ';
     result += curr.text;
   }
 
@@ -153,8 +318,12 @@ function mergeLineText(items: TextItem[]): string {
 
 // ── Block detection ──
 
-function detectBlocks(lines: Line[], pageWidth: number): ContentBlock[] {
+function detectBlocks(lines: Line[], pageWidth: number): { blocks: ContentBlock[]; rightEdges: number[] } {
   const blocks: ContentBlock[] = [];
+  // Parallel to `blocks`: first-line right-edge X for each paragraph; NaN for
+  // any non-paragraph block. Used by the post-pass to spot bullet sequences
+  // (consecutive single-line paragraphs sharing an indent).
+  const paraRightEdges: number[] = [];
   let i = 0;
 
   const fontSizes = lines.map(l => l.fontSize).sort((a, b) => a - b);
@@ -175,23 +344,44 @@ function detectBlocks(lines: Line[], pageWidth: number): ContentBlock[] {
       continue;
     }
 
-    // Try to detect a table starting at this line
+    // Try to detect a table starting at this line. If the detected table
+    // actually begins a few lines later (e.g. it's preceded by a real section
+    // heading), keep processing the lines above the table as normal blocks.
     const tableResult = tryDetectTable(lines, i, pageWidth);
-    if (tableResult) {
+    if (tableResult && tableResult.startIndex <= i) {
       blocks.push(tableResult.table);
+      paraRightEdges.push(NaN);
       i = tableResult.endIndex;
       continue;
     }
 
-    // Detect headers
+    // Detect headers — and merge consecutive header lines into one header
+    // when they share the same font size and are vertically adjacent (a long
+    // title that wraps onto a second line).
     if (isHeader(line, medianFontSize, pageWidth)) {
       const level = getHeaderLevel(line, medianFontSize, pageWidth);
+      const parts = [line.text.trim()];
+      let prevHeaderLine = line;
+      let j = i + 1;
+      while (j < lines.length) {
+        const candidate = lines[j];
+        if (isNoiseLine(candidate) || isPageHeaderFooter(candidate, pageWidth)) { j++; continue; }
+        if (!isHeader(candidate, medianFontSize, pageWidth)) break;
+        if (Math.abs(candidate.fontSize - line.fontSize) > 0.5) break;
+        if (getHeaderLevel(candidate, medianFontSize, pageWidth) !== level) break;
+        const gap = candidate.y - prevHeaderLine.y;
+        if (gap > prevHeaderLine.fontSize * 1.8) break;
+        parts.push(candidate.text.trim());
+        prevHeaderLine = candidate;
+        j++;
+      }
       blocks.push({
         type: 'header',
         level,
-        text: line.text.trim(),
+        text: parts.join(' '),
       });
-      i++;
+      paraRightEdges.push(NaN);
+      i = j;
       continue;
     }
 
@@ -228,12 +418,14 @@ function detectBlocks(lines: Line[], pageWidth: number): ContentBlock[] {
         marker: listMatch.marker,
         segments,
       });
+      paraRightEdges.push(NaN);
       continue;
     }
 
     // Regular paragraph
     const segments = buildSegments(line);
-    const startLine = line;
+    const paraRightEdge = Math.max(...line.items.map(it => it.x + it.width));
+    let prevLine = line;
     i++;
 
     // Collect continuation lines
@@ -247,12 +439,22 @@ function detectBlocks(lines: Line[], pageWidth: number): ContentBlock[] {
       // Don't absorb chapter/appendix lines into paragraphs (e.g. TOC entries)
       if (/^(פרק|נספח)\s+[א-ת]/.test(nextLine.text.trim())) break;
 
-      // Check vertical gap
-      const gap = nextLine.y - startLine.y;
-      if (gap > startLine.fontSize * 3) break;
+      // Vertical gap from PREVIOUS line. Normal in-paragraph line spacing is
+      // ~1.2-1.4x fontSize; a gap of ~2x or more signals a paragraph break.
+      const gap = nextLine.y - prevLine.y;
+      if (gap > prevLine.fontSize * 1.9) break;
+
+      // If both the current and next visual lines are SHORT (don't extend to
+      // the left margin), they're likely separate metadata items like
+      // "Label: value", not wrap continuations of one paragraph.
+      const prevLeft = Math.min(...prevLine.items.map(it => it.x));
+      const nextLeft = Math.min(...nextLine.items.map(it => it.x));
+      const shortThreshold = pageWidth * 0.35;
+      if (prevLeft > shortThreshold && nextLeft > shortThreshold) break;
 
       segments.push({ text: ' ', isBold: false, isItalic: false });
       segments.push(...buildSegments(nextLine));
+      prevLine = nextLine;
       i++;
     }
 
@@ -260,16 +462,154 @@ function detectBlocks(lines: Line[], pageWidth: number): ContentBlock[] {
     const fullText = segments.map(s => s.text).join('').trim();
     if (fullText.length > 1) {
       blocks.push({ type: 'paragraph', segments });
+      paraRightEdges.push(paraRightEdge);
     }
   }
 
-  return blocks;
+  return { blocks, rightEdges: paraRightEdges };
+}
+
+/**
+ * Bold the "Label:" prefix of paragraph/list-item blocks that begin with a
+ * label-value pattern (e.g. "Worker Pods: namespace ייעודי..."). Matches the
+ * convention used in the skill output and in the source PDFs.
+ */
+function boldifyLabels(block: ContentBlock): ContentBlock {
+  if (block.type !== 'paragraph' && block.type !== 'list-item') return block;
+  const segments = (block as { segments: TextSegment[] }).segments;
+  if (!segments || segments.length === 0) return block;
+
+  // Skip placeholder lines (decision-template fields with "Label: ___" form).
+  // The skill renders them inside fenced code blocks, where bold is irrelevant.
+  const fullText = segments.map(s => s.text).join('');
+  if (/_{5,}/.test(fullText)) return block;
+
+  const first = segments[0];
+  // Strip a leading "- " / "– " / "* " artifact that some PDF bullets
+  // emit as a literal dash before the actual content.
+  const stripped = first.text.replace(/^[-–•*]\s+/, '');
+
+  // Three patterns:
+  //   1. "Label: rest"     — normal case
+  //   2. "Label:"          — label-only (e.g. "שאלות לדיון:" introducing a list)
+  //   3. ":Label rest"     — bidi-flipped form, when the colon ended up to the
+  //      LEFT of an embedded LTR label inside an RTL paragraph.
+  let label: string;
+  let rest: string;
+  const normal = stripped.match(/^([\S][^:\n]{0,40}):(?:\s+(.*))?$/);
+  const flipped = !normal ? stripped.match(/^:([A-Za-z0-9][^֐-߿:\n]{0,40})\s+(.*)$/) : null;
+
+  if (normal) {
+    label = normal[1].trim();
+    rest = normal[2] ?? '';
+  } else if (flipped) {
+    label = flipped[1].trim();
+    rest = flipped[2];
+  } else {
+    return block;
+  }
+
+  if (label.length < 2 || label.length > 40) return block;
+  if (/^https?$/i.test(label)) return block;
+  // Avoid labelling lines that are just "1." / "2.1" headings.
+  if (/^\d+(\.\d+){0,3}$/.test(label)) return block;
+
+  const newSegments: TextSegment[] = [
+    { text: `${label}:`, isBold: true, isItalic: first.isItalic },
+  ];
+  if (rest.length > 0) {
+    newSegments.push({ text: ` ${rest}`, isBold: false, isItalic: first.isItalic });
+  } else {
+    newSegments.push({ text: ' ', isBold: false, isItalic: first.isItalic });
+  }
+  for (let k = 1; k < segments.length; k++) newSegments.push(segments[k]);
+
+  if (block.type === 'paragraph') {
+    return { type: 'paragraph', segments: newSegments };
+  }
+  return {
+    type: 'list-item',
+    marker: (block as { marker: string }).marker,
+    segments: newSegments,
+  };
+}
+
+/**
+ * Post-pass: detect "implicit" bullet sequences — runs of 2+ consecutive
+ * paragraph blocks whose first lines share a common right-edge X (within a
+ * small tolerance) and whose right-edge is meaningfully less than the
+ * surrounding non-bullet content. Such runs are visually indented from the
+ * right margin and read as bullets in Hebrew docs that don't print a marker.
+ */
+function convertBulletRuns(blocks: ContentBlock[], rightEdges: number[]): ContentBlock[] {
+  // Establish the document's main right margin from the maximum paragraph
+  // right-edge. Real bulleted items in RTL docs sit visibly indented from
+  // that margin (by ~20 units in this PDF); body/metadata lines extend all
+  // the way to the margin. Requiring an actual indent prevents bolded
+  // front-matter ("**נושא:** ...", "**גישה מאושרת:** ...") from being
+  // mis-clustered into a list with the real bullets that follow.
+  let mainRightEdge = 0;
+  for (const e of rightEdges) {
+    if (!Number.isNaN(e) && e > mainRightEdge) mainRightEdge = e;
+  }
+  const minIndent = 6; // pts; pages set the bullet indent at >=10 in practice
+
+  // Bullet runs that appear BEFORE the first sub-H1 header are top-of-doc
+  // front-matter; keep as paragraphs.
+  let seenSubH1Header = false;
+  const out: ContentBlock[] = [];
+  let i = 0;
+  while (i < blocks.length) {
+    const cur = blocks[i];
+    if (cur.type === 'header' && cur.level >= 2) seenSubH1Header = true;
+    if (cur.type !== 'paragraph' || Number.isNaN(rightEdges[i])) {
+      out.push(cur);
+      i++;
+      continue;
+    }
+    const refEdge = rightEdges[i];
+    const indented = mainRightEdge - refEdge >= minIndent;
+    const tolerance = 4;
+    let j = i + 1;
+    while (
+      j < blocks.length
+      && blocks[j].type === 'paragraph'
+      && !Number.isNaN(rightEdges[j])
+      && Math.abs(rightEdges[j] - refEdge) <= tolerance
+    ) {
+      j++;
+    }
+    const runLen = j - i;
+    // Reject the run if every paragraph in it looks like a decision-template
+    // placeholder (e.g. "תאריך החלטה: _______________"). Those belong inside a
+    // code block, not a bulleted list.
+    const allPlaceholder = (() => {
+      for (let k = i; k < j; k++) {
+        const para = blocks[k] as ParagraphBlock;
+        const text = para.segments.map(s => s.text).join('');
+        if (!/_{5,}|:\s*$/.test(text)) return false;
+      }
+      return true;
+    })();
+    if (runLen >= 2 && seenSubH1Header && indented && !allPlaceholder) {
+      for (let k = i; k < j; k++) {
+        const para = blocks[k] as ParagraphBlock;
+        out.push({ type: 'list-item', marker: '-', segments: para.segments });
+      }
+      i = j;
+    } else {
+      out.push(cur);
+      i++;
+    }
+  }
+  return out;
 }
 
 // ── Table detection ──
 
 interface TableResult {
   table: ContentBlock;
+  startIndex: number;
   endIndex: number;
 }
 
@@ -359,10 +699,19 @@ function tryDetectTable(lines: Line[], startIdx: number, pageWidth: number): Tab
   const tableXMax = Math.max(...colBoundaries.map(b => b.xStart));
   const tableXMin = Math.min(...colBoundaries.map(b => b.xEnd));
 
+  // Look at the median font size of the table rows to decide what counts as
+  // a real section heading vs an extension of the table header.
+  const tableFontSizes = consistentRows.map(a => a.line.fontSize).sort((a, b) => a - b);
+  const tableMedianFont = tableFontSizes[Math.floor(tableFontSizes.length / 2)] || 12;
+
   let headerStartIdx = firstMatchIdx;
   for (let j = firstMatchIdx - 1; j >= Math.max(startIdx, firstMatchIdx - 3); j--) {
     const line = lines[j];
     if (isNoiseLine(line) || isPageHeaderFooter(line, pageWidth)) continue;
+
+    // Don't absorb a real section heading — numbered patterns ("3.3 ...",
+    // "5.1 ...") or visibly larger font lines belong above the table, not in it.
+    if (isHeader(line, tableMedianFont, pageWidth)) break;
 
     const cols = detectColumns(line, pageWidth);
     if (cols.length >= 2 && cols.length < colBoundaries.length
@@ -450,6 +799,7 @@ function tryDetectTable(lines: Line[], startIdx: number, pageWidth: number): Tab
 
   return {
     table: { type: 'table', headers, rows },
+    startIndex: headerStartIdx,
     endIndex: endIdx,
   };
 }
@@ -652,44 +1002,36 @@ function extractTableData(
   const rawRows: { cells: string[]; y: number }[] = [];
 
   for (const line of tableLines) {
-    const cells: string[] = new Array(colBoundaries.length).fill('');
+    // Bucket each text item into its column by horizontal midpoint, then run
+    // `reorderToLogical` per cell so embedded LTR (e.g. "WebHook", "OAuth2")
+    // stays in reading order instead of getting reversed by an X-descending sort.
+    const cellItems: TextItem[][] = Array.from({ length: colBoundaries.length }, () => []);
 
-    const sortedItems = [...line.items]
-      .filter(item => !/^\|+$/.test(item.text.trim()))
-      .sort((a, b) => b.x - a.x);
-
-    for (const item of sortedItems) {
+    const filtered = line.items.filter(item => !/^\|+$/.test(item.text.trim()));
+    for (const item of filtered) {
+      const itemMid = item.x + item.width / 2;
       let bestCol = 0;
       let bestDist = Infinity;
-      const itemMid = item.x + item.width / 2;
-
       for (let c = 0; c < colBoundaries.length; c++) {
         const { xStart, xEnd } = colBoundaries[c];
-
         if (itemMid >= xEnd && itemMid <= xStart) {
           bestCol = c;
           bestDist = 0;
           break;
         }
-
         const distToEdge = Math.min(
           Math.abs(itemMid - xStart),
           Math.abs(itemMid - xEnd),
         );
-
         if (distToEdge < bestDist) {
           bestDist = distToEdge;
           bestCol = c;
         }
       }
-
-      if (cells[bestCol]) {
-        cells[bestCol] += ' ' + item.text;
-      } else {
-        cells[bestCol] = item.text;
-      }
+      cellItems[bestCol].push(item);
     }
 
+    const cells = cellItems.map(items => mergeLineText(reorderToLogical(items)));
     rawRows.push({ cells, y: line.y });
   }
 
@@ -818,11 +1160,19 @@ function isHeader(line: Line, medianFontSize: number, _pageWidth: number): boole
   if (text.length === 0) return false;
   if (text.length > 100) return false;
 
+  // Significantly larger font is a header even without bold
+  if (line.fontSize >= medianFontSize * 1.2) return true;
+
   // Bold and larger font
   if (line.fontSize > medianFontSize * 1.15 && line.isBold) return true;
 
   // Bold and short
   if (line.isBold && text.length < 60 && !isListItem(line)) return true;
+
+  // Numbered section pattern: "1." / "1.1" / "2.1.1" followed by title text.
+  // Either there's a trailing dot ("1.") or at least one inner dot ("1.1"),
+  // so we don't accidentally match a bare leading integer in body content.
+  if (/^(\d+\.|\d+(?:\.\d+)+)\s+\S/.test(text) && text.length < 80) return true;
 
   // Reject TOC entries
   if (/^(פרק|נספח)\s+[א-ת]/.test(text) && /\s\d{1,3}\s*$/.test(text)) {
@@ -859,10 +1209,23 @@ function isHeader(line: Line, medianFontSize: number, _pageWidth: number): boole
   return false;
 }
 
-function getHeaderLevel(line: Line, medianFontSize: number, _pageWidth: number): 1 | 2 | 3 {
+function getHeaderLevel(line: Line, medianFontSize: number, _pageWidth: number): 1 | 2 | 3 | 4 {
   const text = line.text.trim();
 
-  if (line.fontSize > medianFontSize * 1.4) return 1;
+  // The title-page heading is the only thing in a sharply larger font.
+  if (line.fontSize > medianFontSize * 1.8) return 1;
+
+  // Numbered-section hierarchy: depth of the leading "N.N.N" prefix.
+  //   "1.    X"  → ## (H2)
+  //   "1.1   X"  → ### (H3)
+  //   "1.1.1 X"  → #### (H4)
+  const numMatch = text.match(/^(\d+(?:\.\d+){0,3})[.\s]+\S/);
+  if (numMatch) {
+    const depth = numMatch[1].split('.').length;
+    if (depth === 1) return 2;
+    if (depth === 2) return 3;
+    return 4;
+  }
 
   if (/^פרק\s+[א-ת]/.test(text)) return 2;
   if (/^נספח\s+[א-ת]/.test(text)) return 2;
@@ -959,14 +1322,14 @@ function buildSegmentsFromItems(items: TextItem[]): TextSegment[] {
   if (items.length === 0) return [];
 
   const segments: TextSegment[] = [];
-  const sorted = [...items].sort((a, b) => b.x - a.x);
+  const ordered = reorderToLogical(items);
 
   let currentText = '';
-  let currentBold = sorted[0].isBold;
-  let currentItalic = sorted[0].isItalic;
+  let currentBold = ordered[0].isBold;
+  let currentItalic = ordered[0].isItalic;
 
-  for (let i = 0; i < sorted.length; i++) {
-    const item = sorted[i];
+  for (let i = 0; i < ordered.length; i++) {
+    const item = ordered[i];
 
     if (item.isBold !== currentBold || item.isItalic !== currentItalic) {
       if (currentText) {
@@ -978,9 +1341,9 @@ function buildSegmentsFromItems(items: TextItem[]): TextSegment[] {
     }
 
     if (i > 0) {
-      const prev = sorted[i - 1];
-      const gap = prev.x - (item.x + item.width);
-      const avgCharWidth = item.fontSize * 0.4;
+      const prev = ordered[i - 1];
+      const gap = Math.max(prev.x, item.x) - Math.min(prev.x + prev.width, item.x + item.width);
+      const avgCharWidth = Math.max(prev.fontSize, item.fontSize) * 0.4;
       if (gap > avgCharWidth * 0.3) {
         currentText += ' ';
       }

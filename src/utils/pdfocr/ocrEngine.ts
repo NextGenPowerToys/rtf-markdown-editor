@@ -1,31 +1,37 @@
 import * as fs from 'fs';
-import * as path from 'path';
-import { execSync } from 'child_process';
-import * as os from 'os';
+import { resolveOfflineTesseractPaths, type OfflineTesseractPaths } from './offlineConfig';
 import type { TextItem } from './types';
 
 /**
  * OCR engine using Tesseract.js for scanned/image-based PDF pages.
- * Renders PDF pages to images via pdftoppm (poppler) or pdfjs-dist + canvas.
- *
- * Adapted from PDFOCR for use in VS Code extension context:
- * - process.stdout.write replaced with optional progress callback
- * - canvas import is conditional (graceful fallback if unavailable)
+ * Renders PDF pages to images via pdfjs-dist + canvas — no shell-outs to
+ * external binaries, no CDN access. Traineddata + WASM core are loaded from
+ * the bundled resources directory.
  */
 export class OcrEngine {
   private worker: any = null;
   private language: string;
   private progress?: (message: string) => void;
+  private offlinePaths: OfflineTesseractPaths;
 
-  constructor(language = 'heb+eng', progress?: (message: string) => void) {
+  constructor(
+    language = 'heb+eng',
+    extensionRoot: string,
+    progress?: (message: string) => void,
+  ) {
     this.language = language;
     this.progress = progress;
+    this.offlinePaths = resolveOfflineTesseractPaths(extensionRoot);
   }
 
   async initialize(): Promise<void> {
     const Tesseract = await import('tesseract.js');
-    this.progress?.('Initializing OCR engine...');
+    this.progress?.('Initializing OCR engine (offline)...');
     this.worker = await Tesseract.createWorker(this.language, undefined, {
+      corePath: this.offlinePaths.corePath,
+      langPath: this.offlinePaths.langPath,
+      gzip: this.offlinePaths.gzip,
+      cacheMethod: this.offlinePaths.cacheMethod,
       logger: (m: any) => {
         if (m.status === 'recognizing text') {
           this.progress?.(`OCR progress: ${(m.progress * 100).toFixed(0)}%`);
@@ -42,16 +48,10 @@ export class OcrEngine {
   }
 
   /**
-   * Render a PDF page to an image buffer.
-   * Tries pdftoppm first (best quality), then falls back to pdfjs-dist + canvas.
+   * Render a PDF page to an image buffer using pdfjs-dist + canvas.
+   * No external binaries; everything runs inside the Node.js extension host.
    */
   async renderPageToImage(pdfPath: string, pageNum: number, scale = 3.0): Promise<Buffer> {
-    // Try pdftoppm first (from poppler-utils) — best quality rendering
-    if (hasPdftoppm()) {
-      return renderWithPdftoppm(pdfPath, pageNum, Math.round(scale * 150));
-    }
-
-    // Fallback: pdfjs-dist + canvas with proper image support
     return renderWithPdfjs(pdfPath, pageNum, scale);
   }
 
@@ -314,65 +314,6 @@ async function checkCanvas(): Promise<boolean> {
 
 // Run check immediately on module load
 checkCanvas();
-
-// ── pdftoppm rendering (poppler-utils) ──
-
-let _hasPdftoppm: boolean | null = null;
-
-function hasPdftoppm(): boolean {
-  if (_hasPdftoppm === null) {
-    try {
-      execSync('which pdftoppm', { stdio: 'ignore' });
-      _hasPdftoppm = true;
-    } catch {
-      _hasPdftoppm = false;
-    }
-  }
-  return _hasPdftoppm;
-}
-
-function renderWithPdftoppm(pdfPath: string, pageNum: number, dpi: number): Buffer {
-  const tmpDir = os.tmpdir();
-  const tmpPrefix = path.join(tmpDir, `pdfocr_${process.pid}_${pageNum}`);
-
-  try {
-    execSync(
-      `pdftoppm -png -r ${dpi} -f ${pageNum} -l ${pageNum} "${pdfPath}" "${tmpPrefix}"`,
-      { stdio: 'ignore', timeout: 30000 },
-    );
-
-    const candidates = [
-      `${tmpPrefix}-${String(pageNum).padStart(2, '0')}.png`,
-      `${tmpPrefix}-${pageNum}.png`,
-      `${tmpPrefix}-${String(pageNum).padStart(3, '0')}.png`,
-    ];
-
-    for (const filePath of candidates) {
-      if (fs.existsSync(filePath)) {
-        const buffer = fs.readFileSync(filePath);
-        fs.unlinkSync(filePath);
-        return buffer;
-      }
-    }
-
-    const files = fs.readdirSync(tmpDir).filter(f => f.startsWith(`pdfocr_${process.pid}_${pageNum}`));
-    if (files.length > 0) {
-      const filePath = path.join(tmpDir, files[0]);
-      const buffer = fs.readFileSync(filePath);
-      fs.unlinkSync(filePath);
-      return buffer;
-    }
-
-    throw new Error(`pdftoppm output file not found for page ${pageNum}`);
-  } catch (error) {
-    try {
-      const files = fs.readdirSync(tmpDir).filter(f => f.startsWith(`pdfocr_${process.pid}_${pageNum}`));
-      for (const f of files) fs.unlinkSync(path.join(tmpDir, f));
-    } catch { /* ignore cleanup errors */ }
-
-    throw error;
-  }
-}
 
 // ── OCR result helpers ──
 

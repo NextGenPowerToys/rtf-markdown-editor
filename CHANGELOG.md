@@ -2,6 +2,36 @@
 
 All notable changes to the RTF Markdown Editor extension will be documented in this file.
 
+## [2.6.0] - 2026-05-22
+
+### Changed
+
+- **PDF → Markdown is now AI-driven via GitHub Copilot Chat.** The previous in-process heuristic pipeline produced uneven results on RTL documents, tables, and pages with embedded diagrams. The new flow uses a bundled PDF processing **skill** plus GitHub Copilot Chat's language models to produce the final Markdown.
+  - The Explorer context menu entry for `.pdf` files is renamed to **"Convert PDF to Markdown (via GitHub Copilot Chat)"** and only shows when GitHub Copilot (Chat) is installed.
+  - Clicking it opens a confirmation modal, then opens chat with the new `@pdfmd` chat participant pre-invoked.
+  - The chat participant: (1) extracts text + positions from the PDF locally with pdfjs-dist, (2) splits the document into page-aligned chunks (no more 60K-char truncation — every page is sent), (3) passes each chunk to the LM with the bundled skill as authoritative guidance, (4) concatenates the streamed responses, (5) writes the Markdown to `<pdfBaseName>.md` next to the source PDF, (6) opens the result in the RTF Markdown editor.
+  - Chat surface is **status-only**: progress messages while converting, a single final "Saved Markdown to …" link. The document body is no longer echoed into chat.
+- **Supports Unicode/Hebrew paths.** The menu command wraps the PDF path in backticks before stuffing it into the chat query, and the participant's path extractor accepts backtick-wrapped, double-quoted, and bare paths containing spaces, Hebrew, CJK, and other non-ASCII characters.
+
+### Added
+
+- **`resources/skills/pdf/SKILL.md`** ships with the extension (copied from `.agents/skills/pdf/` at build time via the new `copy:skill` script). The chat participant loads it on every invocation.
+- **`@pdfmd` chat participant** — registered via the VS Code Chat Participant API. Can be invoked directly from chat: `@pdfmd convert /path/to/file.pdf to markdown`.
+- **`onStartupFinished` activation event** so the `aiChatAvailable` context key is published in time for the Explorer context menu's `when` clause.
+
+### Fixed
+
+- **pdfjs-dist worker resolution in the extension host.** `extractPdfText` now sets `GlobalWorkerOptions.workerSrc` by probing for `pdf.worker.mjs` via `require.resolve('pdfjs-dist/legacy/build/pdf.worker.mjs')` and several relative paths from `dist/extension.js`. Without this, the host's Node runtime threw `No GlobalWorkerOptions.workerSrc specified` on every conversion.
+
+### Removed
+
+- The in-process heuristic PDF → Markdown pipeline is no longer wired into the menu command. Files remain in the tree (`src/utils/pdfImporter.ts`, `src/utils/pdfocr/*`) for now but are unused; they can be deleted in a follow-up.
+- The `Extract text from PDF to Markdown` command title is replaced by `Convert PDF to Markdown (via GitHub Copilot Chat)`.
+
+### Engine
+
+- Minimum VS Code engine bumped from **1.85.0** to **1.93.0** to access the finalized Chat Participant API.
+
 ## [2.5.4] - 2026-05-22
 
 ### Added

@@ -42,6 +42,7 @@ export async function importFromPDF(
       ocrLanguage: 'heb+eng',
       scale: 3,
       progress,
+      extensionRoot: context?.extensionPath,
     });
 
     let html = result.html;

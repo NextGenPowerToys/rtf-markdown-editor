@@ -23,6 +23,14 @@ async function getTurndownService() {
  * Convert HTML to Markdown with custom rules for semantic preservation
  */
 export async function htmlToMarkdown(html: string, options: { rtl?: boolean } = {}): Promise<string> {
+  // Strip <style>, <script>, and <head> contents up-front. Turndown will
+  // otherwise dump their text contents (CSS rules, script source) into the
+  // markdown output.
+  const cleanedHtml = html
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<head[\s\S]*?<\/head>/gi, '');
+
   const Turndown = await getTurndownService();
   const turndownService = new Turndown({
     headingStyle: 'atx',
@@ -30,6 +38,59 @@ export async function htmlToMarkdown(html: string, options: { rtl?: boolean } = 
     bulletListMarker: '-',
     preserveNewlines: false,
     hr: '---',
+  });
+
+  // Drop any residual style/script tags that the regex pass missed.
+  turndownService.remove(['style', 'script', 'head']);
+
+  // Render <table> as a GFM-style markdown table. Without this, turndown's
+  // default rules emit `| --- | --- |` after every row and double the row count.
+  turndownService.addRule('gfmTable', {
+    filter: (node: any) => (node.nodeName ?? '').toUpperCase() === 'TABLE',
+    replacement: (_content: string, node: any) => {
+      const rows: string[][] = [];
+      let numCols = 0;
+      const collectCells = (tr: any): string[] => {
+        const cells: string[] = [];
+        for (const child of tr.childNodes ?? []) {
+          const name = (child.nodeName ?? '').toLowerCase();
+          if (name === 'th' || name === 'td') {
+            const text = (child.textContent ?? '')
+              .replace(/\s+/g, ' ')
+              .replace(/\|/g, '\\|')
+              .trim();
+            cells.push(text);
+          }
+        }
+        return cells;
+      };
+      const walk = (n: any) => {
+        for (const child of n.childNodes ?? []) {
+          const name = (child.nodeName ?? '').toLowerCase();
+          if (name === 'tr') {
+            const cells = collectCells(child);
+            if (cells.length > 0) {
+              rows.push(cells);
+              if (cells.length > numCols) numCols = cells.length;
+            }
+          } else if (name === 'thead' || name === 'tbody' || name === 'tfoot') {
+            walk(child);
+          }
+        }
+      };
+      walk(node);
+      if (rows.length === 0 || numCols === 0) return '';
+      for (const r of rows) while (r.length < numCols) r.push('');
+      const header = rows[0];
+      const body = rows.slice(1);
+      const sep = Array(numCols).fill('---');
+      const lines = [
+        '| ' + header.join(' | ') + ' |',
+        '| ' + sep.join(' | ') + ' |',
+        ...body.map(r => '| ' + r.join(' | ') + ' |'),
+      ];
+      return '\n\n' + lines.join('\n') + '\n\n';
+    },
   });
 
   // Add custom rules for better preservation
@@ -69,66 +130,15 @@ export async function htmlToMarkdown(html: string, options: { rtl?: boolean } = 
     },
   });
 
-  // Custom rule for tables with proper markdown format
-  turndownService.addRule('table', {
-    filter: 'table',
-    replacement: (content: string) => {
-      return `\n${content}\n`;
-    },
-  });
-
-  turndownService.addRule('tableheader', {
-    filter: 'thead',
-    replacement: (content: string) => {
-      if (!content.trim()) return '';
-      return content;
-    },
-  });
-
-  turndownService.addRule('tablebody', {
-    filter: 'tbody',
-    replacement: (content: string) => {
-      if (!content.trim()) return '';
-      return content;
-    },
-  });
-
-  turndownService.addRule('tablerow', {
-    filter: 'tr',
-    replacement: (content: string, node: any) => {
-      const cells = Array.from(node.querySelectorAll('th, td'));
-      if (cells.length === 0) {
-        return content;
-      }
-
-      const row = cells
-        .map((cell: any) => {
-          let text = cell.textContent?.trim() || '';
-          // Escape pipe characters in cell content
-          text = text.replace(/\|/g, '\\|');
-          return text;
-        })
-        .join(' | ');
-
-      // Add separator after header row
-      const isHeader = node.querySelector('th') !== null;
-      let result = `| ${row} |\n`;
-      if (isHeader) {
-        const separator = cells.map(() => '---').join(' | ');
-        result += `| ${separator} |\n`;
-      }
-
-      return result;
-    },
-  });
-
-  turndownService.addRule('tablecell', {
-    filter: ['th', 'td'],
-    replacement: (content: string) => {
-      // Process cell content
-      return content.trim();
-    },
-  });
+  // Table handling is done holistically by the `gfmTable` rule above. The
+  // children (thead/tbody/tr/th/td) are deliberately neutralized so they
+  // don't emit per-row separators or other intermediate markdown.
+  for (const tag of ['thead', 'tbody', 'tfoot', 'tr', 'th', 'td']) {
+    turndownService.addRule(`neutralize-${tag}`, {
+      filter: tag,
+      replacement: () => '',
+    });
+  }
 
   // Custom rule for line breaks - preserve them better
   turndownService.addRule('linebreak', {
@@ -139,7 +149,7 @@ export async function htmlToMarkdown(html: string, options: { rtl?: boolean } = 
   });
 
   // Convert the HTML
-  let markdown = turndownService.turndown(html);
+  let markdown = turndownService.turndown(cleanedHtml);
 
   // Post-processing: clean up excessive whitespace
   markdown = markdown

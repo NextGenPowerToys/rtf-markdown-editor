@@ -1,8 +1,8 @@
 # RTF Markdown Editor
 
-**Word-like WYSIWYG Markdown Editor for VS Code** — RTL-first, Azure DevOps Mermaid, Export & Import Word/HTML/PDF, Autosave, **100% Offline**
+**Word-like WYSIWYG Markdown Editor for VS Code** — RTL-first, Azure DevOps Mermaid, Export Word/HTML/PDF, Import Word, **AI-driven PDF → Markdown (via GitHub Copilot Chat)**, Autosave, mostly **Offline**
 
-A rich text editor extension for VS Code that provides a Microsoft Word / Google Docs-like editing experience for Markdown files, with special emphasis on right-to-left (RTL) languages like Hebrew and Arabic, automatic saving, Mermaid diagram support, and one-click export to HTML, Word (DOCX), or PDF — plus **content extraction from Word and PDF into Markdown** for AI analysis and content migration.
+A rich text editor extension for VS Code that provides a Microsoft Word / Google Docs-like experience for Markdown files, with special emphasis on right-to-left (RTL) languages like Hebrew and Arabic, automatic saving, Mermaid diagram support, and one-click export to HTML, Word (DOCX), or PDF. Word → Markdown import runs fully offline; **PDF → Markdown is now powered by GitHub Copilot Chat** through the bundled PDF processing skill and the `@pdfmd` chat participant.
 
 ## Features
 
@@ -112,19 +112,18 @@ A rich text editor extension for VS Code that provides a Microsoft Word / Google
 - **Fully Offline**: No internet required — 100% standalone HTML output
 - **Command**: `RTF Markdown: Convert to Web Archive (HTML)`
 
-### ✅ Import from PDF (PDF → Markdown) — Content Extraction
+### ✅ Convert PDF to Markdown — via GitHub Copilot Chat
 
-> **Purpose:** Extract text content from PDFs into Markdown for downstream processing by AI agents, search indexing, or content migration. This is **not** a pixel-perfect PDF-to-Markdown converter — it is a content extraction tool designed to capture the substance of a document, not reproduce its exact visual layout.
+> **Requires GitHub Copilot Chat.** PDF → Markdown is the only feature in this extension that depends on an external AI service. The menu entry is hidden unless GitHub Copilot Chat (or `GitHub.copilot`) is installed, and the actual conversion runs against Copilot's language models.
 
-- **Right-Click Import**: Right-click any `.pdf` file in the Explorer → **"Extract text from PDF to Markdown"**
-- **Command Palette**: `RTF Markdown: Extract text from PDF to Markdown`
-- **Advanced OCR Pipeline**: Multi-pass Tesseract.js OCR with Hebrew/English support
-- **Smart Structure Detection**: Automatically detects headings, tables, lists, and paragraphs from positioned text data
-- **Table Extraction**: Column-alignment-based table detection with cross-page table merging
-- **RTL/Hebrew First**: Optimized for Hebrew documents with misread correction and bidirectional text handling
-- **Image Extraction**: Embedded images extracted and saved to `.attachments/.<name>/` as PNG files with relative Markdown references
-- **Hybrid Mode**: Uses text extraction first (fast), falls back to OCR for pages with broken fonts
-- **Lossless Round-Trip**: PDFs exported by this extension embed metadata for near-perfect re-import
+- **Right-Click Import**: Right-click any `.pdf` file in the Explorer → **"Convert PDF to Markdown (via GitHub Copilot Chat)"** (hidden when Copilot is not installed)
+- **Command Palette**: `RTF Markdown: Convert PDF to Markdown (via GitHub Copilot Chat)`
+- **Bundled PDF Skill**: The extension ships `resources/skills/pdf/SKILL.md` — a structured prompt that drives the model's conversion behavior (heading hierarchy, GFM tables, RTL handling, bold labels, mermaid placeholders for diagram pages, etc.).
+- **Chat Participant**: A `@pdfmd` participant is registered with the VS Code Chat API. The menu opens chat and pre-invokes it with the chosen PDF; you can also type `@pdfmd convert /path/to/file.pdf to markdown` directly into chat.
+- **Local PDF Read**: Text + positions are extracted **locally** with pdfjs-dist before the prompt is sent — the model never has to read the file from disk. Hebrew / Arabic / CJK paths and content are all supported.
+- **Chunked Send**: The document is split into page-aligned chunks (40 K chars each) so the entire PDF is processed — no character-count truncation. Each chunk is sent in its own request and the responses are concatenated in order.
+- **Saved Next to the PDF**: The streamed Markdown is collected silently, wrapping `````markdown`` fences and pre-amble prose are stripped, and the result is written to `<pdfBaseName>.md` next to the original PDF, then opened in the RTF Markdown editor.
+- **Chat as a Status Surface**: Chat shows only progress + the final `Saved Markdown to …` link. The document body is never echoed there.
 
 ### ✅ Import from Word (DOCX → Markdown) — Content Extraction
 
@@ -243,31 +242,35 @@ The exported document preserves:
 
 **Round-trip workflow:** `.md` → Export as DOCX → Import as Markdown → `.md`
 
-### Importing from PDF — Content Extraction
+### Converting PDF to Markdown — via GitHub Copilot Chat
 
-> Extracts text content from PDFs into Markdown. Designed for AI analysis, content migration, and search indexing — not for reproducing the exact visual layout of the original document.
+> **Prerequisite: GitHub Copilot Chat must be installed and signed in.** The PDF → Markdown command is gated on Copilot's presence and only appears in the Explorer context menu when Copilot is available. All other features of this extension still run fully offline; only this command talks to a language model.
 
 **From Explorer (easiest):**
 
 1. Right-click a `.pdf` file in the VS Code Explorer
-2. Select **"Extract text from PDF to Markdown"**
-3. Choose where to save the resulting `.md` file
-4. The file opens automatically in the RTF Markdown Editor
+2. Select **"Convert PDF to Markdown (via GitHub Copilot Chat)"**
+3. Confirm the modal — the extension extracts the PDF text locally, opens chat, and invokes the bundled `@pdfmd` participant
+4. When the model finishes, the resulting `<filename>.md` is saved next to the source PDF and opened in the RTF Markdown Editor
 
 **From Command Palette:**
 
-1. Open Command Palette (Ctrl+Shift+P) → `RTF Markdown: Extract text from PDF to Markdown`
-2. Pick the `.pdf` file to import
-3. Choose where to save the resulting `.md` file
-4. The file opens automatically in the RTF Markdown Editor
+1. Open Command Palette (Ctrl+Shift+P) → `RTF Markdown: Convert PDF to Markdown (via GitHub Copilot Chat)`
+2. Pick the `.pdf` file to convert
+3. Confirm the modal
+4. The resulting `<filename>.md` is saved next to the source PDF and opened in the editor
 
-**What gets extracted:**
+**From chat (direct):**
 
-- All text content: headings, paragraphs, tables, lists
-- Bold and italic formatting (detected from font metadata)
-- Table structures (detected from column alignment in positioned text data)
-- Hebrew/Arabic RTL text with bidirectional correction
-- For extension-exported PDFs: near-lossless recovery via embedded metadata
+- Type `@pdfmd convert /path/to/file.pdf to markdown` in the Copilot Chat input. Paths with spaces, Hebrew, CJK, or other Unicode work either bare, in double quotes, or wrapped in backticks.
+
+**How it works:**
+
+- The extension ships a PDF processing **skill** at `resources/skills/pdf/SKILL.md`. The chat participant loads it on every invocation as the model's authoritative guide for headings/lists/tables/RTL handling.
+- Text + positional data are extracted locally with pdfjs-dist — Copilot never has to read the file from disk.
+- The PDF is split into page-aligned chunks (~40 K chars each) so the entire document is processed; nothing is truncated.
+- Each chunk is sent to Copilot in its own request along with the skill; the streamed responses are concatenated, sanitised (any wrapping ` ```markdown ` fence stripped), saved to `<pdfBaseName>.md`, and the file is opened in the RTF Markdown Editor.
+- Chat is a **status surface only** — progress messages while converting + a single final "Saved Markdown to …" link. The document body itself is not echoed into chat.
 
 ### Import Philosophy & Limitations (Word & PDF)
 
@@ -281,15 +284,14 @@ The exported document preserves:
 - Advanced Word formatting (tracked changes, comments, footnotes) is not preserved
 - Embedded OLE objects and ActiveX controls are skipped
 
-**PDF import — what to expect:**
+**PDF → Markdown (Copilot) — what to expect:**
 
-- PDF is a visual format — it stores where text is drawn, not what it means semantically. Structure detection uses heuristics and may not always be accurate
-- Text, headings, tables, lists, and embedded images are extracted with best-effort structure detection
-- Scanned/image-only PDFs require OCR, which depends on scan quality
-- Complex multi-column layouts may be misinterpreted
-- Custom font encodings without Unicode mappings fall back to OCR
-- OCR accuracy depends on document quality — handwritten text is not supported
-- Tables detected from position data may have alignment issues with irregular layouts
+- The extension extracts text + positions locally with pdfjs-dist, then hands the per-page text dump to GitHub Copilot Chat along with the bundled PDF skill. The model reconstructs structure (headings, lists, tables, bold labels, RTL reading order) from the positional dump.
+- Result quality depends on the model behind Copilot Chat. A current Copilot Premium model handles the easysend.pdf reference document (Hebrew, mixed Latin, nested numbered sections, tables, mermaid placeholder pages) to near-parity with a hand-crafted Markdown version.
+- **Requires GitHub Copilot Chat** — the menu entry is hidden when Copilot isn't installed and the command refuses to run.
+- **Counts toward your Copilot usage.** Long PDFs are chunked and sent in multiple LM requests; this is regular Copilot Chat traffic.
+- Scanned/image-only PDFs have no extractable text, so Copilot has nothing to convert. Such pages are emitted as `*(diagram)*` placeholders. Run them through an external OCR step first if you need their content.
+- Diagrams that were rendered to images at PDF export time cannot be reconstructed as live mermaid source without a vision-capable model; the skill instructs Copilot to leave them as placeholders.
 
 ### Toolbar Controls
 

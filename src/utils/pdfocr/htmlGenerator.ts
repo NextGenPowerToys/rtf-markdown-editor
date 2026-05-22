@@ -4,7 +4,26 @@ import type { ContentBlock, TextSegment } from './types';
  * Generate a complete RTL Hebrew HTML document from structured content blocks.
  */
 export function generateHtml(blocks: ContentBlock[], title = 'PDF Document'): string {
-  const bodyHtml = blocks.map(renderBlock).join('\n');
+  // Group consecutive list-item blocks into a single <ul> so turndown emits
+  // proper markdown bullets ("- item") instead of escaped literal dashes.
+  const bodyParts: string[] = [];
+  let i = 0;
+  while (i < blocks.length) {
+    const block = blocks[i];
+    if (block.type === 'list-item') {
+      const items: string[] = [];
+      while (i < blocks.length && blocks[i].type === 'list-item') {
+        const li = blocks[i] as { type: 'list-item'; marker: string; segments: TextSegment[] };
+        items.push(`    <li>${renderSegments(li.segments)}</li>`);
+        i++;
+      }
+      bodyParts.push(`  <ul>\n${items.join('\n')}\n  </ul>`);
+      continue;
+    }
+    bodyParts.push(renderBlock(block));
+    i++;
+  }
+  const bodyHtml = bodyParts.join('\n');
 
   return `<!DOCTYPE html>
 <html lang="he" dir="rtl">
@@ -13,14 +32,12 @@ export function generateHtml(blocks: ContentBlock[], title = 'PDF Document'): st
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${escapeHtml(title)}</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@400;700&display=swap');
-
     * {
       box-sizing: border-box;
     }
 
     body {
-      font-family: 'Noto Sans Hebrew', 'David', 'Arial Hebrew', Arial, sans-serif;
+      font-family: 'David', 'Arial Hebrew', 'Segoe UI', Arial, sans-serif;
       direction: rtl;
       text-align: right;
       line-height: 1.8;

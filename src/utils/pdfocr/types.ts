@@ -58,7 +58,7 @@ export type ContentBlock =
 
 export interface HeaderBlock {
   type: 'header';
-  level: 1 | 2 | 3;
+  level: 1 | 2 | 3 | 4;
   text: string;
 }
 

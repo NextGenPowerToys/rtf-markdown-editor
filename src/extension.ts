@@ -6,9 +6,9 @@ import * as iconv from 'iconv-lite';
 import * as chardet from 'chardet';
 import { exportToHTML } from './utils/htmlExporter';
 import { importFromDOCX } from './utils/docxImporter';
-import { importFromPDF } from './utils/pdfImporter';
 import { extractMermaidBlocks } from './utils/markdownProcessor';
 import { renderMermaidToPng } from './utils/mermaidRenderer';
+import { detectAiChat, refreshAvailabilityContext, registerPdfChatParticipant } from './pdfChat';
 
 export function activate(context: vscode.ExtensionContext) {
   const provider = new MarkdownWordEditorProvider(context);
@@ -26,6 +26,25 @@ export function activate(context: vscode.ExtensionContext) {
       }
     )
   );
+
+  // Publish the `when`-clause context key the PDF→Markdown menu listens on
+  // BEFORE registering anything else, so the menu can render the moment the
+  // extension finishes activating (driven by `onStartupFinished`).
+  refreshAvailabilityContext().catch(err =>
+    console.warn('[rtf-markdown-editor] availability context failed:', err),
+  );
+  context.subscriptions.push(
+    vscode.extensions.onDidChange(() => { refreshAvailabilityContext(); }),
+  );
+
+  // Chat participant that performs the actual PDF→Markdown conversion via
+  // the bundled `resources/skills/pdf/SKILL.md`. Wrapped in try/catch so a
+  // missing chat API on an older host can't tank the rest of activation.
+  try {
+    context.subscriptions.push(registerPdfChatParticipant(context));
+  } catch (err) {
+    console.warn('[rtf-markdown-editor] chat participant unavailable:', err);
+  }
 
   // Register command to open editor
   context.subscriptions.push(
@@ -194,51 +213,54 @@ export function activate(context: vscode.ExtensionContext) {
     })
   );
 
-  // Register command to import a PDF file and convert it to Markdown
+  // Register command to import a PDF file. The conversion itself is handled
+  // by the @pdfmd chat participant — this command picks the PDF, confirms
+  // intent with the user, and opens chat with the participant pre-invoked.
   context.subscriptions.push(
     vscode.commands.registerCommand('rtf-markdown-editor.importPDF', async (uri?: vscode.Uri) => {
-      try {
-        let pdfUri: vscode.Uri | undefined = uri;
-
-        if (!pdfUri) {
-          const picked = await vscode.window.showOpenDialog({
-            canSelectMany: false,
-            filters: { 'PDF Files': ['pdf'] },
-            openLabel: 'Import PDF',
-          });
-          if (!picked || picked.length === 0) { return; }
-          pdfUri = picked[0];
-        }
-
-        const pdfPath = pdfUri.fsPath;
-        const docName = path.basename(pdfPath, path.extname(pdfPath));
-
-        const saveUri = await vscode.window.showSaveDialog({
-          defaultUri: vscode.Uri.file(path.join(path.dirname(pdfPath), `${docName}.md`)),
-          filters: { 'Markdown Files': ['md'] },
-        });
-        if (!saveUri) { return; }
-
-        let markdown = '';
-        await vscode.window.withProgress(
-          {
-            location: vscode.ProgressLocation.Notification,
-            title: `Converting "${docName}.pdf" to Markdown…`,
-            cancellable: false,
-          },
-          async (progressIndicator) => {
-            markdown = await importFromPDF(pdfPath, saveUri.fsPath, context, (message) => {
-              progressIndicator.report({ message });
-            });
-          }
+      const ai = detectAiChat();
+      if (!ai.available) {
+        vscode.window.showErrorMessage(
+          'PDF → Markdown conversion requires GitHub Copilot Chat to be installed.',
         );
+        return;
+      }
 
-        fs.writeFileSync(saveUri.fsPath, markdown, 'utf8');
+      let pdfUri: vscode.Uri | undefined = uri;
+      if (!pdfUri) {
+        const picked = await vscode.window.showOpenDialog({
+          canSelectMany: false,
+          filters: { 'PDF Files': ['pdf'] },
+          openLabel: 'Convert PDF to Markdown',
+        });
+        if (!picked || picked.length === 0) { return; }
+        pdfUri = picked[0];
+      }
 
-        vscode.window.showInformationMessage(`Markdown saved to ${path.basename(saveUri.fsPath)}`);
-        await vscode.commands.executeCommand('vscode.openWith', saveUri, 'rtf-markdown-editor.editor');
-      } catch (error) {
-        vscode.window.showErrorMessage(`Failed to import PDF: ${error}`);
+      const docName = path.basename(pdfUri.fsPath);
+      const choice = await vscode.window.showInformationMessage(
+        `Convert "${docName}" to Markdown using GitHub Copilot Chat?\n\n` +
+        'This will open chat, load the bundled PDF skill, and ask the assistant ' +
+        'to produce the Markdown. The result is saved next to the PDF and opened in the editor.',
+        { modal: true },
+        'Continue',
+      );
+      if (choice !== 'Continue') return;
+
+      // Open chat and invoke the @pdfmd participant with the PDF path. The
+      // path is wrapped in backticks so spaces, Hebrew, and other Unicode
+      // characters survive the chat input intact — the participant strips
+      // the backticks back off when extracting.
+      const query = `@pdfmd convert \`${pdfUri.fsPath}\` to markdown`;
+      try {
+        await vscode.commands.executeCommand('workbench.action.chat.open', { query });
+      } catch {
+        // Fallback for hosts that use a different chat open command id.
+        await vscode.commands.executeCommand('workbench.panel.chat.view.copilot.focus');
+        await vscode.env.clipboard.writeText(query);
+        vscode.window.showInformationMessage(
+          'Chat opened. The @pdfmd prompt has been copied to your clipboard — paste it into chat.',
+        );
       }
     })
   );

@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import * as path from 'path';
 import type { TextItem, ImageItem, PageData } from './types';
 
 // pdfjs-dist types
@@ -28,6 +29,26 @@ const MIN_IMAGE_SIZE = 50;
 export async function extractPdfText(pdfPath: string): Promise<PageData[]> {
   // Dynamic import for pdfjs-dist (handles ESM/CJS in Node.js)
   const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs');
+
+  // pdfjs-dist requires GlobalWorkerOptions.workerSrc to be set even when
+  // running in Node (it uses a "fake worker" that still reads the worker
+  // file). Without it, getDocument() throws:
+  //   "No GlobalWorkerOptions.workerSrc specified"
+  // Try common locations: node_modules, the extension's resources dir, etc.
+  if (pdfjsLib.GlobalWorkerOptions && !pdfjsLib.GlobalWorkerOptions.workerSrc) {
+    const candidates = [
+      tryResolveWorker(),
+      path.resolve(__dirname, '..', '..', '..', 'node_modules', 'pdfjs-dist', 'legacy', 'build', 'pdf.worker.mjs'),
+      path.resolve(__dirname, '..', '..', 'node_modules', 'pdfjs-dist', 'legacy', 'build', 'pdf.worker.mjs'),
+      path.resolve(process.cwd(), 'node_modules', 'pdfjs-dist', 'legacy', 'build', 'pdf.worker.mjs'),
+    ].filter((p): p is string => !!p);
+    for (const candidate of candidates) {
+      if (fs.existsSync(candidate)) {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = candidate;
+        break;
+      }
+    }
+  }
 
   const data = new Uint8Array(fs.readFileSync(pdfPath));
   const doc = await pdfjsLib.getDocument({
@@ -274,4 +295,19 @@ function detectItalic(fontName: string, styles: PdfTextContent['styles']): boole
   }
 
   return false;
+}
+
+/**
+ * Resolve the pdfjs-dist worker script via Node's CJS require, which works
+ * after esbuild externalises the `pdfjs-dist` package. Returns null if not
+ * resolvable — the caller then falls back to filesystem path probes.
+ */
+function tryResolveWorker(): string | null {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const req = require as NodeRequire;
+    return req.resolve('pdfjs-dist/legacy/build/pdf.worker.mjs');
+  } catch {
+    return null;
+  }
 }

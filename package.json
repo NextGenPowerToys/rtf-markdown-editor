@@ -1,8 +1,8 @@
 {
   "name": "rtf-markdown-editor",
   "displayName": "RTF Markdown Editor",
-  "description": "Word-like WYSIWYG Markdown Editor — Export & Import Word (DOCX) and PDF, Export HTML, RTL-first (Hebrew/Arabic), Azure DevOps Mermaid, Autosave, 100% Offline",
-  "version": "2.5.4",
+  "description": "Word-like WYSIWYG Markdown Editor — Export Word/HTML/PDF, Import Word, AI-driven PDF → Markdown (via GitHub Copilot Chat), RTL-first (Hebrew/Arabic), Azure DevOps Mermaid, Autosave",
+  "version": "2.6.0",
   "publisher": "NGPowerToys",
   "icon": "media/icons/RTFMD.png",
   "keywords": [
@@ -56,7 +56,7 @@
     "url": "https://github.com/NextGenPowerToys/rtf-markdown-editor"
   },
   "engines": {
-    "vscode": "^1.85.0"
+    "vscode": "^1.93.0"
   },
   "categories": [
     "Notebooks",
@@ -64,7 +64,7 @@
     "Visualization"
   ],
   "activationEvents": [
-    "onCustomEditor:rtf-markdown-editor.editor"
+    "onStartupFinished"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -112,7 +112,7 @@
         },
         {
           "command": "rtf-markdown-editor.importPDF",
-          "when": "resourceExtname == .pdf",
+          "when": "resourceExtname == .pdf && rtf-markdown-editor.aiChatAvailable",
           "group": "1_modification"
         }
       ]
@@ -145,8 +145,17 @@
       },
       {
         "command": "rtf-markdown-editor.importPDF",
-        "title": "Extract text from PDF to Markdown",
+        "title": "Convert PDF to Markdown (via GitHub Copilot Chat)",
         "category": "RTF Markdown"
+      }
+    ],
+    "chatParticipants": [
+      {
+        "id": "rtf-markdown-editor.pdfChat",
+        "fullName": "PDF to Markdown",
+        "name": "pdfmd",
+        "description": "Convert a PDF file to Markdown using the bundled PDF processing skill via GitHub Copilot Chat",
+        "isSticky": true
       }
     ],
     "configuration": {
@@ -207,14 +216,16 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run copy:mermaid && npm run esbuild-base -- --minify",
+    "vscode:prepublish": "npm run copy:mermaid && npm run copy:tess && npm run copy:skill && npm run esbuild-base -- --minify",
     "copy:mermaid": "node -e \"require('fs').copyFileSync('node_modules/mermaid/dist/mermaid.min.js', 'media/mermaid.min.js')\"",
+    "copy:tess": "node -e \"const fs=require('fs'),path=require('path');const src='node_modules/tesseract.js-core';const dst='resources/tess-core';fs.mkdirSync(dst,{recursive:true});for(const f of fs.readdirSync(src)){if(/^tesseract-core.*\\.(js|wasm)$/.test(f))fs.copyFileSync(path.join(src,f),path.join(dst,f))}fs.mkdirSync('resources/tess-worker',{recursive:true});fs.copyFileSync('node_modules/tesseract.js/dist/worker.min.js','resources/tess-worker/worker.min.js');\"",
+    "copy:skill": "node -e \"const fs=require('fs'),path=require('path');const src='.agents/skills/pdf';const dst='resources/skills/pdf';fs.mkdirSync(dst,{recursive:true});for(const f of ['SKILL.md','forms.md','reference.md','LICENSE.txt']){try{fs.copyFileSync(path.join(src,f),path.join(dst,f))}catch{}};\"",
     "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --external:pdfjs-dist --external:tesseract.js --external:canvas --format=cjs --platform=node",
     "esbuild": "npm run esbuild-base -- --sourcemap",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
     "build:webview": "esbuild ./media/editor.ts --bundle --outfile=media/editor.bundle.js --format=iife --sourcemap",
     "build:webview-watch": "npm run build:webview -- --watch",
-    "build": "npm run copy:mermaid && npm run esbuild && npm run build:webview",
+    "build": "npm run copy:mermaid && npm run copy:tess && npm run copy:skill && npm run esbuild && npm run build:webview",
     "watch": "concurrently \"npm run esbuild-watch\" \"npm run build:webview-watch\"",
     "compile": "tsc -p ./",
     "test": "jest",
