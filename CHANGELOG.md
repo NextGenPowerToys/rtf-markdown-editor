@@ -10,6 +10,8 @@ All notable changes to the RTF Markdown Editor extension will be documented in t
 
 ### Fixed
 
+- **Horizontal Rules and Blank Lines Corrupted on Save** ([#1](https://github.com/NextGenPowerToys/rtf-markdown-editor/issues/1)) — Fixed a critical data-loss bug in the HTML→Markdown autosave path. The serializer had no rule for `<hr>` tags, so the generic catch-all regex stripped them entirely, destroying `---` horizontal rules in source files. The same path also converted `</p>` to a single `\n` instead of `\n\n`, collapsing adjacent paragraphs into a single block and stripping visual spacing. Now: `<hr>` round-trips correctly as `\n\n---\n\n`, paragraphs are separated by proper blank lines, and empty paragraphs are preserved using a zero-width-space marker so vertical spacing survives autosave.
+
 - **PDF Export: Images Overflowing Page Boundaries** — Large images in exported PDFs now scale down to fit within a single page. Added `max-height: 240mm` and `object-fit: contain` to print CSS, ensuring tall diagrams and screenshots don't span across multiple pages.
 
 ## [2.5.3] - 2026-05-21
