@@ -1239,7 +1239,7 @@ function detectRTLContent() {
   if (!editor) return;
 
   const text = editor.getJSON();
-  const hasRTL = WebviewRTLService.hasRTLContent(text);
+  const hasRTL = WebviewRTLService.detectRTLCharacters(JSON.stringify(text));
 
   if (hasRTL && !editorConfig.rtl) {
     editorConfig.rtl = true;
@@ -1482,6 +1482,7 @@ function handleMessageFromExtension(message: MessageToWebview) {
       // Delay to ensure DOM is fully rendered by TipTap
       setTimeout(() => renderMermaidDiagrams(), 300);
       setTimeout(() => renderMathBlocks(), 300);
+      break;
 
     case 'setConfig':
       if (message.config) {

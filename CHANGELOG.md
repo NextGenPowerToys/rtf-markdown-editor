@@ -2,7 +2,7 @@
 
 All notable changes to the RTF Markdown Editor extension will be documented in this file.
 
-## [2.4.0] - 2026-03-10
+## [2.5.4] - 2026-05-22
 
 ### Added
 
@@ -10,9 +10,42 @@ All notable changes to the RTF Markdown Editor extension will be documented in t
 
 ### Fixed
 
-- **PDF Export: Garbage Text at Beginning of PDF** — Fixed a bug where raw JSON metadata (document structure serialized as `{"type":"paragraph","content":"..."}` objects) appeared as visible text at the start of exported PDFs. The metadata was embedded as an HTML comment in `<body>`, which Chrome's PDF renderer incorrectly rendered as visible content. Metadata is now base64-encoded inside a hidden `<div>` element, keeping it invisible in the PDF while preserving lossless round-trip import capability. Backward-compatible with PDFs exported by older versions.
-
 - **PDF Export: Images Overflowing Page Boundaries** — Large images in exported PDFs now scale down to fit within a single page. Added `max-height: 240mm` and `object-fit: contain` to print CSS, ensuring tall diagrams and screenshots don't span across multiple pages.
+
+## [2.5.3] - 2026-05-21
+
+### Changed
+
+- **Open Editor Command** — `rtf-markdown-editor.openEditor` now falls back to the currently active editor when invoked without a resource argument, and validates that the target is a Markdown file before attempting to open it (previously failed silently).
+
+## [2.5.2] - 2026-03-29
+
+### Fixed
+
+- **Build — Missing esbuild Externals** — Added `--external:puppeteer-core --external:adm-zip --external:turndown --external:mammoth` to the esbuild command, fixing "Could not resolve" build errors.
+
+## [2.5.0] - 2026-03-29
+
+### Fixed
+
+- **RTL Detection Overhaul** — Fixed multiple interacting bugs that caused inconsistent RTL behavior
+  - Fixed missing `break` in message handler switch statement (`setContent` fell through into `setConfig`, re-applying config and resetting RTL state)
+  - Changed hardcoded `dir="rtl"` in standalone HTML and `dir="ltr"` in webview template to `dir="auto"`, eliminating brief direction flash on load
+  - Fixed RTL auto-detection threshold inconsistency: editor used "any RTL character" while backend used 30% density — now both use the same threshold
+  - RTL detection now strips fenced code blocks before counting, preventing code-heavy documents from diluting the RTL character ratio below the threshold
+  - Lowered RTL detection threshold from 30% to 10% for better sensitivity with mixed-language documents
+  - All export paths (HTML, DOCX, PDF) now pass explicit `rtl` flag based on content analysis, instead of relying on fallback auto-detection buried inside exporters
+
+- **PDF Export — Chrome/Edge Detection** — `findChrome()` now detects Microsoft Edge in addition to Chrome/Chromium on Windows, macOS, and Linux, fixing "Chrome not installed" error on machines with only Edge
+
+- **PDF Export — Metadata Not Visible** — PDF metadata marker changed from an HTML comment (which Chrome's PDF engine rendered as visible text) to a hidden `<div>` with base64-encoded content, keeping it invisible in the PDF while preserving lossless round-trip import. Backward-compatible with PDFs exported by older versions.
+
+- **DOCX Import — Relative Image Paths** — Fixed `file://` URL handling in image path conversion: replaced manual `src.slice(7)` with `fileURLToPath()` which correctly handles the leading `/` on Windows paths and decodes percent-encoded characters (e.g., Hebrew filenames)
+
+### Changed
+
+- **PDF Import Renamed** — Command renamed from "Convert PDF to Markdown" to "Extract text from PDF to Markdown" to better reflect that this is a text extraction tool, not a visual format converter
+- **PDF Import — Removed Image Extraction** — Removed the non-functional image extraction step from PDF import; the command now focuses on text content extraction (re-introduced in 2.5.4 with a working implementation)
 
 ## [2.3.0] - 2026-02-25
 

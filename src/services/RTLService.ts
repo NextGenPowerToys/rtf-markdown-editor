@@ -24,15 +24,19 @@ export class RTLService {
   static detectRTLCharacters(text: string): boolean {
     if (!text) return false;
 
+    // Strip fenced code blocks — code is inherently LTR and should not
+    // dilute the RTL character ratio for prose content.
+    const proseText = text.replace(/```[\s\S]*?```/g, '');
+
     // Strip all whitespace to compare actual content
-    const cleanText = text.replace(/\s/g, '');
+    const cleanText = proseText.replace(/\s/g, '');
     if (cleanText.length === 0) return false;
 
     // Count RTL characters
     const rtlMatches = cleanText.match(new RegExp(RTLService.RTL_CHAR_PATTERN, 'g'));
     const rtlCount = rtlMatches ? rtlMatches.length : 0;
 
-    return (rtlCount / cleanText.length) >= 0.3;
+    return (rtlCount / cleanText.length) >= 0.1;
   }
 
   /**

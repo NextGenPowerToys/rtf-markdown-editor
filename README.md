@@ -116,8 +116,8 @@ A rich text editor extension for VS Code that provides a Microsoft Word / Google
 
 > **Purpose:** Extract text content from PDFs into Markdown for downstream processing by AI agents, search indexing, or content migration. This is **not** a pixel-perfect PDF-to-Markdown converter — it is a content extraction tool designed to capture the substance of a document, not reproduce its exact visual layout.
 
-- **Right-Click Import**: Right-click any `.pdf` file in the Explorer → **"Convert PDF to Markdown"**
-- **Command Palette**: `RTF Markdown: Convert PDF to Markdown`
+- **Right-Click Import**: Right-click any `.pdf` file in the Explorer → **"Extract text from PDF to Markdown"**
+- **Command Palette**: `RTF Markdown: Extract text from PDF to Markdown`
 - **Advanced OCR Pipeline**: Multi-pass Tesseract.js OCR with Hebrew/English support
 - **Smart Structure Detection**: Automatically detects headings, tables, lists, and paragraphs from positioned text data
 - **Table Extraction**: Column-alignment-based table detection with cross-page table merging
@@ -250,13 +250,13 @@ The exported document preserves:
 **From Explorer (easiest):**
 
 1. Right-click a `.pdf` file in the VS Code Explorer
-2. Select **"Convert PDF to Markdown"**
+2. Select **"Extract text from PDF to Markdown"**
 3. Choose where to save the resulting `.md` file
 4. The file opens automatically in the RTF Markdown Editor
 
 **From Command Palette:**
 
-1. Open Command Palette (Ctrl+Shift+P) → **"RTF Markdown: Convert PDF to Markdown"**
+1. Open Command Palette (Ctrl+Shift+P) → `RTF Markdown: Extract text from PDF to Markdown`
 2. Pick the `.pdf` file to import
 3. Choose where to save the resulting `.md` file
 4. The file opens automatically in the RTF Markdown Editor

@@ -21,9 +21,9 @@ import { applyBidiReconstruction, hasRTLCharacters } from './bidiHandler';
  */
 export async function importFromPDF(
   pdfPath: string,
+  outputMarkdownPath?: string,
   context?: vscode.ExtensionContext,
   progress?: (message: string) => void,
-  outputMarkdownPath?: string,
 ): Promise<string> {
   const buffer = fs.readFileSync(pdfPath);
 
@@ -34,6 +34,7 @@ export async function importFromPDF(
   }
 
   // Step 1: Use PDFOCR pipeline for conversion
+  let markdown: string;
   try {
     progress?.('Starting PDF conversion...');
     const result = await convertPdfToHtml(pdfPath, {
@@ -52,15 +53,16 @@ export async function importFromPDF(
 
     // Step 3: Convert HTML to Markdown
     progress?.('Converting to Markdown...');
-    const markdown = await htmlToMarkdown(html, { rtl: result.isRTL });
-    return markdown;
+    markdown = await htmlToMarkdown(html, { rtl: result.isRTL });
   } catch (error) {
     console.warn('PDFOCR pipeline failed, falling back to heuristics:', error);
     progress?.('Advanced conversion failed, trying basic extraction...');
 
     // Fallback: basic pdf-parse + heuristics
-    return await fallbackConvert(buffer, progress);
+    markdown = await fallbackConvert(buffer, progress);
   }
+
+  return markdown;
 }
 
 /**
@@ -294,3 +296,4 @@ function detectHeadingLevel(
 
   return 0;
 }
+

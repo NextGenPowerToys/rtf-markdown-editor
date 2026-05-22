@@ -358,10 +358,12 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
         : {};
 
       // Generate HTML
+      const isRTL = RTLService.detectRTLCharacters(markdown);
       const html = await exportToHTML(markdown, {
         ...options,
         title: docName,
         mermaidImages,
+        rtl: options.rtl !== undefined ? options.rtl : isRTL,
       });
 
       // Ask user where to save
@@ -402,6 +404,7 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
         title: docName,
         basePath: path.dirname(document.uri.fsPath),
         mermaidImages,
+        rtl: RTLService.detectRTLCharacters(markdown),
       });
 
       const uri = await vscode.window.showSaveDialog({
@@ -440,6 +443,7 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
         title: docName,
         basePath: path.dirname(document.uri.fsPath),
         mermaidImages,
+        rtl: RTLService.detectRTLCharacters(markdown),
       });
 
       const uri = await vscode.window.showSaveDialog({
@@ -568,7 +572,7 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
     const nonce = getNonce();
 
     return `<!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="en" dir="auto">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
