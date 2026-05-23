@@ -6,3 +6,4 @@ dist/
 *.log
 out/
 media/*.bundle.js*
+MEDIUM_POST.md
