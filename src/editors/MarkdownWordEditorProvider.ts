@@ -179,6 +179,10 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
         }
         break;
 
+      case 'openMermaidInVisualEditor':
+        this.handleOpenInVisualEditor(document, panel, message.mermaidId, message.mermaidSource);
+        break;
+
       case 'saveImageFile':
         if (message.imageData && message.fileName) {
           const savedPath = this.saveImageToAttachments(document.uri, message.imageData, message.fileName);
@@ -245,6 +249,60 @@ export class MarkdownWordEditorProvider implements vscode.CustomEditorProvider {
       config,
       fragment: metadata.fragment, // Send fragment for line navigation
     } as MessageToWebview);
+  }
+
+  /**
+   * Click handler for a Mermaid diagram. Prefers the Mermaid Visual Editor
+   * extension; falls back to the built-in modal by bouncing an
+   * `openMermaidInModal` message back to the webview.
+   *
+   * Passes the picked diagram's source (and index parsed from MERMAID_<n>) so
+   * the visual editor skips the thumbnail picker and opens that diagram active.
+   * Older builds of the extension ignore the extra arg and show the picker —
+   * still functional, just one extra click.
+   *
+   * Persists pending edits first; the visual editor reads from disk via
+   * `openTextDocument(uri)`.
+   */
+  private async handleOpenInVisualEditor(
+    document: WebviewDocument,
+    panel: vscode.WebviewPanel,
+    mermaidId?: string,
+    mermaidSource?: string
+  ): Promise<void> {
+    const VISUAL_EDITOR_ID = 'NGPowerToys.mermaid-visual-editor';
+    const OPEN_FROM_FILE = 'mermaidVisualEditor.openFromFile';
+
+    const fallbackToModal = () => {
+      panel.webview.postMessage({
+        type: 'openMermaidInModal',
+        mermaidId,
+      } as MessageToWebview);
+    };
+
+    const ext = vscode.extensions.getExtension(VISUAL_EDITOR_ID);
+    if (!ext) {
+      fallbackToModal();
+      return;
+    }
+
+    document.save();
+
+    const options: { source?: string; index?: number } = {};
+    if (mermaidSource) options.source = mermaidSource;
+    const indexMatch = mermaidId && mermaidId.match(/^MERMAID_(\d+)$/);
+    if (indexMatch) options.index = parseInt(indexMatch[1], 10);
+
+    try {
+      if (!ext.isActive) await ext.activate();
+      await vscode.commands.executeCommand(OPEN_FROM_FILE, document.uri, options);
+    } catch (err) {
+      vscode.window.showErrorMessage(
+        'Failed to open Mermaid Visual Editor: ' +
+          (err instanceof Error ? err.message : String(err))
+      );
+      fallbackToModal();
+    }
   }
 
   private getImageDimensions(base64Data: string): { width: number | null, height: number | null } {

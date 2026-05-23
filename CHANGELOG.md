@@ -2,6 +2,16 @@
 
 All notable changes to the RTF Markdown Editor extension will be documented in this file.
 
+## [3.2.0] - 2026-05-23
+
+> Click a Mermaid diagram → it now opens directly in the **Mermaid NG — Visual Editor** companion extension (drag-and-drop WYSIWYG canvas) instead of the built-in source-only modal. The built-in modal is still the silent fallback when the companion isn't installed, so nothing regresses for users who don't want a second extension.
+
+### Added
+
+- **Single-click hand-off to Mermaid NG — Visual Editor.** Click any Mermaid diagram in the editor and the RTF host invokes `mermaidVisualEditor.openFromFile` with the diagram's source + index — the visual editor opens that specific diagram active (no thumbnail picker), with sibling diagrams from the same file available as inactive sheets. Requires the companion extension `NGPowerToys.mermaid-visual-editor` v2.3.0 or later for direct-open; older versions still work but show the thumbnail picker for multi-diagram files.
+- **Silent fallback to the built-in modal.** If the companion isn't installed (or its command throws), the host bounces an `openMermaidInModal` message back to the webview and the prior source-edit modal opens immediately. No install prompt, no interrupted click.
+- **Always-fresh diagram source.** The document is saved to disk before invoking the companion so the visual editor reads the latest content (it opens the file from disk via `openTextDocument(uri)`, not the in-memory webview HTML).
+
 ## [3.1.0] - 2026-05-22
 
 > Smart per-paragraph RTL/LTR — each line now picks its own direction from its content, so a single document can mix Arabic/Hebrew/Urdu prose with English code and technical terms without forcing the whole file in one direction. Adds a manual cursor-direction toggle (button + `Ctrl/Cmd+Shift+X`) so you can choose direction in an empty paragraph *before* you start typing.

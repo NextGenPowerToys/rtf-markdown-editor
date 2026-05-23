@@ -1,5 +1,6 @@
 export interface MessageFromWebview {
   type: 'ready' | 'contentChanged' | 'requestSaveNow' | 'editMermaid' | 'updateMermaid'
+      | 'openMermaidInVisualEditor'
       | 'saveImageFile' | 'mermaidExportReady'
       | 'exportHTML' | 'exportHTMLSelfContained' | 'exportDOCX' | 'exportPDF';
   content?: string;
@@ -14,10 +15,11 @@ export interface MessageFromWebview {
 }
 
 export interface MessageToWebview {
-  type: 'setContent' | 'setConfig' | 'externalUpdate' | 'showConflictPrompt' | 'showError' | 'mermaidRendered' | 'imageSaved' | 'renderMermaidForExport' | 'exportStart' | 'exportDone';
+  type: 'setContent' | 'setConfig' | 'externalUpdate' | 'showConflictPrompt' | 'showError' | 'mermaidRendered' | 'imageSaved' | 'renderMermaidForExport' | 'exportStart' | 'exportDone' | 'openMermaidInModal';
   content?: string;
   html?: string;
   mermaidSources?: Record<string, string>;
+  mermaidId?: string;
   config?: EditorConfig;
   options?: string[];
   message?: string;

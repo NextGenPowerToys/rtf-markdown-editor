@@ -1094,11 +1094,17 @@ function attachToolbarEventListeners() {
 function setupMermaidHandlers() {
   setTimeout(() => {
     document.querySelectorAll('[data-mdwe="mermaid"]').forEach((element) => {
+      // Single click opens the Mermaid Visual Editor extension; the host
+      // bounces back `openMermaidInModal` if that extension isn't installed,
+      // and the built-in modal opens as fallback.
       element.addEventListener('click', (e) => {
         const mermaidId = (e.currentTarget as HTMLElement).getAttribute('data-id');
-        if (mermaidId) {
-          openMermaidModal(mermaidId);
-        }
+        if (!mermaidId) return;
+        vscode.postMessage({
+          type: 'openMermaidInVisualEditor',
+          mermaidId,
+          mermaidSource: mermaidSources[mermaidId] || '',
+        });
       });
     });
   }, 100);
@@ -1920,6 +1926,11 @@ function handleMessageFromExtension(message: MessageToWebview) {
         }
         vscode.postMessage({ type: 'mermaidExportReady', mermaidImages: exportImages } as MessageFromWebview);
       })();
+      break;
+
+    case 'openMermaidInModal':
+      // Fallback when the Mermaid Visual Editor extension isn't installed.
+      if (message.mermaidId) openMermaidModal(message.mermaidId);
       break;
 
     case 'imageSaved':
