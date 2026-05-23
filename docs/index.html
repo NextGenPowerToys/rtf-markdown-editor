@@ -1,843 +1,844 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- Primary SEO -->
-    <title>RTF Markdown Editor — Word-like WYSIWYG Markdown Editor with AI PDF → Markdown (GitHub Copilot Chat) for VS Code</title>
-    <meta name="description" content="Word-like WYSIWYG Markdown editor for VS Code — RTL/Hebrew/Arabic first, Mermaid diagrams, AI-powered PDF → Markdown via GitHub Copilot Chat, one-click HTML/DOCX/PDF import, Word/HTML/PDF export, dedicated Documents side panel, autosave.">
-    <meta name="keywords" content="markdown editor, markdown-editor, wysiwyg markdown editor, vs code extension, vscode extension, rtl markdown, hebrew markdown, arabic markdown, bidi, mermaid editor, mermaid diagrams, flowchart, azure devops, github copilot, copilot chat, chat participant, ai markdown, language model api, pdf to markdown, pdf to md, ai pdf converter, ai pdf to markdown, docx to markdown, word to markdown, html to markdown, document converter, side panel, documents view, technical writing, documentation, autosave, offline editor, rfc 7763">
-    <meta name="author" content="NGPowerToys">
-    <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://nextgenpowertoys.github.io/rtf-markdown-editor/">
+  <!-- Primary SEO -->
+  <title>RTF Markdown Editor — Word-like WYSIWYG Markdown Editor with AI PDF → Markdown (GitHub Copilot Chat) for VS Code</title>
+  <meta name="description" content="Word-like WYSIWYG Markdown editor for VS Code — RTL/Hebrew/Arabic first, Mermaid diagrams, AI-powered PDF → Markdown via GitHub Copilot Chat, one-click HTML/DOCX/PDF import, Word/HTML/PDF export, dedicated Documents side panel, autosave." />
+  <meta name="keywords" content="markdown editor, markdown-editor, wysiwyg markdown editor, vs code extension, vscode extension, rtl markdown, hebrew markdown, arabic markdown, bidi, mermaid editor, mermaid diagrams, flowchart, azure devops, github copilot, copilot chat, chat participant, ai markdown, language model api, pdf to markdown, pdf to md, ai pdf converter, ai pdf to markdown, docx to markdown, word to markdown, html to markdown, document converter, side panel, documents view, technical writing, documentation, autosave, offline editor, rfc 7763" />
+  <meta name="author" content="NGPowerToys" />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
+  <meta name="theme-color" content="#175fa5" />
+  <link rel="canonical" href="https://nextgenpowertoys.github.io/rtf-markdown-editor/" />
+  <link rel="icon" type="image/png" href="icon.png" />
+  <link rel="apple-touch-icon" href="icon.png" />
 
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://nextgenpowertoys.github.io/rtf-markdown-editor/">
-    <meta property="og:title" content="RTF Markdown Editor — Word-like WYSIWYG Markdown with AI PDF → Markdown (Copilot) for VS Code">
-    <meta property="og:description" content="WYSIWYG Markdown editor for VS Code — RTL/Hebrew/Arabic first, Mermaid diagrams, AI-powered PDF → Markdown via GitHub Copilot Chat, one-click HTML/DOCX/PDF import, Word/HTML/PDF export, Documents side panel, autosave.">
-    <meta property="og:image" content="https://nextgenpowertoys.github.io/rtf-markdown-editor/og-image.png">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="RTF Markdown Editor" />
+  <meta property="og:title" content="RTF Markdown Editor — Word-like WYSIWYG Markdown with AI PDF → Markdown (Copilot) for VS Code" />
+  <meta property="og:description" content="WYSIWYG Markdown editor for VS Code — RTL/Hebrew/Arabic first, Mermaid diagrams, AI-powered PDF → Markdown via GitHub Copilot Chat, one-click HTML/DOCX/PDF import, Word/HTML/PDF export, Documents side panel, autosave." />
+  <meta property="og:url" content="https://nextgenpowertoys.github.io/rtf-markdown-editor/" />
+  <meta property="og:image" content="https://nextgenpowertoys.github.io/rtf-markdown-editor/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:locale" content="en_US" />
 
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="RTF Markdown Editor — WYSIWYG Markdown with AI PDF → Markdown (Copilot)">
-    <meta name="twitter:description" content="WYSIWYG Markdown editor for VS Code — RTL/Hebrew/Arabic, Mermaid, AI PDF → Markdown via GitHub Copilot Chat, HTML/DOCX/PDF import, Word/HTML/PDF export, Documents side panel, autosave.">
-    <meta name="twitter:image" content="https://nextgenpowertoys.github.io/rtf-markdown-editor/og-image.png">
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="RTF Markdown Editor — WYSIWYG Markdown with AI PDF → Markdown (Copilot)" />
+  <meta name="twitter:description" content="WYSIWYG Markdown editor for VS Code — RTL/Hebrew/Arabic, Mermaid, AI PDF → Markdown via GitHub Copilot Chat, HTML/DOCX/PDF import, Word/HTML/PDF export, Documents side panel, autosave." />
+  <meta name="twitter:image" content="https://nextgenpowertoys.github.io/rtf-markdown-editor/og-image.png" />
 
-    <!-- Structured Data -->
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "SoftwareApplication",
-        "name": "RTF Markdown Editor",
-        "alternateName": "RTFMD",
-        "description": "Word-like WYSIWYG Markdown editor for VS Code with RTL-first design (Hebrew/Arabic), Mermaid diagram support, AI-powered PDF → Markdown conversion via GitHub Copilot Chat, one-click HTML / DOCX / PDF import, Word / HTML / PDF export, and a dedicated Documents side panel that lists every supported document in the workspace.",
-        "applicationCategory": "DeveloperApplication",
-        "applicationSubCategory": "Markdown Editor",
-        "operatingSystem": "Windows, macOS, Linux",
-        "offers": {
-            "@type": "Offer",
-            "price": "0",
-            "priceCurrency": "USD"
-        },
-        "author": {
-            "@type": "Organization",
-            "name": "NGPowerToys",
-            "url": "https://github.com/NextGenPowerToys"
-        },
-        "softwareVersion": "3.1.0",
-        "url": "https://marketplace.visualstudio.com/items?itemName=NGPowerToys.rtf-markdown-editor",
-        "downloadUrl": "https://marketplace.visualstudio.com/items?itemName=NGPowerToys.rtf-markdown-editor",
-        "screenshot": "https://nextgenpowertoys.github.io/rtf-markdown-editor/screenshots/editor-overview.png",
-        "softwareRequirements": "Visual Studio Code 1.93+; GitHub Copilot Chat required only for the AI-powered PDF → Markdown command.",
-        "featureList": [
-            "Word-like WYSIWYG Markdown editing",
-            "RTL-first design with Hebrew / Arabic / bidi support",
-            "Smart per-paragraph RTL/LTR detection (mixed-language docs, AI chat paste)",
-            "Manual cursor-direction toggle (Ctrl/Cmd+Shift+X) for empty-paragraph writing",
-            "Mermaid diagram editing (Azure DevOps Wiki compatible)",
-            "AI-powered PDF → Markdown via GitHub Copilot Chat (@pdfmd chat participant)",
-            "HTML → Markdown import (offline)",
-            "DOCX → Markdown import with image attachment extraction (offline)",
-            "PDF / DOCX / HTML diagrams extracted as .attachments/ image references",
-            "Export to Word (DOCX), HTML, and PDF",
-            "Documents side panel (Activity Bar) listing every .md / .pdf / .docx / .html in the workspace",
-            "Editor title-bar quick action to switch a .md from any editor into the RTF editor",
-            "Event-driven autosave (blur / tab-hidden / pagehide / beforeunload)",
-            "RFC 7763 charset & variant detection",
-            "Custom editor providers for .md and .markdown files",
-            "Mostly offline — only PDF → Markdown talks to Copilot Chat"
-        ],
-        "keywords": "markdown editor, wysiwyg markdown editor, vs code, vscode extension, rtl markdown, hebrew, arabic, bidi, mermaid, azure devops, github copilot, copilot chat, chat participant, ai pdf to markdown, pdf converter, docx to markdown, html to markdown, document converter, side panel, technical writing, documentation, autosave, offline editor"
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "RTF Markdown Editor",
+    "alternateName": "RTFMD",
+    "description": "Word-like WYSIWYG Markdown editor for VS Code with RTL-first design (Hebrew/Arabic), Mermaid diagram support, AI-powered PDF → Markdown conversion via GitHub Copilot Chat, one-click HTML / DOCX / PDF import, Word / HTML / PDF export, and a dedicated Documents side panel.",
+    "applicationCategory": "DeveloperApplication",
+    "applicationSubCategory": "Markdown Editor",
+    "operatingSystem": "Windows, macOS, Linux",
+    "softwareVersion": "3.1.0",
+    "downloadUrl": "https://marketplace.visualstudio.com/items?itemName=NGPowerToys.rtf-markdown-editor",
+    "url": "https://nextgenpowertoys.github.io/rtf-markdown-editor/",
+    "image": "https://nextgenpowertoys.github.io/rtf-markdown-editor/og-image.png",
+    "license": "https://opensource.org/licenses/MIT",
+    "isAccessibleForFree": true,
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "author": {
+      "@type": "Organization",
+      "name": "NGPowerToys",
+      "url": "https://github.com/NextGenPowerToys"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "NGPowerToys",
+      "url": "https://github.com/NextGenPowerToys"
+    },
+    "softwareRequirements": "Visual Studio Code 1.93+; GitHub Copilot Chat required only for the AI-powered PDF → Markdown command.",
+    "keywords": "markdown editor, wysiwyg markdown editor, vs code, vscode extension, rtl markdown, hebrew, arabic, bidi, mermaid, azure devops, github copilot, copilot chat, chat participant, ai pdf to markdown, pdf converter, docx to markdown, html to markdown, document converter, side panel, technical writing, documentation, autosave, offline editor"
+  }
+  </script>
+
+  <style>
+    :root {
+      --bg: #ffffff;
+      --bg-soft: #f5f4ef;
+      --bg-card: #ffffff;
+      --text: #1a1a18;
+      --text-soft: #5f5e5a;
+      --text-muted: #888780;
+      --accent: #175fa5;
+      --accent-hover: #134a82;
+      --success: #2d7a2d;
+      --danger: #a32d2d;
+      --border: rgba(0, 0, 0, 0.1);
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      --radius: 12px;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      --font-mono: "SF Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
     }
-    </script>
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #15151a;
+        --bg-soft: #1f1f25;
+        --bg-card: #1d1d23;
+        --text: #f5f4ef;
+        --text-soft: #b4b2a9;
+        --text-muted: #80807a;
+        --accent: #6ea7e3;
+        --accent-hover: #92bce8;
+        --success: #82c182;
+        --danger: #f09595;
+        --border: rgba(255, 255, 255, 0.1);
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { color: var(--accent-hover); text-decoration: underline; }
+    code, pre { font-family: var(--font-mono); }
+    code { background: var(--bg-soft); padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+    pre {
+      background: var(--bg-soft);
+      padding: 16px 20px;
+      border-radius: var(--radius);
+      overflow-x: auto;
+      font-size: 0.9em;
+      border: 1px solid var(--border);
+    }
+    pre code { background: transparent; padding: 0; }
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="icon.png">
-    <link rel="apple-touch-icon" href="icon.png">
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    /* Top nav */
+    nav.top {
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+    }
+    nav.top .container { display: flex; align-items: center; justify-content: space-between; }
+    nav.top .brand { display: flex; align-items: center; gap: 12px; font-weight: 600; color: var(--text); }
+    nav.top .brand img { width: 32px; height: 32px; border-radius: 6px; }
+    nav.top .links { display: flex; gap: 24px; font-size: 14px; }
+    nav.top .links a { color: var(--text-soft); }
+    nav.top .links a:hover { color: var(--accent); text-decoration: none; }
 
-    <style>
-        /* ===== Reset & Base ===== */
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    /* Hero */
+    .hero {
+      padding: 80px 0 60px;
+      text-align: center;
+      background: linear-gradient(180deg, var(--bg) 0%, var(--bg-soft) 100%);
+    }
+    .hero img.icon {
+      width: 180px;
+      height: auto;
+      margin-bottom: 28px;
+      border-radius: 24px;
+      filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.15));
+    }
+    .hero h1 {
+      font-size: clamp(32px, 5vw, 48px);
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      letter-spacing: -0.02em;
+    }
+    .hero .tagline {
+      font-size: clamp(16px, 2vw, 20px);
+      color: var(--text-soft);
+      max-width: 760px;
+      margin: 0 auto 32px;
+    }
+    .hero .tagline strong { color: var(--text); font-weight: 600; }
+    .pill-row {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+      margin-bottom: 32px;
+    }
+    .pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 13px;
+      color: var(--text-soft);
+    }
+    .pill .dot { color: var(--success); font-weight: bold; }
+    .whats-new {
+      max-width: 760px;
+      margin: 40px auto 0;
+      padding: 14px 20px;
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: var(--radius);
+      background: var(--bg-card);
+      font-size: 14.5px;
+      color: var(--text-soft);
+      text-align: left;
+    }
+    .whats-new strong { color: var(--text); }
+    .cta-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 22px;
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: 15px;
+      border: 1px solid var(--border);
+      transition: transform 0.1s, box-shadow 0.1s, background 0.1s;
+      cursor: pointer;
+      text-decoration: none !important;
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+    .btn-primary { background: var(--accent); color: #fff !important; border-color: var(--accent); }
+    .btn-primary:hover { background: var(--accent-hover); color: #fff !important; }
+    .btn-secondary { background: var(--bg-card); color: var(--text) !important; }
 
-        :root {
-            --bg-primary: #0a0e1a;
-            --bg-secondary: #111827;
-            --bg-card: #1a2235;
-            --bg-card-hover: #1f2a40;
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --text-muted: #64748b;
-            --accent: #3b82f6;
-            --accent-light: #60a5fa;
-            --accent-glow: rgba(59, 130, 246, 0.3);
-            --green: #10b981;
-            --purple: #8b5cf6;
-            --orange: #f59e0b;
-            --pink: #ec4899;
-            --border: rgba(255, 255, 255, 0.06);
-            --radius: 16px;
-            --radius-sm: 10px;
-            --shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
-        }
+    /* Sections */
+    section { padding: 72px 0; }
+    section.alt { background: var(--bg-soft); }
+    section h2 {
+      font-size: clamp(26px, 3.5vw, 34px);
+      font-weight: 700;
+      margin-bottom: 12px;
+      letter-spacing: -0.01em;
+    }
+    section .lede {
+      font-size: 16px;
+      color: var(--text-soft);
+      margin-bottom: 40px;
+      max-width: 720px;
+    }
 
-        html { scroll-behavior: smooth; }
+    /* Feature grid */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 18px;
+    }
+    .feature {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+    }
+    .feature:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+      border-color: var(--accent);
+    }
+    .feature .emoji { font-size: 28px; margin-bottom: 12px; display: block; }
+    .feature h3 { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
+    .feature p { color: var(--text-soft); font-size: 14.5px; }
 
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            line-height: 1.7;
-            overflow-x: hidden;
-        }
+    /* Screenshot gallery */
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 18px;
+    }
+    .shot {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+    }
+    .shot:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+      border-color: var(--accent);
+    }
+    .shot img {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: #0e0e12;
+    }
+    .shot figcaption {
+      padding: 14px 18px;
+      color: var(--text-soft);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .shot figcaption strong { color: var(--text); font-weight: 600; display: block; margin-bottom: 2px; }
+    .shot.wide { grid-column: 1 / -1; }
+    @media (min-width: 900px) {
+      .shot.wide img { max-height: 720px; object-fit: contain; background: var(--bg-soft); }
+    }
 
-        a { color: var(--accent-light); text-decoration: none; transition: color 0.2s; }
-        a:hover { color: #93bbfd; }
+    /* RTL showcase */
+    .rtl-showcase {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      align-items: stretch;
+    }
+    .rtl-demo {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+    }
+    .rtl-sample {
+      direction: rtl;
+      text-align: right;
+      font-size: 22px;
+      line-height: 1.7;
+      color: var(--text);
+      font-weight: 500;
+    }
+    .rtl-sample .latin { direction: ltr; color: var(--accent); font-weight: 600; unicode-bidi: embed; }
+    .rtl-sample + .rtl-sample {
+      margin-top: 14px;
+      font-size: 16px;
+      color: var(--text-soft);
+      font-weight: 400;
+    }
+    .rtl-list {
+      list-style: none;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 24px;
+    }
+    .rtl-list li {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 10px 0;
+      font-size: 14.5px;
+      color: var(--text-soft);
+      border-bottom: 1px solid var(--border);
+    }
+    .rtl-list li:last-child { border-bottom: none; }
+    .rtl-list li .check {
+      width: 22px; height: 22px; border-radius: 6px;
+      background: rgba(45, 122, 45, 0.12); color: var(--success);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: bold;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .rtl-list li strong { color: var(--text); }
+    @media (max-width: 900px) {
+      .rtl-showcase { grid-template-columns: 1fr; }
+    }
 
-        /* ===== Utility ===== */
-        .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
-        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+    /* Use cases */
+    .use-cases {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 18px;
+    }
+    .use-case {
+      padding: 24px;
+      border-left: 3px solid var(--accent);
+      background: var(--bg-card);
+      border-radius: 4px;
+    }
+    .use-case h3 { font-size: 16px; margin-bottom: 6px; }
+    .use-case p { color: var(--text-soft); font-size: 14.5px; }
 
-        /* ===== Animated background ===== */
-        .bg-glow {
-            position: fixed; inset: 0; pointer-events: none; z-index: 0;
-            background:
-                radial-gradient(ellipse 800px 600px at 20% 10%, rgba(59,130,246,0.08), transparent),
-                radial-gradient(ellipse 600px 500px at 80% 50%, rgba(139,92,246,0.06), transparent),
-                radial-gradient(ellipse 700px 400px at 50% 90%, rgba(236,72,153,0.05), transparent);
-        }
+    /* Workflow */
+    .workflow {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+    .workflow-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      text-align: center;
+      transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+    }
+    .workflow-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+      border-color: var(--accent);
+    }
+    .workflow-step {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--accent); color: #fff;
+      font-weight: 700; font-size: 15px;
+      margin-bottom: 16px;
+    }
+    .workflow-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+    .workflow-card p { color: var(--text-soft); font-size: 14px; margin-bottom: 14px; }
+    .workflow-formats { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+    .format-tag {
+      padding: 3px 10px; border-radius: 999px;
+      background: var(--bg-soft); border: 1px solid var(--border);
+      font-family: var(--font-mono); font-size: 12px;
+      color: var(--text-soft);
+    }
+    @media (max-width: 700px) {
+      .workflow { grid-template-columns: 1fr; max-width: 420px; margin: 0 auto; }
+    }
 
-        /* ===== Nav ===== */
-        nav {
-            position: sticky; top: 0; z-index: 100;
-            background: rgba(10, 14, 26, 0.8);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border);
-            padding: 0 24px;
-        }
-        .nav-inner {
-            max-width: 1200px; margin: 0 auto;
-            display: flex; align-items: center; justify-content: space-between;
-            height: 64px;
-        }
-        .nav-brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 1.1rem; }
-        .nav-brand img { width: 36px; height: 36px; border-radius: 8px; }
-        .nav-links { display: flex; gap: 32px; list-style: none; }
-        .nav-links a { color: var(--text-secondary); font-size: 0.9rem; font-weight: 500; transition: color 0.2s; }
-        .nav-links a:hover { color: var(--text-primary); }
-        .nav-cta {
-            display: inline-flex; align-items: center; gap: 8px;
-            background: var(--accent); color: #fff; padding: 8px 20px;
-            border-radius: 8px; font-weight: 600; font-size: 0.9rem;
-            transition: background 0.2s, transform 0.15s;
-        }
-        .nav-cta:hover { background: #2563eb; color: #fff; transform: translateY(-1px); }
+    /* Commands table */
+    .cmds {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+    .cmds th, .cmds td {
+      padding: 14px 18px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      font-size: 14.5px;
+    }
+    .cmds th { background: var(--bg-soft); font-weight: 600; color: var(--text-soft); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .cmds tr:last-child td { border-bottom: none; }
+    .cmds code { font-size: 13px; }
 
-        /* Mobile nav */
-        .nav-toggle { display: none; background: none; border: none; color: var(--text-primary); cursor: pointer; padding: 8px; }
-        .nav-toggle svg { width: 24px; height: 24px; }
+    /* Install */
+    .install-card {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 32px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+    .install-card h3 { font-size: 16px; margin-bottom: 12px; }
+    .install-card p { color: var(--text-soft); font-size: 14.5px; }
+    .install-card + .install-card { margin-top: 16px; }
 
-        /* ===== Hero ===== */
-        .hero {
-            position: relative; z-index: 1;
-            padding: 100px 24px 80px;
-            text-align: center;
-        }
-        .hero-badge {
-            display: inline-flex; align-items: center; gap: 8px;
-            background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2);
-            padding: 6px 16px; border-radius: 100px;
-            font-size: 0.85rem; color: var(--accent-light); font-weight: 500;
-            margin-bottom: 24px;
-        }
-        .hero-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    /* Footer */
+    footer {
+      padding: 40px 0 60px;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 14px;
+      text-align: center;
+    }
+    footer .footer-links {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 24px;
+      margin-bottom: 16px;
+    }
+    footer .copyright { font-size: 13px; }
 
-        .hero h1 {
-            font-size: clamp(2.5rem, 6vw, 4rem);
-            font-weight: 800;
-            line-height: 1.1;
-            letter-spacing: -0.03em;
-            margin-bottom: 20px;
-            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .hero h1 span {
-            background: linear-gradient(135deg, var(--accent-light), var(--purple));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .hero-sub {
-            max-width: 680px; margin: 0 auto 40px;
-            font-size: 1.2rem; color: var(--text-secondary); line-height: 1.7;
-        }
-        .hero-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 56px; }
-        .btn-primary {
-            display: inline-flex; align-items: center; gap: 10px;
-            background: var(--accent); color: #fff;
-            padding: 14px 32px; border-radius: 12px;
-            font-weight: 700; font-size: 1.05rem;
-            border: none; cursor: pointer;
-            transition: all 0.2s; box-shadow: 0 4px 20px var(--accent-glow);
-        }
-        .btn-primary:hover { background: #2563eb; color: #fff; transform: translateY(-2px); box-shadow: 0 8px 30px var(--accent-glow); }
-        .btn-secondary {
-            display: inline-flex; align-items: center; gap: 10px;
-            background: rgba(255,255,255,0.05); color: var(--text-primary);
-            padding: 14px 32px; border-radius: 12px;
-            font-weight: 600; font-size: 1.05rem;
-            border: 1px solid var(--border); cursor: pointer;
-            transition: all 0.2s;
-        }
-        .btn-secondary:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
-
-        /* Hero screenshot */
-        .hero-screenshot {
-            max-width: 960px; margin: 0 auto;
-            border-radius: var(--radius);
-            overflow: hidden;
-            box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 0 0 1px var(--border);
-            position: relative;
-        }
-        .hero-screenshot img {
-            width: 100%; height: auto; display: block;
-        }
-        .hero-screenshot::before {
-            content: '';
-            position: absolute; inset: 0;
-            border-radius: var(--radius);
-            background: linear-gradient(180deg, transparent 60%, var(--bg-primary) 100%);
-            pointer-events: none; z-index: 1;
-        }
-
-        /* ===== Stats Bar ===== */
-        .stats {
-            position: relative; z-index: 1;
-            padding: 40px 24px;
-            border-top: 1px solid var(--border);
-            border-bottom: 1px solid var(--border);
-        }
-        .stats-grid {
-            max-width: 900px; margin: 0 auto;
-            display: grid; grid-template-columns: repeat(4, 1fr);
-            gap: 32px; text-align: center;
-        }
-        .stat-num { font-size: 2rem; font-weight: 800; color: var(--accent-light); }
-        .stat-label { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; }
-
-        /* ===== Sections ===== */
-        section { position: relative; z-index: 1; padding: 100px 24px; }
-        .section-label {
-            display: inline-flex; align-items: center; gap: 8px;
-            font-size: 0.8rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
-            color: var(--accent-light); margin-bottom: 12px;
-        }
-        .section-title {
-            font-size: clamp(1.8rem, 4vw, 2.6rem);
-            font-weight: 800; line-height: 1.2;
-            letter-spacing: -0.02em; margin-bottom: 16px;
-        }
-        .section-desc {
-            font-size: 1.1rem; color: var(--text-secondary);
-            max-width: 600px; margin-bottom: 56px;
-        }
-
-        /* ===== Feature Grid ===== */
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 24px;
-        }
-        .feature-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 32px;
-            transition: all 0.3s;
-        }
-        .feature-card:hover {
-            background: var(--bg-card-hover);
-            border-color: rgba(59, 130, 246, 0.2);
-            transform: translateY(-4px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
-        }
-        .feature-icon {
-            width: 48px; height: 48px; border-radius: 12px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.4rem; margin-bottom: 20px;
-        }
-        .feature-card h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 10px; }
-        .feature-card p { color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6; }
-
-        .icon-blue { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
-        .icon-green { background: rgba(16, 185, 129, 0.15); color: #34d399; }
-        .icon-purple { background: rgba(139, 92, 246, 0.15); color: #a78bfa; }
-        .icon-orange { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
-        .icon-pink { background: rgba(236, 72, 153, 0.15); color: #f472b6; }
-        .icon-cyan { background: rgba(6, 182, 212, 0.15); color: #22d3ee; }
-
-        /* ===== Export/Import Workflow ===== */
-        .workflow-grid {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px;
-        }
-        .workflow-card {
-            position: relative;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 40px 32px; text-align: center;
-            transition: all 0.3s;
-        }
-        .workflow-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
-        }
-        .workflow-step {
-            width: 40px; height: 40px; border-radius: 50%;
-            background: var(--accent); color: #fff;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 800; font-size: 1rem;
-            margin: 0 auto 20px;
-        }
-        .workflow-card h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 10px; }
-        .workflow-card p { font-size: 0.95rem; color: var(--text-secondary); }
-        .workflow-formats {
-            display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 16px;
-        }
-        .format-tag {
-            padding: 4px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;
-        }
-        .tag-blue { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
-        .tag-green { background: rgba(16, 185, 129, 0.15); color: #34d399; }
-        .tag-purple { background: rgba(139, 92, 246, 0.15); color: #a78bfa; }
-        .tag-orange { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
-
-        /* ===== RTL Showcase ===== */
-        .rtl-showcase {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center;
-        }
-        .rtl-text-demo {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 32px;
-        }
-        .rtl-sample {
-            font-size: 1.4rem; direction: rtl; text-align: right;
-            line-height: 2; color: var(--text-primary); font-weight: 500;
-        }
-        .rtl-sample .latin { direction: ltr; color: var(--accent-light); }
-        .rtl-list { list-style: none; margin-top: 24px; }
-        .rtl-list li {
-            display: flex; align-items: center; gap: 12px;
-            padding: 10px 0; font-size: 1rem; color: var(--text-secondary);
-        }
-        .rtl-list li .check {
-            width: 24px; height: 24px; border-radius: 6px;
-            background: rgba(16, 185, 129, 0.15); color: #34d399;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 0.85rem; flex-shrink: 0;
-        }
-
-        /* ===== Privacy ===== */
-        .privacy-grid {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
-        }
-        .privacy-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 32px; text-align: center;
-            transition: all 0.3s;
-        }
-        .privacy-card:hover { transform: translateY(-4px); }
-        .privacy-icon { font-size: 2.2rem; margin-bottom: 16px; }
-        .privacy-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; }
-        .privacy-card p { font-size: 0.9rem; color: var(--text-secondary); }
-
-        /* ===== Screenshots ===== */
-        .screenshots-grid {
-            display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px;
-        }
-        .screenshot-frame {
-            border-radius: var(--radius); overflow: hidden;
-            border: 1px solid var(--border);
-            background: var(--bg-card);
-            transition: all 0.3s;
-        }
-        .screenshot-frame:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.3); }
-        .screenshot-frame img { width: 100%; height: auto; display: block; }
-        .screenshot-caption {
-            padding: 16px 20px;
-            font-size: 0.9rem; color: var(--text-secondary); font-weight: 500;
-            border-top: 1px solid var(--border);
-        }
-
-        /* ===== CTA ===== */
-        .cta-section {
-            text-align: center;
-            padding: 100px 24px;
-            background: linear-gradient(180deg, var(--bg-primary) 0%, rgba(59, 130, 246, 0.05) 50%, var(--bg-primary) 100%);
-        }
-        .cta-section h2 {
-            font-size: clamp(2rem, 4vw, 3rem);
-            font-weight: 800; margin-bottom: 16px;
-            background: linear-gradient(135deg, #fff, var(--accent-light));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .cta-section p {
-            font-size: 1.15rem; color: var(--text-secondary); margin-bottom: 40px; max-width: 540px; margin-left: auto; margin-right: auto;
-        }
-        .cta-install-box {
-            max-width: 480px; margin: 32px auto 0;
-            background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: 12px; padding: 16px 24px;
-            display: flex; align-items: center; justify-content: space-between;
-            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
-            font-size: 0.9rem; color: var(--text-secondary);
-        }
-        .cta-install-box code { color: var(--accent-light); }
-        .copy-btn {
-            background: none; border: none; color: var(--text-muted); cursor: pointer;
-            padding: 6px; border-radius: 6px; transition: all 0.2s;
-        }
-        .copy-btn:hover { color: var(--text-primary); background: rgba(255,255,255,0.1); }
-
-        /* ===== Footer ===== */
-        footer {
-            position: relative; z-index: 1;
-            border-top: 1px solid var(--border);
-            padding: 40px 24px;
-        }
-        .footer-inner {
-            max-width: 1200px; margin: 0 auto;
-            display: flex; align-items: center; justify-content: space-between;
-        }
-        .footer-brand { display: flex; align-items: center; gap: 10px; }
-        .footer-brand img { width: 28px; height: 28px; border-radius: 6px; }
-        .footer-brand span { font-weight: 600; font-size: 0.95rem; }
-        .footer-links { display: flex; gap: 24px; }
-        .footer-links a { color: var(--text-muted); font-size: 0.85rem; }
-        .footer-links a:hover { color: var(--text-primary); }
-        .footer-copy { color: var(--text-muted); font-size: 0.8rem; }
-
-        /* ===== Responsive ===== */
-        @media (max-width: 900px) {
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
-            .workflow-grid { grid-template-columns: 1fr; max-width: 480px; margin: 0 auto; }
-            .rtl-showcase { grid-template-columns: 1fr; }
-            .privacy-grid { grid-template-columns: 1fr; max-width: 480px; margin: 0 auto; }
-            .screenshots-grid { grid-template-columns: 1fr; max-width: 600px; margin: 0 auto; }
-        }
-        @media (max-width: 640px) {
-            .nav-links { display: none; }
-            .nav-toggle { display: block; }
-            .nav-links.open {
-                display: flex; flex-direction: column; gap: 0;
-                position: absolute; top: 64px; left: 0; right: 0;
-                background: rgba(10, 14, 26, 0.95); backdrop-filter: blur(20px);
-                border-bottom: 1px solid var(--border);
-                padding: 16px 24px;
-            }
-            .nav-links.open a { display: block; padding: 12px 0; }
-            .hero { padding: 60px 24px 40px; }
-            .hero-actions { flex-direction: column; align-items: center; }
-            .btn-primary, .btn-secondary { width: 100%; max-width: 320px; justify-content: center; }
-            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
-            .stat-num { font-size: 1.5rem; }
-            .features-grid { grid-template-columns: 1fr; }
-            section { padding: 60px 24px; }
-            .footer-inner { flex-direction: column; gap: 16px; text-align: center; }
-            .footer-links { flex-wrap: wrap; justify-content: center; }
-        }
-
-        /* ===== Animations ===== */
-        .fade-up {
-            opacity: 0; transform: translateY(30px);
-            transition: opacity 0.6s ease, transform 0.6s ease;
-        }
-        .fade-up.visible { opacity: 1; transform: translateY(0); }
-    </style>
+    @media (max-width: 600px) {
+      nav.top .links { display: none; }
+      .hero { padding: 56px 0 40px; }
+      .hero img.icon { width: 140px; }
+      section { padding: 56px 0; }
+    }
+  </style>
 </head>
 <body>
 
-<div class="bg-glow" aria-hidden="true"></div>
-
-<!-- ===== NAV ===== -->
-<nav>
-    <div class="nav-inner">
-        <a href="#" class="nav-brand" aria-label="RTF Markdown Editor Home">
-            <img src="icon.png" alt="RTF Markdown Editor icon" width="36" height="36">
-            <span>RTF Markdown Editor</span>
-        </a>
-        <ul class="nav-links" id="navLinks">
-            <li><a href="#features">Features</a></li>
-            <li><a href="#workflow">Workflow</a></li>
-            <li><a href="#rtl">RTL Support</a></li>
-            <li><a href="#privacy">Privacy</a></li>
-            <li><a href="#screenshots">Screenshots</a></li>
-        </ul>
-        <a href="https://marketplace.visualstudio.com/items?itemName=NGPowerToys.rtf-markdown-editor" class="nav-cta" target="_blank" rel="noopener">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M14 8a6 6 0 1 1-12 0 6 6 0 0 1 12 0ZM8 3.5a.5.5 0 0 0-.5.5v4a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 0-1H8.5V4a.5.5 0 0 0-.5-.5Z"/></svg>
-            Install Free
-        </a>
-        <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
-        </button>
+<nav class="top">
+  <div class="container">
+    <a class="brand" href="#top">
+      <img src="icon.png" alt="" />
+      RTF Markdown Editor
+    </a>
+    <div class="links">
+      <a href="#features">Features</a>
+      <a href="#screenshots">Screenshots</a>
+      <a href="#rtl">RTL</a>
+      <a href="#workflow">Workflow</a>
+      <a href="#use-cases">Use cases</a>
+      <a href="#install">Install</a>
+      <a href="https://github.com/NextGenPowerToys/rtf-markdown-editor">GitHub</a>
     </div>
+  </div>
 </nav>
 
-<!-- ===== HERO ===== -->
-<header class="hero">
-    <div class="container">
-        <div class="hero-badge">
-            <span class="dot"></span>
-            v3.1.0 &mdash; Smart per-paragraph RTL/LTR, manual cursor-direction toggle
-        </div>
-        <h1>
-            Write Markdown.<br>
-            <span>Feel like Word.</span>
-        </h1>
-        <p class="hero-sub">
-            A free, mostly-offline WYSIWYG Markdown editor for VS Code &mdash;
-            <strong>RTL/Hebrew/Arabic first</strong>, Mermaid diagrams,
-            <strong>AI-powered PDF&nbsp;&rarr;&nbsp;Markdown</strong> via GitHub Copilot Chat,
-            one-click HTML&nbsp;/&nbsp;DOCX&nbsp;/&nbsp;PDF import, Word&nbsp;/&nbsp;HTML&nbsp;/&nbsp;PDF export,
-            dedicated <strong>Documents side panel</strong>, autosave. Zero telemetry.
-        </p>
-        <div class="hero-actions">
-            <a href="https://marketplace.visualstudio.com/items?itemName=NGPowerToys.rtf-markdown-editor" class="btn-primary" target="_blank" rel="noopener">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16Zm1 11.5a.75.75 0 0 1-1.5 0v-4.793l-1.146 1.147a.75.75 0 0 1-1.06-1.06l2.5-2.5a.75.75 0 0 1 1.06 0l2.5 2.5a.75.75 0 0 1-1.06 1.06L11 8.707V13.5Z" style="transform:rotate(180deg);transform-origin:center"/></svg>
-                Install from Marketplace
-            </a>
-            <a href="https://github.com/NextGenPowerToys/rtf-markdown-editor" class="btn-secondary" target="_blank" rel="noopener">
-                <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
-                View on GitHub
-            </a>
-        </div>
-        <div class="hero-screenshot fade-up">
-            <img src="Screenshot%202026-02-25%20at%2015.24.56.png" alt="RTF Markdown Editor in VS Code showing WYSIWYG editing with Hebrew RTL text, rich formatting toolbar, headings, blockquotes, and lists" width="960" height="540" loading="eager">
-        </div>
+<header class="hero" id="top">
+  <div class="container">
+    <img class="icon" src="icon.png" alt="RTF Markdown Editor icon" />
+    <h1>RTF Markdown Editor</h1>
+    <p class="tagline">
+      A <strong>Word-like, WYSIWYG Markdown editor</strong> for VS Code — <strong>RTL/Hebrew/Arabic first</strong>,
+      Mermaid diagrams, <strong>AI-powered PDF → Markdown</strong> via GitHub Copilot Chat,
+      one-click Word / HTML / PDF import and export, a dedicated <strong>Documents side panel</strong>, autosave.
+      Mostly offline. Zero telemetry.
+    </p>
+
+    <div class="pill-row">
+      <span class="pill"><span class="dot">●</span> WYSIWYG</span>
+      <span class="pill"><span class="dot">●</span> RTL / Hebrew / Arabic</span>
+      <span class="pill"><span class="dot">●</span> Mostly offline</span>
+      <span class="pill"><span class="dot">●</span> No telemetry</span>
+      <span class="pill"><span class="dot">●</span> Mermaid diagrams</span>
+      <span class="pill"><span class="dot">●</span> AI PDF → Markdown</span>
+      <span class="pill"><span class="dot">●</span> Word / HTML / PDF</span>
+      <span class="pill"><span class="dot">●</span> Azure DevOps Wiki</span>
+      <span class="pill"><span class="dot">●</span> MIT</span>
     </div>
+
+    <div class="cta-row">
+      <a class="btn btn-primary" href="https://marketplace.visualstudio.com/items?itemName=NGPowerToys.rtf-markdown-editor">Install from Marketplace</a>
+      <a class="btn btn-secondary" href="https://github.com/NextGenPowerToys/rtf-markdown-editor">View on GitHub</a>
+      <a class="btn btn-secondary" href="#install">Install instructions</a>
+    </div>
+
+    <p class="whats-new">
+      <strong>What's new in 3.1.0:</strong>
+      <strong>Smart per-paragraph RTL/LTR</strong> — every block (paragraph, heading, list item, blockquote) picks its own direction from its content, so Arabic / Hebrew / Urdu prose mixed with English code stays correct without manual <code>dir</code> wrappers. Plus a <strong>manual cursor-direction toggle</strong> (<code>Ctrl/Cmd+Shift+X</code>) that cycles the active block through auto → LTR → RTL → auto.
+      <a href="https://github.com/NextGenPowerToys/rtf-markdown-editor/blob/main/CHANGELOG.md">Full changelog →</a>
+    </p>
+  </div>
 </header>
 
-<!-- ===== STATS ===== -->
-<div class="stats">
-    <div class="stats-grid">
-        <div>
-            <div class="stat-num">6</div>
-            <div class="stat-label">Export &amp; Import Formats</div>
-        </div>
-        <div>
-            <div class="stat-num">10+</div>
-            <div class="stat-label">Mermaid Diagram Types</div>
-        </div>
-        <div>
-            <div class="stat-num">100%</div>
-            <div class="stat-label">Local-First &amp; Private</div>
-        </div>
-        <div>
-            <div class="stat-num">0</div>
-            <div class="stat-label">Telemetry / Tracking</div>
-        </div>
-    </div>
-</div>
-
-<!-- ===== FEATURES ===== -->
 <section id="features">
-    <div class="container">
-        <div class="section-label">Features</div>
-        <h2 class="section-title">Everything you need in a Markdown editor</h2>
-        <p class="section-desc">Word-like editing experience with powerful export, import, and diagramming built right in.</p>
+  <div class="container">
+    <h2>Why RTF Markdown Editor?</h2>
+    <p class="lede">
+      Markdown is the lingua franca of modern engineering and AI workflows — it diffs cleanly, it travels cleanly, and every LLM speaks it natively.
+      But writing and reviewing it in a plain text editor is friction your team can't keep absorbing.
+      RTF Markdown Editor gives you a <strong>WYSIWYG canvas, real RTL, and one-click round-trips</strong> to Word, PDF, and HTML — without leaving Markdown.
+    </p>
 
-        <div class="features-grid">
-            <div class="feature-card fade-up">
-                <div class="feature-icon icon-blue">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-                </div>
-                <h3>WYSIWYG Editing</h3>
-                <p>Real-time rich text editing powered by TipTap/ProseMirror. Bold, italic, headings, tables, code blocks, lists, colors &mdash; the full toolbar, just like Word or Google Docs.</p>
-            </div>
-
-            <div class="feature-card fade-up">
-                <div class="feature-icon icon-green">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                </div>
-                <h3>Export to Word (DOCX)</h3>
-                <p>One-click export to real .docx files. Opens natively in Microsoft Word, LibreOffice, and Google Docs. All styling, tables, and Mermaid diagrams preserved as embedded PNGs.</p>
-            </div>
-
-            <div class="feature-card fade-up">
-                <div class="feature-icon icon-purple">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><polyline points="14 2 14 8 20 8"/><path d="m9 15 2 2 4-4"/></svg>
-                </div>
-                <h3>Export to PDF</h3>
-                <p>High-quality PDF output via Chrome headless rendering. Mermaid diagrams pre-rendered as PNG. Embeds metadata for lossless re-import back into Markdown.</p>
-            </div>
-
-            <div class="feature-card fade-up">
-                <div class="feature-icon icon-orange">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 22h14a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v4"/><polyline points="14 2 14 8 20 8"/><path d="m3 15 2 2 4-4"/></svg>
-                </div>
-                <h3>Import Word, HTML &amp; PDF</h3>
-                <p>One-click conversion of .docx, .html and .pdf files into clean Markdown. PDF is converted by GitHub Copilot Chat (the new <code>@pdfmd</code> chat participant) with embedded diagrams extracted as <code>.attachments/</code> images. DOCX and HTML run fully offline.</p>
-            </div>
-
-            <div class="feature-card fade-up">
-                <div class="feature-icon icon-pink">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                </div>
-                <h3>Mermaid Diagrams</h3>
-                <p>Full Mermaid integration &mdash; flowcharts, sequence diagrams, Gantt charts, ERD, state machines, and more. Both GitHub and Azure DevOps Wiki syntax. Click to edit live.</p>
-            </div>
-
-            <div class="feature-card fade-up">
-                <div class="feature-icon icon-cyan">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4"/><path d="M12 16V8"/></svg>
-                </div>
-                <h3>Self-Contained HTML</h3>
-                <p>Export to a single, portable HTML file with all images embedded as base64, diagrams pre-rendered, and styles inlined. Share anywhere, view offline.</p>
-            </div>
-        </div>
+    <div class="features">
+      <div class="feature">
+        <span class="emoji">📝</span>
+        <h3>WYSIWYG editing</h3>
+        <p>Real-time rich text editing powered by TipTap / ProseMirror. Bold, italic, headings, tables, code blocks, lists, colors, alignment — the full toolbar, just like Word or Google Docs.</p>
+      </div>
+      <div class="feature">
+        <span class="emoji">🌐</span>
+        <h3>RTL / Hebrew / Arabic first</h3>
+        <p>Smart per-paragraph direction detection. Mix Arabic / Hebrew / Urdu prose with English code in the same document — every line keeps the correct direction. Direction preserved in every export.</p>
+      </div>
+      <div class="feature">
+        <span class="emoji">🔄</span>
+        <h3>Manual cursor-direction toggle</h3>
+        <p><code>Ctrl/Cmd+Shift+X</code> cycles the current block through <strong>auto → LTR → RTL → auto</strong>. Pick a direction in an empty paragraph <em>before</em> you start typing.</p>
+      </div>
+      <div class="feature">
+        <span class="emoji">📊</span>
+        <h3>Mermaid diagrams</h3>
+        <p>Full Mermaid support — flowcharts, sequence, gantt, class, state, ER, journey, pie. Both ```` ```mermaid ```` and Azure DevOps Wiki <code>::: mermaid</code> syntax. Click any diagram to edit.</p>
+      </div>
+      <div class="feature">
+        <span class="emoji">🤖</span>
+        <h3>AI PDF → Markdown</h3>
+        <p>Right-click a <code>.pdf</code> → converts to Markdown via GitHub Copilot Chat and the bundled <code>@pdfmd</code> participant. Local text extraction with pdfjs-dist; embedded images saved as real <code>.attachments/</code> files.</p>
+      </div>
+      <div class="feature">
+        <span class="emoji">📄</span>
+        <h3>Word (DOCX) round-trip</h3>
+        <p>Export to a real <code>.docx</code> that opens natively in Word, LibreOffice, and Google Docs. Mermaid diagrams embedded as PNGs, RTL preserved. Right-click any <code>.docx</code> to import back into Markdown.</p>
+      </div>
+      <div class="feature">
+        <span class="emoji">🖨️</span>
+        <h3>PDF export</h3>
+        <p>High-quality PDF rendering via Chromium headless. Mermaid pre-rendered to PNG. RTL preserved. Embeds metadata so the original Markdown structure can be re-imported.</p>
+      </div>
+      <div class="feature">
+        <span class="emoji">📦</span>
+        <h3>Self-contained HTML export</h3>
+        <p>A single portable <code>.html</code> file — images embedded as base64, Mermaid as PNG, styles inlined, no CDN. Share it anywhere, view it offline.</p>
+      </div>
+      <div class="feature">
+        <span class="emoji">📥</span>
+        <h3>HTML → Markdown</h3>
+        <p>Right-click any <code>.html</code> / <code>.htm</code> file (Confluence export, scraped docs, web archive) → convert to clean Markdown. Fully offline.</p>
+      </div>
+      <div class="feature">
+        <span class="emoji">📁</span>
+        <h3>Documents side panel</h3>
+        <p>A dedicated Activity Bar view listing every <code>.md</code> / <code>.pdf</code> / <code>.docx</code> / <code>.html</code> in your workspace. Type-specific one-click actions: edit or convert.</p>
+      </div>
+      <div class="feature">
+        <span class="emoji">💾</span>
+        <h3>Event-driven autosave</h3>
+        <p>Saves on blur, tab-hidden, and panel close — not on every keystroke, so embedded images don't flicker mid-typing. Content hashing prevents redundant writes.</p>
+      </div>
+      <div class="feature">
+        <span class="emoji">🔒</span>
+        <h3>Mostly offline · zero telemetry</h3>
+        <p>Editing, autosave, exports, Word / HTML import — all run with no network. Only the AI PDF → Markdown command talks to a remote service (Copilot Chat) and only when you ask for it.</p>
+      </div>
     </div>
+  </div>
 </section>
 
-<!-- ===== WORKFLOW ===== -->
-<section id="workflow" style="background: rgba(255,255,255,0.01);">
-    <div class="container">
-        <div class="section-label">Workflow</div>
-        <h2 class="section-title">Full round-trip document conversion</h2>
-        <p class="section-desc">Import, edit, and export with a single tool. Your Markdown stays the source of truth.</p>
+<section class="alt" id="screenshots">
+  <div class="container">
+    <h2>See it in action</h2>
+    <p class="lede">A familiar Word-style editing surface, right inside VS Code — with Hebrew, Arabic, Mermaid, tables, and exports that just work.</p>
 
-        <div class="workflow-grid">
-            <div class="workflow-card fade-up">
-                <div class="workflow-step">1</div>
-                <h3>Import</h3>
-                <p>Bring in existing content from Word, HTML, and PDF files. Word and HTML run offline; PDF is converted by GitHub Copilot Chat. Right-click in the Explorer or open the new Documents side panel.</p>
-                <div class="workflow-formats">
-                    <span class="format-tag tag-blue">.docx</span>
-                    <span class="format-tag tag-purple">.pdf</span>
-                    <span class="format-tag tag-blue">.html</span>
-                </div>
-            </div>
-            <div class="workflow-card fade-up">
-                <div class="workflow-step">2</div>
-                <h3>Edit</h3>
-                <p>Write and format with the full WYSIWYG toolbar. Tables, diagrams, code blocks, colors, RTL &mdash; all in a familiar Word-like interface.</p>
-                <div class="workflow-formats">
-                    <span class="format-tag tag-green">.md</span>
-                </div>
-            </div>
-            <div class="workflow-card fade-up">
-                <div class="workflow-step">3</div>
-                <h3>Export</h3>
-                <p>One-click export to Word, PDF, or self-contained HTML. Diagrams pre-rendered, images embedded, RTL preserved. Share with anyone.</p>
-                <div class="workflow-formats">
-                    <span class="format-tag tag-blue">.docx</span>
-                    <span class="format-tag tag-purple">.pdf</span>
-                    <span class="format-tag tag-orange">.html</span>
-                </div>
-            </div>
-        </div>
+    <div class="gallery">
+      <figure class="shot wide">
+        <img src="Screenshot%202026-02-25%20at%2015.24.56.png" alt="RTF Markdown Editor in VS Code with rich Hebrew RTL text, headings, blockquotes, and lists rendered like Microsoft Word" loading="lazy" />
+        <figcaption>
+          <strong>Rich WYSIWYG editing with Hebrew RTL.</strong>
+          Headings, blockquotes, lists, formatting toolbar — feels like Word, saves as plain Markdown.
+        </figcaption>
+      </figure>
+
+      <figure class="shot">
+        <img src="Screenshot%202026-02-25%20at%2015.25.10.png" alt="Task lists, ordered lists and feature tables rendered in Hebrew RTL" loading="lazy" />
+        <figcaption>
+          <strong>Task lists, numbered lists &amp; tables.</strong>
+          GFM task lists and tables render correctly in both LTR and RTL — and round-trip cleanly to <code>.docx</code>.
+        </figcaption>
+      </figure>
+
+      <figure class="shot">
+        <img src="Screenshot%202026-02-25%20at%2015.25.20.png" alt="Syntax-highlighted code blocks alongside a Mermaid flowchart diagram in the editor" loading="lazy" />
+        <figcaption>
+          <strong>Code blocks &amp; Mermaid flowcharts side by side.</strong>
+          Syntax highlighting for code, live Mermaid rendering for diagrams. Click any diagram to edit its source.
+        </figcaption>
+      </figure>
+
+      <figure class="shot">
+        <img src="Screenshot%202026-02-25%20at%2015.25.32.png" alt="Mermaid flowchart and sequence diagram with Hebrew labels" loading="lazy" />
+        <figcaption>
+          <strong>Mermaid with mixed-direction labels.</strong>
+          Diagrams render with Hebrew / Arabic labels intact — and export as embedded PNGs into <code>.docx</code> / PDF / HTML.
+        </figcaption>
+      </figure>
+
+      <figure class="shot">
+        <img src="Screenshot%202026-02-25%20at%2015.25.40.png" alt="Mermaid sequence diagram and pie chart visualization in VS Code" loading="lazy" />
+        <figcaption>
+          <strong>10+ Mermaid families.</strong>
+          Flowchart, sequence, gantt, class, state, ER, journey, pie, gitgraph — all rendered live, all editable inline.
+        </figcaption>
+      </figure>
+
+      <figure class="shot">
+        <img src="Screenshot%202026-02-25%20at%2015.25.53.png" alt="Arabic RTL content with syntax-highlighted code blocks" loading="lazy" />
+        <figcaption>
+          <strong>First-class Arabic support.</strong>
+          Code blocks stay LTR for readability while prose flows RTL — exactly what programming conventions demand.
+        </figcaption>
+      </figure>
+
+      <figure class="shot">
+        <img src="Screenshot%202026-02-25%20at%2015.26.00.png" alt="Arabic tables, task lists and Mermaid flowchart diagrams" loading="lazy" />
+        <figcaption>
+          <strong>Tables &amp; diagrams in Arabic.</strong>
+          Bidirectional cells, mixed-language labels, full RTL table headers — preserved on save and on export.
+        </figcaption>
+      </figure>
+
+      <figure class="shot">
+        <img src="Screenshot%202026-02-25%20at%2015.26.33.png" alt="VS Code right-click context menu showing export options: Convert to PDF, HTML, and Word DOCX" loading="lazy" />
+        <figcaption>
+          <strong>Right-click to convert.</strong>
+          Word, HTML, and PDF export live one click away — same for the import flows (DOCX, HTML, and PDF via Copilot).
+        </figcaption>
+      </figure>
     </div>
+  </div>
 </section>
 
-<!-- ===== RTL ===== -->
 <section id="rtl">
-    <div class="container">
-        <div class="section-label">RTL-first</div>
-        <h2 class="section-title">First-class Hebrew &amp; Arabic support</h2>
-        <p class="section-desc">Not an afterthought. RTL support is built into every layer &mdash; editor, toolbar, export, and import.</p>
+  <div class="container">
+    <h2>First-class RTL — not an afterthought</h2>
+    <p class="lede">
+      Most Markdown editors break the moment a sentence starts with a Latin word but is actually 95% Hebrew, Arabic, or Urdu.
+      We don't do that. Direction is decided per paragraph, from content — not from the first character.
+    </p>
 
-        <div class="rtl-showcase">
-            <div class="rtl-text-demo fade-up">
-                <div class="rtl-sample">
-                    <div>&#1513;&#1500;&#1493;&#1501; &#1506;&#1493;&#1500;&#1501;! &#1494;&#1492; <span class="latin">Markdown</span> &#1489;&#1506;&#1489;&#1512;&#1497;&#1514;.</div>
-                    <div style="margin-top:12px; font-size:1.1rem; color:var(--text-secondary)">&#1499;&#1514;&#1497;&#1489;&#1492; &#1502;&#1497;&#1502;&#1497;&#1503; &#1500;&#1513;&#1502;&#1488;&#1500;, &#1506;&#1501; &#1514;&#1502;&#1497;&#1499;&#1492; &#1502;&#1500;&#1488;&#1492; &#1489;&#1491;&#1493;-&#1499;&#1497;&#1493;&#1493;&#1504;&#1497;&#1493;&#1514;.</div>
-                </div>
-            </div>
-            <div class="fade-up">
-                <ul class="rtl-list">
-                    <li><span class="check">&#10003;</span> Auto-detects Hebrew, Arabic, Persian &amp; Urdu content</li>
-                    <li><span class="check">&#10003;</span> <strong>Smart per-paragraph direction</strong> (v3.1.0) &mdash; each line picks its own dir from content; mixed-language docs &amp; AI-chat paste keep their structure</li>
-                    <li><span class="check">&#10003;</span> Not "first-character" based &mdash; <code>React &#1575;&#1740;&#1705; &#1576;&#1729;&#1578;&#1585;&#1740;&#1606; &#1604;&#1575;&#1574;&#1576;&#1585;&#1740;&#1585;&#1740; &#1729;&#1746;</code> correctly renders RTL</li>
-                    <li><span class="check">&#10003;</span> <strong>Manual cursor toggle</strong> (Ctrl/Cmd+Shift+X) cycles current block: auto &rarr; LTR &rarr; RTL &rarr; auto</li>
-                    <li><span class="check">&#10003;</span> Global RTL/LTR toggle still available in the toolbar</li>
-                    <li><span class="check">&#10003;</span> Bidirectional mixed-language text support</li>
-                    <li><span class="check">&#10003;</span> RTL preserved in Word, PDF &amp; HTML exports</li>
-                    <li><span class="check">&#10003;</span> Direction-aware alignment controls</li>
-                    <li><span class="check">&#10003;</span> AI-powered PDF import via Copilot Chat with Hebrew RTL handling</li>
-                </ul>
-            </div>
+    <div class="rtl-showcase">
+      <div class="rtl-demo">
+        <div class="rtl-sample">
+          <span class="latin">React</span> &#1488;&#1497;&#1503; &#1499;&#1502;&#1493; &#1505;&#1508;&#1512;&#1497;&#1497;&#1492; &#1496;&#1493;&#1489;&#1492; &#1500;&#1499;&#1514;&#1493;&#1489; &#1502;&#1502;&#1513;&#1511;&#1497;&#1501; &#1497;&#1508;&#1497;&#1501;.
         </div>
+        <div class="rtl-sample">
+          &#1499;&#1514;&#1497;&#1489;&#1492; &#1502;&#1497;&#1502;&#1497;&#1503; &#1500;&#1513;&#1502;&#1488;&#1500;, &#1506;&#1501; &#1514;&#1502;&#1497;&#1499;&#1492; &#1502;&#1500;&#1488;&#1492; &#1489;&#1491;&#1493;-&#1499;&#1497;&#1493;&#1493;&#1504;&#1497;&#1493;&#1514;.
+        </div>
+      </div>
+      <ul class="rtl-list">
+        <li><span class="check">&#10003;</span> <span><strong>Auto-detects</strong> Hebrew, Arabic, Persian &amp; Urdu — sets <code>dir</code> per paragraph from content.</span></li>
+        <li><span class="check">&#10003;</span> <span><strong>Not first-character based</strong> — a sentence starting with <code>React</code> followed by Hebrew/Arabic still flows RTL.</span></li>
+        <li><span class="check">&#10003;</span> <span><strong>Smart paste</strong> from ChatGPT / Claude / Gemini — every line is re-evaluated, mixed-language chat output keeps its structure.</span></li>
+        <li><span class="check">&#10003;</span> <span><strong>Manual cursor toggle</strong> — <code>Ctrl/Cmd+Shift+X</code> cycles the active block: auto → LTR → RTL → auto.</span></li>
+        <li><span class="check">&#10003;</span> <span><strong>Global RTL toggle</strong> — flips the whole document when you want it.</span></li>
+        <li><span class="check">&#10003;</span> <span><strong>RTL preserved in every export</strong> — Word (<code>w:bidi</code>), HTML, and PDF all render with the correct direction.</span></li>
+        <li><span class="check">&#10003;</span> <span><strong>Code stays LTR</strong> — inline code and code blocks always render left-to-right, following programming conventions.</span></li>
+        <li><span class="check">&#10003;</span> <span><strong>AI PDF import</strong> with Hebrew handling — text + positions are extracted locally, the model gets reading order correct.</span></li>
+      </ul>
     </div>
+  </div>
 </section>
 
-<!-- ===== PRIVACY ===== -->
-<section id="privacy" style="background: rgba(255,255,255,0.01);">
-    <div class="container">
-        <div class="section-label">Privacy &amp; Security</div>
-        <h2 class="section-title">Local-first. Zero telemetry. Your data stays yours.</h2>
-        <p class="section-desc">Editing, import, and export run on your machine. The only feature that uses the network is the optional AI-powered PDF&nbsp;&rarr;&nbsp;Markdown conversion, which routes through GitHub Copilot Chat on your own account &mdash; never to NGPowerToys.</p>
+<section class="alt" id="workflow">
+  <div class="container">
+    <h2>Full round-trip workflow</h2>
+    <p class="lede">Import existing content, edit it in WYSIWYG mode, export to whatever format your stakeholders need. Your Markdown stays canonical.</p>
 
-        <div class="privacy-grid">
-            <div class="privacy-card fade-up">
-                <div class="privacy-icon">&#128274;</div>
-                <h3>No Network Calls (except opt-in AI PDF)</h3>
-                <p>All editor, import, and export dependencies are bundled locally &mdash; no CDN, no runtime downloads, no fonts fetched. The single exception is the AI PDF &rarr; Markdown command, which talks to GitHub Copilot Chat through your own Copilot subscription.</p>
-            </div>
-            <div class="privacy-card fade-up">
-                <div class="privacy-icon">&#128065;&#8205;&#128488;</div>
-                <h3>Zero Telemetry</h3>
-                <p>No analytics, no tracking, no data collection of any kind. Strict Content Security Policy blocks external resource loading.</p>
-            </div>
-            <div class="privacy-card fade-up">
-                <div class="privacy-icon">&#9989;</div>
-                <h3>Self-Contained Exports</h3>
-                <p>Exported HTML, Word, and PDF files are fully standalone. No internet required to view them. Share freely.</p>
-            </div>
+    <div class="workflow">
+      <div class="workflow-card">
+        <div class="workflow-step">1</div>
+        <h3>Import</h3>
+        <p>Bring in content from Word, HTML, or PDF. DOCX and HTML run fully offline; PDF goes through GitHub Copilot Chat with embedded images extracted to <code>.attachments/</code>.</p>
+        <div class="workflow-formats">
+          <span class="format-tag">.docx</span>
+          <span class="format-tag">.html</span>
+          <span class="format-tag">.pdf</span>
         </div>
+      </div>
+      <div class="workflow-card">
+        <div class="workflow-step">2</div>
+        <h3>Edit</h3>
+        <p>WYSIWYG toolbar, Word-style. Tables, lists, code, colors, alignment, Mermaid, RTL — all preserved as standard Markdown when you save.</p>
+        <div class="workflow-formats">
+          <span class="format-tag">.md</span>
+        </div>
+      </div>
+      <div class="workflow-card">
+        <div class="workflow-step">3</div>
+        <h3>Export</h3>
+        <p>One-click out to Word, HTML, or PDF. Mermaid pre-rendered as PNG, images embedded, RTL preserved. Self-contained — no CDN, no broken links.</p>
+        <div class="workflow-formats">
+          <span class="format-tag">.docx</span>
+          <span class="format-tag">.html</span>
+          <span class="format-tag">.pdf</span>
+        </div>
+      </div>
     </div>
+  </div>
 </section>
 
-<!-- ===== SCREENSHOTS ===== -->
-<section id="screenshots">
-    <div class="container">
-        <div class="section-label">In Action</div>
-        <h2 class="section-title">See it in action</h2>
-        <p class="section-desc">A familiar editing experience, right inside VS Code.</p>
-
-        <div class="screenshots-grid">
-            <div class="screenshot-frame fade-up">
-                <img src="Screenshot%202026-02-25%20at%2015.24.56.png" alt="RTF Markdown Editor with Hebrew RTL text showing rich formatting, headings, blockquotes, and lists" width="640" height="360" loading="lazy">
-                <div class="screenshot-caption">Rich text editing with Hebrew RTL &mdash; headings, blockquotes &amp; lists</div>
-            </div>
-            <div class="screenshot-frame fade-up">
-                <img src="Screenshot%202026-02-25%20at%2015.25.10.png" alt="RTF Markdown Editor showing task lists, numbered lists, and feature tables in Hebrew" width="640" height="360" loading="lazy">
-                <div class="screenshot-caption">Task lists, numbered lists &amp; feature tables</div>
-            </div>
-            <div class="screenshot-frame fade-up">
-                <img src="Screenshot%202026-02-25%20at%2015.25.20.png" alt="RTF Markdown Editor with syntax-highlighted code blocks and Mermaid flowchart diagram" width="640" height="360" loading="lazy">
-                <div class="screenshot-caption">Syntax-highlighted code blocks &amp; Mermaid flowcharts</div>
-            </div>
-            <div class="screenshot-frame fade-up">
-                <img src="Screenshot%202026-02-25%20at%2015.25.32.png" alt="Mermaid flowchart and sequence diagram with Hebrew labels rendered in the editor" width="640" height="360" loading="lazy">
-                <div class="screenshot-caption">Mermaid flowchart &amp; sequence diagrams with Hebrew labels</div>
-            </div>
-            <div class="screenshot-frame fade-up">
-                <img src="Screenshot%202026-02-25%20at%2015.25.40.png" alt="Mermaid sequence diagram and pie chart visualization in VS Code" width="640" height="360" loading="lazy">
-                <div class="screenshot-caption">Sequence diagram &amp; pie chart visualization</div>
-            </div>
-            <div class="screenshot-frame fade-up">
-                <img src="Screenshot%202026-02-25%20at%2015.25.46.png" alt="Mermaid pie chart and bidirectional mixed Hebrew-English text" width="640" height="360" loading="lazy">
-                <div class="screenshot-caption">Pie chart &amp; bidirectional mixed-language text</div>
-            </div>
-            <div class="screenshot-frame fade-up">
-                <img src="Screenshot%202026-02-25%20at%2015.25.53.png" alt="Arabic RTL content with syntax-highlighted code blocks in VS Code" width="640" height="360" loading="lazy">
-                <div class="screenshot-caption">Arabic RTL content with code blocks</div>
-            </div>
-            <div class="screenshot-frame fade-up">
-                <img src="Screenshot%202026-02-25%20at%2015.26.00.png" alt="Arabic tables, task lists, and Mermaid flowchart diagrams" width="640" height="360" loading="lazy">
-                <div class="screenshot-caption">Arabic tables, task lists &amp; flowchart diagrams</div>
-            </div>
-            <div class="screenshot-frame fade-up">
-                <img src="Screenshot%202026-02-25%20at%2015.26.07.png" alt="Arabic Mermaid flowchart showing full export workflow from Markdown to Word, PDF, and HTML" width="640" height="360" loading="lazy">
-                <div class="screenshot-caption">Arabic Mermaid flowchart with export workflow</div>
-            </div>
-            <div class="screenshot-frame fade-up">
-                <img src="Screenshot%202026-02-25%20at%2015.26.33.png" alt="VS Code right-click context menu showing export options: Convert to PDF, HTML, and Word DOCX" width="640" height="360" loading="lazy">
-                <div class="screenshot-caption">Right-click context menu with export options</div>
-            </div>
-        </div>
+<section id="use-cases">
+  <div class="container">
+    <h2>Built for</h2>
+    <p class="lede">
+      Anyone whose work routinely lives in <code>.md</code> files and ends up needing a polished artifact for someone who doesn't.
+    </p>
+    <div class="use-cases">
+      <div class="use-case">
+        <h3>Business analysts</h3>
+        <p>Requirements and user journeys drafted with AI, edited in WYSIWYG, handed to stakeholders as a Word doc — without losing the source.</p>
+      </div>
+      <div class="use-case">
+        <h3>Technical leaders</h3>
+        <p>60-file <code>/docs</code> trees stay in Markdown for Git and AI tools, but exec briefings still go out as PDF and legal still gets DOCX.</p>
+      </div>
+      <div class="use-case">
+        <h3>Software architects</h3>
+        <p>ADRs and architecture docs with Mermaid diagrams that render in GitHub, edit in VS Code, and ship as a single self-contained HTML when needed.</p>
+      </div>
+      <div class="use-case">
+        <h3>Developers &amp; technical writers</h3>
+        <p>READMEs, runbooks, and design docs — write them in Markdown, review them in WYSIWYG, hand them off in any format.</p>
+      </div>
+      <div class="use-case">
+        <h3>AI / LLM workflows</h3>
+        <p>Paste any model's Markdown output — including mixed-language responses — and the editor handles direction, structure, and embedded diagrams correctly.</p>
+      </div>
+      <div class="use-case">
+        <h3>Multilingual / RTL teams</h3>
+        <p>Hebrew, Arabic, Persian, Urdu — first-class direction handling, mixed-language paragraphs, full RTL in exports. Finally just works.</p>
+      </div>
     </div>
+  </div>
 </section>
 
-<!-- ===== CTA ===== -->
-<section class="cta-section">
-    <div class="container">
-        <h2>Start editing Markdown<br>the way it should feel</h2>
-        <p>Free, open-source, and ready in under a minute. Install from the VS Code Marketplace.</p>
-        <div class="hero-actions" style="margin-bottom: 0;">
-            <a href="https://marketplace.visualstudio.com/items?itemName=NGPowerToys.rtf-markdown-editor" class="btn-primary" target="_blank" rel="noopener">
-                Install from Marketplace
-            </a>
-            <a href="https://github.com/NextGenPowerToys/rtf-markdown-editor" class="btn-secondary" target="_blank" rel="noopener">
-                <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
-                Star on GitHub
-            </a>
-        </div>
-        <div class="cta-install-box">
-            <span>ext install <code>NGPowerToys.rtf-markdown-editor</code></span>
-            <button class="copy-btn" onclick="navigator.clipboard.writeText('ext install NGPowerToys.rtf-markdown-editor')" aria-label="Copy install command" title="Copy to clipboard">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            </button>
-        </div>
+<section class="alt" id="install">
+  <div class="container">
+    <h2>Install</h2>
+    <p class="lede">Free on the VS Code Marketplace, or install the <code>.vsix</code> directly from GitHub.</p>
+
+    <div class="install-card">
+      <h3>From the VS Code Marketplace</h3>
+      <pre><code># Inside VS Code Quick Open (Cmd/Ctrl+P)
+ext install NGPowerToys.rtf-markdown-editor</code></pre>
+      <p>Or click <a href="https://marketplace.visualstudio.com/items?itemName=NGPowerToys.rtf-markdown-editor">Install from Marketplace</a>.</p>
     </div>
+
+    <div class="install-card">
+      <h3>From a GitHub release</h3>
+      <pre><code># Download the latest .vsix
+curl -LO https://github.com/NextGenPowerToys/rtf-markdown-editor/releases/latest/download/rtf-markdown-editor.vsix
+
+# Install it into VS Code
+code --install-extension rtf-markdown-editor.vsix</code></pre>
+    </div>
+
+    <div class="install-card">
+      <h3>For development</h3>
+      <p>
+        Clone the repo, run <code>npm install</code> and <code>npm run build</code>, then press <code>F5</code> in VS Code to launch an Extension Development Host.
+      </p>
+      <pre><code>git clone https://github.com/NextGenPowerToys/rtf-markdown-editor.git
+cd rtf-markdown-editor
+npm install
+npm run build</code></pre>
+    </div>
+  </div>
 </section>
 
-<!-- ===== FOOTER ===== -->
+<section id="getting-started">
+  <div class="container">
+    <h2>Getting started</h2>
+    <p class="lede">Three ways to start editing.</p>
+
+    <div class="features">
+      <div class="feature">
+        <span class="emoji">📂</span>
+        <h3>Open an existing Markdown file</h3>
+        <p>Right-click any <code>.md</code> / <code>.markdown</code> file in the Explorer → <strong>Edit with RTF Markdown Editor</strong>. Or click the RTFMD icon that appears in the editor title bar when a Markdown file is open in another editor.</p>
+      </div>
+      <div class="feature">
+        <span class="emoji">🗂️</span>
+        <h3>Browse the Documents side panel</h3>
+        <p>Click the RTFMD icon in the Activity Bar to see every <code>.md</code>, <code>.pdf</code>, <code>.docx</code>, and <code>.html</code> file in your workspace. Single-click any entry to edit (Markdown) or convert (everything else).</p>
+      </div>
+      <div class="feature">
+        <span class="emoji">🤖</span>
+        <h3>Convert a PDF with Copilot</h3>
+        <p>With GitHub Copilot Chat installed, right-click any <code>.pdf</code> → <strong>Convert PDF to Markdown</strong>. Text is extracted locally; embedded images become real <code>.attachments/</code> files; the result opens in the editor.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <footer>
-    <div class="footer-inner">
-        <div class="footer-brand">
-            <img src="icon.png" alt="" width="28" height="28">
-            <span>RTF Markdown Editor</span>
-        </div>
-        <div class="footer-links">
-            <a href="https://marketplace.visualstudio.com/items?itemName=NGPowerToys.rtf-markdown-editor" target="_blank" rel="noopener">VS Code Marketplace</a>
-            <a href="https://github.com/NextGenPowerToys/rtf-markdown-editor" target="_blank" rel="noopener">GitHub</a>
-            <a href="https://github.com/NextGenPowerToys/rtf-markdown-editor/issues" target="_blank" rel="noopener">Report Issue</a>
-        </div>
-        <div class="footer-copy">&copy; 2026 NGPowerToys. MIT License.</div>
+  <div class="container">
+    <div class="footer-links">
+      <a href="https://marketplace.visualstudio.com/items?itemName=NGPowerToys.rtf-markdown-editor">VS Code Marketplace</a>
+      <a href="https://github.com/NextGenPowerToys/rtf-markdown-editor">GitHub</a>
+      <a href="https://github.com/NextGenPowerToys/rtf-markdown-editor/blob/main/README.md">Documentation</a>
+      <a href="https://github.com/NextGenPowerToys/rtf-markdown-editor/blob/main/CHANGELOG.md">Changelog</a>
+      <a href="https://github.com/NextGenPowerToys/rtf-markdown-editor/issues">Issues</a>
+      <a href="https://github.com/NextGenPowerToys/rtf-markdown-editor/blob/main/LICENSE">License (MIT)</a>
     </div>
+    <p class="copyright">
+      RTF Markdown Editor · © 2026 <a href="https://github.com/NextGenPowerToys">NGPowerToys</a> · MIT License.
+      A sibling of <a href="https://nextgenpowertoys.github.io/mermaid-visual-editor/">Mermaid NG — Visual Editor</a>.
+    </p>
+  </div>
 </footer>
 
-<!-- ===== Scripts ===== -->
-<script>
-    // Mobile nav toggle
-    document.getElementById('navToggle').addEventListener('click', () => {
-        document.getElementById('navLinks').classList.toggle('open');
-    });
-
-    // Scroll fade-in
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('visible');
-            }
-        });
-    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
-
-    document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
-</script>
 </body>
 </html>
