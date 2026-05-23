@@ -1,14 +1,16 @@
 # RTF Markdown Editor - Complete Feature Showcase
-
 Welcome to the **RTF Markdown Editor** for VS Code! This document demonstrates every feature supported by the editor. Edit it directly in VS Code using the custom editor provider.
 
 ---
+
 ## Text Formatting
 ### Basic Formatting
 This paragraph includes **bold text**, *italic text*, ***bold and italic***, **underline**, ~~strikethrough~~, and `inline code`.
 You can also apply **text color** using the color picker in the toolbar, and highlight text with background colors for emphasis.
+
 ### Font Selection
 You can change the font family using the font dropdown in the toolbar. Supported fonts include system fonts optimized for your platform.
+
 ## Heading Levels
 # Heading 1 (H1)
 ## Heading 2 (H2)
@@ -21,10 +23,12 @@ This paragraph is **left-aligned** (default).
 This paragraph is **center-aligned** using the alignment toolbar button.
 This paragraph is **right-aligned**.
 This paragraph is **justified**, meaning it stretches to fill the full width of the container.
+
 ## RTL (Right-to-Left) Support
 The editor includes full support for Hebrew, Arabic, and other RTL languages. Click the **RTL/LTR toggle** in the toolbar to switch text direction.
 Example in English first, then you can toggle RTL mode to edit Hebrew or Arabic text seamlessly.
 **Features:**
+
 - Auto-detection of RTL characters
 
 - Manual RTL/LTR toggle button in toolbar
@@ -36,7 +40,9 @@ Example in English first, then you can toggle RTL mode to edit Hebrew or Arabic 
 ## Lists
 ### Unordered List (Bulleted)
 - **First item** in the list
+
 - Nested item level 2
+
 - Nested item level 3
 
 - Back to level 2
@@ -47,23 +53,22 @@ Example in English first, then you can toggle RTL mode to edit Hebrew or Arabic 
 
 ### Ordered List (Numbered)
 - **First step** - Description of the first step
+
 - Sub-step A
 
 - Sub-step B
 
 - **Second step** - Description of the second step
+
 - Sub-step A
 
 - **Third step** - Description of the third step
 
 ## Block Elements
-
 ### Block Quote
 
 > This is a blockquote. Use it to highlight important information or citations.
-> 
 > You can have multiple paragraphs in a blockquote by adding a `>` on each line.
-
 ### Code Block
 ```javascript
 // Example JavaScript code block
@@ -73,16 +78,18 @@ function fibonacci(n) {
 }
 
 console.log(fibonacci(10)); // Output: 55
-```
 
+```
 You can specify the language for syntax highlighting: javascript, python, typescript, html, css, etc.
 
 ### Horizontal Rule
+
 ---
 
 Another horizontal rule:
 
 ---
+
 ## Tables
 ### Product Comparison Table
 | Feature | RTF Editor | Standard Editor | Web Editor |
@@ -104,14 +111,17 @@ Another horizontal rule:
 ### External Links
 Visit the [VS Code Marketplace](https://marketplace.visualstudio.com) to find and install extensions.
 Learn more about [Markdown syntax](https://www.markdownguide.org/) for better documentation.
+
 ### Local Files and Relative Paths
 You can link to files: [../README.md](../README.md)
 You can embed images with relative paths:
 
+​
+
 ![Editor Icon](assets/RTFMD.png)
 ## Mermaid Diagrams
-
 ### Flowchart Example
+
 ::: mermaid
 graph TD
     A[Start] --> B{Decision}
@@ -122,6 +132,7 @@ graph TD
 :::
 
 ### Sequence Diagram
+
 ::: mermaid
 sequenceDiagram
     participant User
@@ -135,6 +146,7 @@ sequenceDiagram
 :::
 
 ### Gantt Chart
+
 ::: mermaid
 gantt
     title Project Timeline
@@ -154,6 +166,7 @@ gantt
 :::
 
 ### Class Diagram
+
 ::: mermaid
 classDiagram
     class Editor {
@@ -174,6 +187,7 @@ classDiagram
 :::
 
 ### State Diagram
+
 ::: mermaid
 stateDiagram-v2
     [*] --> Idle
@@ -189,33 +203,42 @@ stateDiagram-v2
 ---
 
 ## Mathematical Formulas
-
 ### Inline Formulas
-The Pythagorean theorem states that $a^2 + b^2 = c^2$ for right triangles.
+The Pythagorean theorem states that  for right triangles.
 
-Einstein's famous equation is $E = mc^2$.
+Einstein's famous equation is .
 
 ### Block Formulas
 The quadratic formula is:
 
-$$x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$$
+​
+
+​
 
 Integral calculus:
 
-$$\int_0^{\infty} e^{-x^2} dx = \frac{\sqrt{\pi}}{2}$$
+​
+
+​
 
 Matrix notation:
 
-$$\begin{pmatrix} a & b \\ c & d \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix} = \begin{pmatrix} ax + by \\ cx + dy \end{pmatrix}$$
-## Editor Features
+​
 
+​
+
+## Editor Features
 ### Autosave
 This document autosaves every **750ms** as you edit. There's no need to manually save—changes are written to disk automatically.
 
 **Autosave triggers on:**
+
 - Content changes (750ms debounce)
+
 - Editor blur (when you click away)
+
 - Tab hidden (when you switch windows)
+
 - File close
 
 ### Undo / Redo
@@ -226,9 +249,13 @@ Standard clipboard support works seamlessly. Copy formatted text and paste it an
 
 ### Selection and Formatting
 - Select text with mouse or keyboard
+
 - Use toolbar buttons or keyboard shortcuts to apply formatting
+
 - **Ctrl+B** for bold
+
 - **Ctrl+I** for italic
+
 - **Ctrl+U** for underline
 
 ---
@@ -246,43 +273,61 @@ Standard clipboard support works seamlessly. Copy formatted text and paste it an
 | Find | Ctrl+F | Cmd+F |
 
 ## Editor Toolbar Controls
-
 **Text Formatting:**
+
 - Bold, Italic, Underline, Strikethrough
+
 - Inline Code
+
 - Text Color Picker
+
 - Background/Highlight Color
 
 **Paragraph Styles:**
+
 - Heading dropdown (H1–H6)
+
 - Paragraph style selector
 
 **Alignment:**
+
 - Left Align
+
 - Center Align
+
 - Right Align
+
 - Justify
 
-**Lists & Blocks:**
+**Lists &amp; Blocks:**
+
 - Bullet List
+
 - Ordered List
+
 - Blockquote
+
 - Code Block
 
 **Insert:**
+
 - Link (with URL dialog)
+
 - Image (with path input)
+
 - Table (configurable rows/columns)
+
 - Horizontal Rule
 
 **Direction:**
+
 - RTL/LTR Toggle
+
 - Auto-detection indicator
 
 ---
 
 ## Document Metadata
-
 **Created**: January 2026
 **Format**: Markdown
 **Editor**: RTF Markdown Editor 1.1.1
@@ -292,22 +337,29 @@ Standard clipboard support works seamlessly. Copy formatted text and paste it an
 ---
 
 ## Tips and Best Practices
+- **Use Mermaid diagrams** for flowcharts, sequence diagrams, and timelines
 
-1. **Use Mermaid diagrams** for flowcharts, sequence diagrams, and timelines
-2. **Leverage RTL support** for multilingual documentation
-3. **Apply colors strategically** to highlight important information
-4. **Nest lists carefully** to maintain readability
-5. **Use code blocks** with language syntax for technical documentation
-6. **Trust autosave**—work without worrying about manual saves
-7. **Keep diagrams updated** by clicking and editing them inline
+- **Leverage RTL support** for multilingual documentation
+
+- **Apply colors strategically** to highlight important information
+
+- **Nest lists carefully** to maintain readability
+
+- **Use code blocks** with language syntax for technical documentation
+
+- **Trust autosave**—work without worrying about manual saves
+
+- **Keep diagrams updated** by clicking and editing them inline
 
 ---
 
 ## Additional Resources
-
 - [VS Code Extension Marketplace](https://marketplace.visualstudio.com/)
+
 - [Markdown Guide](https://www.markdownguide.org/)
+
 - [Mermaid Documentation](https://mermaid.js.org/)
+
 - [KaTeX Math Reference](https://katex.org/)
 
 ---
