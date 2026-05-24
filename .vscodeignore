@@ -1,5 +1,5 @@
 out
-node_modules
+node_modules/**
 .vscode-test/
 *.vsix
 src/
@@ -48,6 +48,14 @@ test-*.ts
 run-*.js
 run-*.ts
 pdf.worker.mjs
+
+# pdfjs-dist is marked --external in esbuild (its worker is loaded as a file,
+# so it can't be bundled). Ship the minimum legacy ESM build the @pdfmd
+# chat participant resolves at runtime.
+!node_modules/pdfjs-dist/package.json
+!node_modules/pdfjs-dist/LICENSE
+!node_modules/pdfjs-dist/legacy/build/pdf.mjs
+!node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs
 
 # Large planning artefacts (kept in repo, not shipped)
 PDF_TO_HTML_TO_MD_DESIGN1.md

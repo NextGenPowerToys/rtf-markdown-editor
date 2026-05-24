@@ -2,7 +2,7 @@
   "name": "rtf-markdown-editor",
   "displayName": "RTF Markdown Editor",
   "description": "Word-like WYSIWYG Markdown editor for VS Code — RTL/Hebrew/Arabic first, Mermaid diagrams, AI-powered PDF → Markdown via GitHub Copilot Chat, one-click HTML/DOCX/PDF import, Word/HTML/PDF export, dedicated Documents side panel, autosave.",
-  "version": "3.2.0",
+  "version": "3.2.2",
   "publisher": "NGPowerToys",
   "icon": "media/icons/RTFMD.png",
   "keywords": [

@@ -1,390 +1,169 @@
-# RTF Markdown Editor - הדגמה מלאה של התכונות
-!בברכה ל**RTF Markdown Editor** ל-VS Code! מסמך זה מדגים כל תכונה הנתמכת בעורך. ערוך אותו ישירות ב-VS Code באמצעות custom editor provider.
+# R T F M a r kd own E di tor - הדגמה מלאה של
 
----
+## התכונות
+- ברכה! ל R T F M a r kd own E di tor - V S C o de באמצעות custom editor provider ישירות.
+- טקסט עיצוב בסיסי:
+  - פסקה זו כוללת טקסט מודגש, בשיפוע טקסט, קו תחתון, חציצה, ו inline code.
+  - באפשרותך להחיל טקסט צבעי ורקע צבעי באמצעות הטולבר color picker.
+  - בחירת F ont: בטולבר drop down אפשר לשנות את משפחת הגופנים (font family).
+  - כוללים syst e m f onts המותאמים לפלטפורמה שלך.
 
-## עיצוב טקסט
-### עיצוב בסיסי
-פסקה זו כוללת **טקסט מודגש**, *טקסט בשיפוע*, ***מודגש ובשיפוע***, **קו תחתון**, ~~קו חציצה~~, ו-`inline code`.
-
-באפשרותך גם להחיל **צבע טקסט** באמצעות color picker בטולבר, ולהדגיש טקסט עם צבעי רקע.
-
-### בחירת Font
-באפשרותך לשנות את משפחת הגופנים (font family) באמצעות dropdown בטולבר. גופנים נתמכים כוללים system fonts המותאמים לפלטפורמה שלך.
-
----
-
-## רמות כותרים
-# כותרת 1 (H1)
-## כותרת 2 (H2)
-### כותרת 3 (H3)
-#### כותרת 4 (H4)
-##### כותרת 5 (H5)
-###### כותרת 6 (H6)
-
----
+## כותרים רמות
+- (H1) כותרת 1
+- (H2) כותרת 2
+- (H3) כותרת 3
+- (H4) כותרת 4
+- (H5) כותרת 5
+- (H6) כותרת 6
 
 ## יישור טקסט
-פסקה זו **יושרה לימין** (ברירת מחדל).
+- פסקה זו יושרה לימין (ברירת מחדל).
+- פסקה זו יושרה למרכז באמצעות כפתור alignment בטולבר.
+- פסקה זו יושרה לשמאל.
+- פסקה זו היא justified — כלומר נמתחת למלוא רוחב הקונטיינר.
 
-פסקה זו **יושרה למרכז** באמצעות כפתור alignment בטולבר.
+## RTL (Right-to-Left) תמיכה
+- לחץ על ה‑R T L / L T R toggle בטולבר כדי להחליף את כיוון הטקסט.
+- העורך כולל תמיכה מלאה בעברית, ערבית ושפות RTL אחרות.
+- תכונת Auto-detection של R T L תווים מטפלת באופן אוטומטי בכיוון הטקסט.
 
-פסקה זו **יושרה לשמאל**.
-
-פסקה זו **justified**, כלומר היא נמתחת למלוא רוחב הקונטיינר.
-
----
-
-## תמיכה RTL (Right-to-Left)
-העורך כולל תמיכה מלאה בעברית, ערבית וקשרו RTL אחרות. לחץ על **RTL/LTR toggle** בטולבר כדי להחליף את כיוון הטקסט.
-
-דוגמה: אתה יכול לערוך טקסט בעברית וטקסט באנגלית בתוך אותו מסמך, והעורך יטפל בכיוון הטקסט באופן אוטומטי.
-
-**תכונות:**
-
-- Auto-detection של תווי RTL
-
-- כפתור toggle RTL/LTR ידני בטולבר
-
-- alignment controls שמודעים לכיוון הטקסט
-
-- ריווח וגבולות מתאימים עבור layout RTL
-
----
+## כפתור ידני לטOGGLE R T L / L T R
+- בקרה על כיוון הטקסט עם alignment controls מודעים ל‑R T L.
+- layout וגבולות ריווח מתאימים ל‑R T L.
 
 ## רשימות
-### רשימה לא מסודרת (Bullet List)
-- **פריט ראשון** ברשימה
-
-- פריט מקונן רמה 2
-
-- פריט מקונן רמה 3
-
-- חזרה לרמה 2
-
-- **פריט שני** ברשימה
-
-- **פריט שלישי** ברשימה
-
-### רשימה מסודרת (Ordered List)
-- **שלב ראשון** - תיאור השלב הראשון
-
-- תת-שלב A
-
-- תת-שלב B
-
-- **שלב שני** - תיאור השלב השני
-
-- תת-שלב A
-
-- **שלב שלישי** - תיאור השלב השלישי
-
----
+- (Bullet List) רשימה לא מסודרת
+  - ברשימה ראשון פריט
+  - 2 רמה מקונן פריט
+    - 3 רמה מקונן פריט
+    - 2 לרמה חזרה
+  - ברשימה שני פריט
+  - ברשימה שלישי פריט
+- (Ordered List) רשימה מסודרת
+  1. הראשון שלב תיאור - ראשון שלב
+     - A שלב - תת
+     - B שלב - תת
+  2. השני השלב תיאור - שני שלב
+     - A שלב - תת
+  3. השלישי השלב תיאור - שלישי שלב
 
 ## Block Elements
 ### Block Quote
+- זהו block quote. השתמש בו כדי להדגיש ציטוטים או מידע חשוב.
+- על ידי הוספת < בכל שורה של פסקאות - יכול לך מספר פסקאות להיות ב‑block quote.
 
-> זהו blockquote. השתמש בו כדי להדגיש מידע חשוב או ציטוטים.
-> יכול להיות לך מספר פסקאות ב-blockquote על ידי הוספת `>` בכל שורה.
 ### Code Block
+- דוגמת Python code block:
 ```python
-# דוגמה Python code block
 def fibonacci(n):
     if n <= 1:
         return n
     return fibonacci(n - 1) + fibonacci(n - 2)
 
-print(fibonacci(10))  # Output: 55
-
+print(fibonacci(10)) # Output: 55
 ```
-אתה יכול לציין את ה-language עבור syntax highlighting: javascript, python, typescript, html, css, וכו'.
+- ניתן לציין את ה‑lang עבור syntax highlighting: ja v a s c r i pt, pyt h on, typ e s c r i pt, h tml, css וכו'.
 
 ### Horizontal Rule
+- H or i zont a l R ul e
 
----
-
-## עוד Horizontal Rule:
 ## טבלאות
 ### טבלת השוואת מוצרים
-| תכונה | RTF Editor | Standard Editor | Web Editor |
-| --- | --- | --- | --- |
-| WYSIWYG Editing | ✓ | ✗ | ✓ |
-| Offline Support | ✓ | ✓ | ✗ |
-| RTL Support | ✓ | ✗ | ✗ |
-| Mermaid Diagrams | ✓ | ✗ | ✓ |
-| Autosave | ✓ | ✗ | ✓ |
+| תכונה | R T F E di tor | S t a n da r d E di tor | W eb E di tor |
+|---|---:|---:|---:|
+| WY SI WY G E di t i n g | ✓ | ✗ | ✓ |
+| O ff l i n e S upport | ✓ | ✓ | ✗ |
+| R T L S upport | ✓ | ✗ | ✗ |
+| M e rm aid D iag r a ms | ✓ | ✗ | ✓ |
+| A utos a v e | ✓ | ✗ | ✓ |
 
 ### Data Table
 | שם | Email | ארגון | סטטוס |
-| --- | --- | --- | --- |
-| Alice Johnson | alice@example.com | TechCorp | Active |
-| Bob Smith | bob@example.com | DevStudio | Active |
-| Carol White | carol@example.com | WebDev Inc | Inactive |
+|---|---|---|---|
+| Alice Johnson | alice@example.com | Tech Corp | Active |
+| Bob Smith | bob@example.com | Dev Studio | Active |
+| Carol White | carol@example.com | Web Dev Inc | Inactive |
 
----
+## קישורים ותמונות
+- External Links
+- למציאת ההתקנות וה‑extensions עבור V S C o de בקר ב‑Marketplace.
 
-## Links ותמונות
-### External Links
-בקר ב-[VS Code Marketplace](https://marketplace.visualstudio.com) כדי למצוא וההתקנת extensions.
+## נתיבים יחסיים וקבצים מקומיים
+- ניתן לקשר לקבצים באמצעות README.md/.. .
+- ניתן להטביע תמונות עם relative paths.
 
-קרא עוד על [Markdown syntax](https://www.markdownguide.org/) עבור תיעוד טוב יותר.
-
-### Local Files ו-Relative Paths
-אתה יכול לקשר לקבצים: [../README.md](../README.md)
-
-אתה יכול להטבע תמונות עם relative paths:
-
-![Editor Icon](assets/RTFMD.png)
-
----
-
-## Mermaid Diagrams
-### דוגמה Flowchart
-
-::: mermaid
-graph TD
-    A[התחלה] --> B{החלטה}
-    B -->|כן| C[Process A]
-    B -->|לא| D[Process B]
-    C --> E[סוף]
-    D --> E
-:::
-
-### Sequence Diagram
-
-::: mermaid
-sequenceDiagram
-    participant User
-    participant Editor
-    participant FileSystem
-    
-    User->>Editor: לחץ Save
-    Editor->>FileSystem: כתוב קובץ
-    FileSystem-->>Editor: אשר שמירה
-    Editor-->>User: הצג הודעת הצלחה
-:::
-
-### Gantt Chart
-
-::: mermaid
-gantt
-    title Project Timeline
-    dateFormat YYYY-MM-DD
-    
-    section Planning
-    Requirements :req, 2026-01-08, 10d
-    Design :des, 2026-01-18, 15d
-    
-    section Development
-    Backend :crit, dev_b, 2026-02-02, 20d
-    Frontend :dev_f, 2026-02-02, 20d
-    
-    section Testing
-    QA :qa, 2026-02-22, 10d
-    Release :rel, 2026-03-04, 5d
-:::
-
-### Class Diagram
-
-::: mermaid
-classDiagram
-    class Editor {
-        -content: string
-        -isDirty: boolean
-        +save()
-        +undo()
-        +redo()
-    }
-    
-    class Formatter {
-        +bold(text)
-        +italic(text)
-        +code(text)
-    }
-    
-    Editor --> Formatter
-:::
-
-### State Diagram
-
-::: mermaid
-stateDiagram-v2
-    [*] --> Idle
-    Idle --> Editing: User starts typing
-    Editing --> Autosave: 750ms debounce
-    Autosave --> Editing: Continue editing
-    Autosave --> Idle: No changes
-    Idle --> [*]
-:::
-
-**לחץ על כל Mermaid diagram למעלה כדי לערוך אותו!** העורך פותח modal כאשר באפשרותך לשנות את ה-source של ה-diagram ולראות rendering בזמן אמת.
-
----
+## אייקון העורך ו‑Mermaid
+- Mermaid Diagrams: Flow chart דוגמה, Sequence Diagram, Gantt Chart, Class Diagram, State Diagram.
+- העורך מציע render בזמן אמת — לחץ על source כדי לערוך ולראות את ה‑Mermaid diagram מתעדכן.
 
 ## נוסחאות מתמטיות (Mathematical Formulas)
-### Inline Formulas
-משפט פיתגורס קובע כי  עבור משולשים ישרי זווית.
-
-המשוואה המפורסמת של איינשטיין היא .
-
-### Block Formulas
-נוסחת ה-quadratic היא:
-
-​
-
-​
-
-Integral calculus:
-
-​
-
-​
-
-Matrix notation:
-
-​
-
-​
-
----
+- Inline formulas:
+  - משפט פיתגורס עבור משולשים ישרי זווית.
+  - משוואת איינשטיין המפורסמת.
+- Block formulas:
+  - נוסחה ריבועית (quadratic).
+  - אינטגרל חישובי (Integral calculus).
+  - Matrix notation.
 
 ## תכונות העורך
-### Autosave
-מסמך זה autosave כל **750ms** כשאתה עורך. אין צורך לשמור ידנית—שינויים נכתבים לדיסק באופן אוטומטי.
+- **Autosave:** שינויים נכתבים לדיסק באופן אוטומטי — אין צורך לשמור ידנית. Autosave מופעל על מסמך זה (750 ms debounce).
+- **Editor blur:** שמירה בעת איבוד פוקוס (כאשר לוחץ במקום אחר).
+- **Tab hidden:** חלונות מחליף כשאתה Tab hidden.
+- **File close, Undo/Redo:** השתמש ב‑Ctrl+Z ללחזור אחורה וב‑Ctrl+Shift+Z או Ctrl+Y להתקדם.
 
-**Autosave מופעל על:**
+## העתק/הדבק
+- העורך שומר על העיצוב בעת העתק/הדבק באותו מקום — תמיכה ב‑clipboard חלקה.
 
-- שינויים בתוכן (750ms debounce)
+## Formatting & Selection
+- בחר טקסט בעזרת מקלדת או עכבר.
+- העבר עיצוב באמצעות קיצורי מקלדת או כפתורי טולבר:
+  - Ctrl + B — bold
+  - Ctrl + I — italic
+  - Ctrl + U — underline
 
-- Editor blur (כשאתה לוחץ במקום אחר)
-
-- Tab hidden (כשאתה מחליף חלונות)
-
-- File close
-
-### Undo / Redo
-השתמש ב-**Ctrl+Z** כדי לחזור אחורה ו-**Ctrl+Y** או **Ctrl+Shift+Z** כדי להתקדם. העורך שומר על היסטוריה מלאה של כל ה-edits.
-
-### Copy / Paste
-תמיכה clipboard עובדת בצורה חלקה. העתק טקסט מעוצב והדבק אותו בכל מקום—העורך משמר את העיצוב.
-
-### Selection ו-Formatting
-- בחר טקסט עם עכבר או keyboard
-
-- השתמש בכפתורי טולבר או keyboard shortcuts להחיל עיצוב
-
-- **Ctrl+B** עבור bold
-
-- **Ctrl+I** עבור italic
-
-- **Ctrl+U** עבור underline
-
----
-
-## Keyboard Shortcuts
-| פעולה | Windows/Linux | macOS |
-| --- | --- | --- |
-| Bold | Ctrl+B | Cmd+B |
-| Italic | Ctrl+I | Cmd+I |
-| Underline | Ctrl+U | Cmd+U |
-| Code | Ctrl+` | Cmd+` |
-| Undo | Ctrl+Z | Cmd+Z |
-| Redo | Ctrl+Y | Cmd+Shift+Z |
-| Save | Ctrl+S | Cmd+S |
-| Find | Ctrl+F | Cmd+F |
-
----
+## קיצורי מקלדת
+| macOS | Windows / Linux | פעולה |
+|---:|---:|---|
+| Cmd + B | Ctrl + B | Bold |
+| Cmd + I | Ctrl + I | Italic |
+| Cmd + U | Ctrl + U | Underline |
+| ` + Cmd | ` + Ctrl | Code |
+| Cmd + Z | Ctrl + Z | Undo |
+| Cmd + Shift + Z | Ctrl + Y | Redo |
+| Cmd + S | Ctrl + S | Save |
+| Cmd + F | Ctrl + F | Find |
 
 ## Editor Toolbar Controls
-**Text Formatting:**
+- **Text Formatting:** Bold, Italic, Underline, Strike through
+- **Inline Code**
+- **Text Color Picker**
+- **Background / Highlight Color**
+- **Paragraph Styles:** Heading dropdown (H1–H6), paragraph style selector
+- **Alignment:** Left Align, Center Align, Right Align, Justify
+- **Lists & Blocks:** Bullet List, Ordered List, Block quote, Code Block
+- **Insert:** Link (עם URL dialog), Image (עם path input), Table (configurable rows/columns), Horizontal Rule
+- **Direction:** R T L / L T R Toggle, Auto-detection indicator
 
-- Bold, Italic, Underline, Strikethrough
+## מסמך Metadata
+- **Created:** January 2026
+- **Format:** Markdown
+- **Editor:** R T F M a r kd own E di tor 1.1.0
+- **Status:** Production Ready
+- **LICENSE file:** ראה : License
 
-- Inline Code
-
-- Text Color Picker
-
-- Background/Highlight Color
-
-**Paragraph Styles:**
-
-- Heading dropdown (H1–H6)
-
-- Paragraph style selector
-
-**Alignment:**
-
-- Left Align
-
-- Center Align
-
-- Right Align
-
-- Justify
-
-**Lists &amp; Blocks:**
-
-- Bullet List
-
-- Ordered List
-
-- Blockquote
-
-- Code Block
-
-**Insert:**
-
-- Link (עם URL dialog)
-
-- Image (עם path input)
-
-- Table (configurable rows/columns)
-
-- Horizontal Rule
-
-**Direction:**
-
-- RTL/LTR Toggle
-
-- Auto-detection indicator
-
----
-
-## Document Metadata
-**Created**: January 2026
-**Format**: Markdown
-**Editor**: RTF Markdown Editor 1.1.0
-**Status**: Production Ready
-**License**: ראה LICENSE file
-
----
-
-## טיפים ועיקרו הטובים
-- **השתמש ב-Mermaid diagrams** עבור flowcharts, sequence diagrams, וtimelines
-
-- **נצל את ה-RTL support** עבור תיעוד רב לשוני
-
-- **החל צבעים בחוכמה** כדי להדגיש מידע חשוב
-
-- **קינן רשימות בזהירות** כדי לשמור על readability
-
-- **השתמש ב-code blocks** עם language syntax עבור תיעוד טכני
-
-- **סמוך על autosave**—עבוד ללא דאגה לשמירות ידניות
-
-- **עדכן diagrams**—לחץ וערוך אותם inline
-
----
+## טיפים ועיקרי הטובים
+- השתמש ב‑Mermaid diagrams עבור timelines, flow charts ו‑sequence diagrams.
+- נצל היטב את התיעוד הרב עבור R T L support.
+- הדגש מידע חשוב בחוכמה עם צבעים.
+- שמור על readability על ידי זהירות ברשימות מקוננות.
+- השתמש ב‑code blocks עבור תיעוד טכני של שפות.
+- התבסס על autosave כדי לדאוג ללא שמירות ידניות.
+- עדכן ולחץ כדי לערוך ולהתאים inline diagrams.
 
 ## משאבים נוספים
-- [VS Code Extension Marketplace](https://marketplace.visualstudio.com/)
+- V S C o de Extension Marketplace
+- Markdown Guide
+- Mermaid Documentation
+- KaTeX Math Reference
 
-- [Markdown Guide](https://www.markdownguide.org/)
-
-- [Mermaid Documentation](https://mermaid.js.org/)
-
-- [KaTeX Math Reference](https://katex.org/)
-
----
-
-**כתיבה מהנה!** ה-RTF Markdown Editor מעוצב כדי להפוך את יצירת התיעוד ותוכן לחלקה וזורמת.
+*(מהנה הכתיבה ועיצובה R T F M a r kd own E di tor — להפוך את התיעוד שלך לחלקה וזורמת.)*

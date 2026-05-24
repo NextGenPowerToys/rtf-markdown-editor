@@ -2,6 +2,22 @@
 
 All notable changes to the RTF Markdown Editor extension will be documented in this file.
 
+## [3.2.2] - 2026-05-24
+
+> Bug-fix release. Fixes `@pdfmd convert … to markdown` failing on Windows 11 with `Setting up fake worker failed: "Only URLs with a scheme in: file, data, node, and electron are supported by the default ESM loader. … Received protocol 'c:'"`.
+
+### Fixed
+
+- **`@pdfmd` PDF → Markdown now works on Windows.** `pdfjs-dist`'s "fake worker" dynamically `import()`s the path assigned to `GlobalWorkerOptions.workerSrc`. On macOS/Linux a bare absolute path works; on Windows, Node's ESM loader parses `c:\…\pdf.worker.mjs` as a URL, treats `c:` as a protocol scheme, and rejects it. The resolved worker path is now converted to a proper `file://` URL via `url.pathToFileURL()` before assignment, so the loader accepts it on every platform.
+
+## [3.2.1] - 2026-05-23
+
+> Bug-fix release. Restores the `@pdfmd` PDF → Markdown chat participant, which has been broken since 3.0.0 with `Cannot find package 'pdfjs-dist'`.
+
+### Fixed
+
+- **`@pdfmd convert … to markdown` no longer fails with `Cannot find package 'pdfjs-dist'`.** Since 3.0.0 the published `.vsix` shipped without `pdfjs-dist` on disk — esbuild marks the package `--external` (its worker is loaded as a separate file, so it can't be bundled), but `.vscodeignore` was excluding all of `node_modules`. The minimum runtime files (`package.json`, `LICENSE`, `legacy/build/pdf.mjs`, `legacy/build/pdf.worker.mjs`) are now packaged. Adds ~3 MB to the VSIX; no other `node_modules` content is shipped.
+
 ## [3.2.0] - 2026-05-23
 
 > Click a Mermaid diagram → it now opens directly in the **Mermaid NG — Visual Editor** companion extension (drag-and-drop WYSIWYG canvas) instead of the built-in source-only modal. The built-in modal is still the silent fallback when the companion isn't installed, so nothing regresses for users who don't want a second extension.

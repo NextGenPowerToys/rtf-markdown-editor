@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { pathToFileURL } from 'url';
 import type { TextItem, ImageItem, PageData } from './types';
 
 // pdfjs-dist types
@@ -44,7 +45,10 @@ export async function extractPdfText(pdfPath: string): Promise<PageData[]> {
     ].filter((p): p is string => !!p);
     for (const candidate of candidates) {
       if (fs.existsSync(candidate)) {
-        pdfjsLib.GlobalWorkerOptions.workerSrc = candidate;
+        // pdfjs-dist dynamically imports this path via the ESM loader, which on
+        // Windows rejects raw `c:\...` paths ("protocol 'c:'"). Convert to a
+        // file:// URL so the loader accepts it on all platforms.
+        pdfjsLib.GlobalWorkerOptions.workerSrc = pathToFileURL(candidate).toString();
         break;
       }
     }
