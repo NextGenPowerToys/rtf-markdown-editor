@@ -76,6 +76,10 @@ A rich text editor extension for VS Code that provides a Microsoft Word / Google
 - **Bundled Renderer**: No CDN required, fully offline
 - **Export as PNG**: Diagrams are pre-rendered to PNG for HTML and DOCX export
 
+**Companion — Mermaid NG · Diagram Files panel.** Install [Mermaid NG — Visual Editor](https://marketplace.visualstudio.com/items?itemName=NGPowerToys.mermaid-visual-editor) and your workspace's `.mmd` / `.mermaid` files surface in their own Activity Bar panel — single-click any file to open it in the WYSIWYG canvas, the same way the RTF Markdown Editor's Documents panel works for `.md` / `.pdf` / `.docx` / `.html`.
+
+![Mermaid NG — Diagram Files side panel listing .mmd files alongside the VS Code Welcome page](docs/mermaid-ng-diagram-files.png)
+
 ### ✅ Export to HTML
 - **One-Click Export**: Toolbar button or Command Palette
 - **Self-Contained**: All images embedded as base64 — single portable file

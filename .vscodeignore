@@ -6,6 +6,9 @@ src/
 media/*.ts
 media/icons/*.svg
 media/*.svg
+# Keep the activity-bar SVG icon referenced from package.json's
+# viewsContainers.activitybar entry.
+!media/icons/rtf-md-activity.svg
 .git
 .github
 esbuild.config.js

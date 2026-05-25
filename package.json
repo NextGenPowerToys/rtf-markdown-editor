@@ -2,7 +2,7 @@
   "name": "rtf-markdown-editor",
   "displayName": "RTF Markdown Editor",
   "description": "Word-like WYSIWYG Markdown editor for VS Code — RTL/Hebrew/Arabic first, Mermaid diagrams, AI-powered PDF → Markdown via GitHub Copilot Chat, one-click HTML/DOCX/PDF import, Word/HTML/PDF export, dedicated Documents side panel, autosave.",
-  "version": "3.2.3",
+  "version": "3.3.0",
   "publisher": "NGPowerToys",
   "icon": "media/icons/RTFMD.png",
   "keywords": [
@@ -63,7 +63,7 @@
         {
           "id": "rtfMarkdownEditor",
           "title": "RTF Markdown Editor",
-          "icon": "media/icons/RTFMD.png"
+          "icon": "media/icons/rtf-md-activity.svg"
         }
       ]
     },
@@ -140,6 +140,21 @@
           "command": "rtf-markdown-editor.openEditor",
           "when": "(resourceExtname == .md || resourceExtname == .markdown) && activeCustomEditorId != 'rtf-markdown-editor.editor'",
           "group": "navigation@1"
+        },
+        {
+          "command": "rtf-markdown-editor.exportHTMLSelfContained",
+          "when": "resourceExtname == .md || resourceExtname == .markdown",
+          "group": "navigation@2"
+        },
+        {
+          "command": "rtf-markdown-editor.exportDOCX",
+          "when": "resourceExtname == .md || resourceExtname == .markdown",
+          "group": "navigation@3"
+        },
+        {
+          "command": "rtf-markdown-editor.exportPDF",
+          "when": "resourceExtname == .md || resourceExtname == .markdown",
+          "group": "navigation@4"
         }
       ],
       "view/title": [
@@ -147,6 +162,23 @@
           "command": "rtf-markdown-editor.refreshFiles",
           "when": "view == rtfMarkdownEditor.files",
           "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "rtf-markdown-editor.exportHTMLSelfContained",
+          "when": "view == rtfMarkdownEditor.files && viewItem == mdFile",
+          "group": "inline@1"
+        },
+        {
+          "command": "rtf-markdown-editor.exportDOCX",
+          "when": "view == rtfMarkdownEditor.files && viewItem == mdFile",
+          "group": "inline@2"
+        },
+        {
+          "command": "rtf-markdown-editor.exportPDF",
+          "when": "view == rtfMarkdownEditor.files && viewItem == mdFile",
+          "group": "inline@3"
         }
       ]
     },
@@ -169,17 +201,20 @@
       {
         "command": "rtf-markdown-editor.exportHTMLSelfContained",
         "title": "Convert to Web Archive (HTML)",
-        "category": "RTF Markdown"
+        "category": "RTF Markdown",
+        "icon": "$(globe)"
       },
       {
         "command": "rtf-markdown-editor.exportDOCX",
         "title": "Convert to Word (DOCX)",
-        "category": "RTF Markdown"
+        "category": "RTF Markdown",
+        "icon": "$(file-text)"
       },
       {
         "command": "rtf-markdown-editor.exportPDF",
         "title": "Convert to PDF",
-        "category": "RTF Markdown"
+        "category": "RTF Markdown",
+        "icon": "$(file-pdf)"
       },
       {
         "command": "rtf-markdown-editor.importDOCX",

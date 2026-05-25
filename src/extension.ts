@@ -146,12 +146,15 @@ export function activate(context: vscode.ExtensionContext) {
   // Delegates to the provider so it uses the live editor content and webview Mermaid
   // rendering — identical to the toolbar button. Opens the editor in the background
   // if the file is not already open.
+  //
+  // Accepts variadic args because the same command is reachable from: the tree-view
+  // inline button (which passes the FileNode object, not a Uri), the editor/title
+  // bar (which passes the active Uri), the Explorer context menu (Uri), and the
+  // Command Palette (no args). `resolveMarkdownTarget` walks all of these shapes.
   context.subscriptions.push(
-    vscode.commands.registerCommand('rtf-markdown-editor.exportHTMLSelfContained', async (uri?: vscode.Uri) => {
-      const target = uri ?? (vscode.window.activeTextEditor
-        ? vscode.Uri.file(vscode.window.activeTextEditor.document.uri.fsPath)
-        : undefined);
-      if (!target || !/\.(md|markdown)$/i.test(target.fsPath)) {
+    vscode.commands.registerCommand('rtf-markdown-editor.exportHTMLSelfContained', async (...args: any[]) => {
+      const target = resolveMarkdownTarget(args);
+      if (!target) {
         vscode.window.showErrorMessage('Please open or select a Markdown file first');
         return;
       }
@@ -165,11 +168,9 @@ export function activate(context: vscode.ExtensionContext) {
   // Register command to export current document as Word DOCX
   // Same delegation pattern as exportHTMLSelfContained.
   context.subscriptions.push(
-    vscode.commands.registerCommand('rtf-markdown-editor.exportDOCX', async (uri?: vscode.Uri) => {
-      const target = uri ?? (vscode.window.activeTextEditor
-        ? vscode.Uri.file(vscode.window.activeTextEditor.document.uri.fsPath)
-        : undefined);
-      if (!target || !/\.(md|markdown)$/i.test(target.fsPath)) {
+    vscode.commands.registerCommand('rtf-markdown-editor.exportDOCX', async (...args: any[]) => {
+      const target = resolveMarkdownTarget(args);
+      if (!target) {
         vscode.window.showErrorMessage('Please open or select a Markdown file first');
         return;
       }
@@ -179,11 +180,9 @@ export function activate(context: vscode.ExtensionContext) {
   // Register command to export current document as PDF
   // Same delegation pattern as exportHTMLSelfContained and exportDOCX.
   context.subscriptions.push(
-    vscode.commands.registerCommand('rtf-markdown-editor.exportPDF', async (uri?: vscode.Uri) => {
-      const target = uri ?? (vscode.window.activeTextEditor
-        ? vscode.Uri.file(vscode.window.activeTextEditor.document.uri.fsPath)
-        : undefined);
-      if (!target || !/\.(md|markdown)$/i.test(target.fsPath)) {
+    vscode.commands.registerCommand('rtf-markdown-editor.exportPDF', async (...args: any[]) => {
+      const target = resolveMarkdownTarget(args);
+      if (!target) {
         vscode.window.showErrorMessage('Please open or select a Markdown file first');
         return;
       }

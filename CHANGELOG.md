@@ -2,6 +2,24 @@
 
 All notable changes to the RTF Markdown Editor extension will be documented in this file.
 
+## [3.3.0] - 2026-05-25
+
+> One-click HTML / DOCX / PDF export from the **Documents** side panel and from the editor tab's title bar — no more right-click hunt. Activity-bar icon refreshed to a monochrome SVG that themes with the rest of VS Code's sidebar. Companion **Mermaid NG — Diagram Files** panel now featured in the README and landing-page gallery.
+
+### Added
+
+- **Inline export icons on every `.md` row in the Documents panel.** Hovering a Markdown file in the **Documents** Activity Bar view now reveals three icon buttons on the right side of the row — globe (HTML), document (DOCX), PDF (PDF) — each invoking the corresponding `exportHTMLSelfContained` / `exportDOCX` / `exportPDF` command against that file's URI. The row's click action is unchanged (still opens the file in the RTF editor), so the new buttons add capability without retraining muscle memory.
+- **Same export icons in the editor tab's title bar.** When a `.md` / `.markdown` file is the active tab — in either the RTF custom editor or the default text editor — the three export icons appear in the title bar alongside the "Edit with RTF Markdown Editor" hand-off icon (the latter still only shows when the file is *not* already in the RTF editor). Single-click → save dialog → conversion uses the live editor content + Mermaid pre-render, identical to the in-editor toolbar button.
+- **Companion Mermaid NG — Diagram Files screenshot.** Added [`docs/mermaid-ng-diagram-files.png`](docs/mermaid-ng-diagram-files.png) showing the companion extension's dedicated Activity Bar panel for `.mmd` / `.mermaid` files. Surfaces in the README's Diagram Support section and in the landing-page screenshot gallery to make the click-to-edit handoff visible at a glance.
+
+### Changed
+
+- **Activity-bar icon redrawn as a monochrome SVG.** The Documents side panel's Activity Bar entry now uses [`media/icons/rtf-md-activity.svg`](media/icons/rtf-md-activity.svg) — a 24×24 stroke-only document silhouette with the classic Markdown `M↓` glyph, drawn with `stroke="currentColor"`. The icon now picks up the active/inactive Activity Bar foreground colour the same way Explorer, Search, Mermaid Visual Editor, and Extensions do, instead of rendering as a fixed-colour PNG that didn't theme. The marketplace listing icon (`media/icons/RTFMD.png`) is unchanged.
+
+### Fixed
+
+- **Export commands no longer raise "Please open or select a Markdown file first" when invoked from the Documents tree.** VS Code's `view/item/context` invocation passes the `TreeItem` *node object* (not a `Uri`) as `args[0]`; the previous `exportHTMLSelfContained` / `exportDOCX` / `exportPDF` handlers assumed a `Uri` and ran a regex against `.fsPath`, which was `undefined` on the node object, so they fell through to the error toast every time. All three commands now route through the same `resolveMarkdownTarget()` resolver the `openEditor` command uses, which walks `args` (`Uri` / string / `{uri}` / `{resource}` / `{fsPath}`), then `activeTextEditor`, then every `tabGroups` active tab — so they work from the tree inline button, the editor title bar (including when a custom editor is active and `activeTextEditor` is `undefined`), the Explorer context menu, and the Command Palette.
+
 ## [3.2.3] - 2026-05-25
 
 > Build refresh tested against **Mermaid NG — Visual Editor 2.5.0**, which brings a per-node green **"+"** button → 4-shape picker (one-click flow building), multi-line labels with `\n` encoding across every object type, and a default + recently-used colour palette in the edit modal. No behaviour changes in the RTF Markdown Editor itself — clicking a Mermaid diagram still hands off to the companion via `mermaidVisualEditor.openFromFile`, and users on v2.5.0+ of the companion automatically see the new editing features.
