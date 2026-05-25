@@ -2,6 +2,14 @@
 
 All notable changes to the RTF Markdown Editor extension will be documented in this file.
 
+## [3.3.1] - 2026-05-25
+
+> Documentation-only patch. Re-homes every screenshot referenced from the README and the landing page under the `docs/screenshots/` subdirectory. Restores the landing-page gallery (its `Screenshot 2026-02-25 at *.png` references were broken when the files were moved out of `docs/` root) and points the README's companion-extension figure at the canonical `docs/screenshots/image.png`.
+
+### Changed
+
+- **All screenshot references now resolve under `docs/screenshots/`.** Updated 9 `<img src>` paths in [`docs/index.html`](docs/index.html) and the companion-extension image link in [`README.md`](README.md) so the gallery renders again on the landing page and the README's Mermaid NG figure points at the in-repo screenshot rather than the orphan copy at `docs/mermaid-ng-diagram-files.png`. Removed that orphan copy from `docs/` since nothing references it.
+
 ## [3.3.0] - 2026-05-25
 
 > One-click HTML / DOCX / PDF export from the **Documents** side panel and from the editor tab's title bar — no more right-click hunt. Activity-bar icon refreshed to a monochrome SVG that themes with the rest of VS Code's sidebar. Companion **Mermaid NG — Diagram Files** panel now featured in the README and landing-page gallery.
