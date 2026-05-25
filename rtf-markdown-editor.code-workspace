@@ -1,10 +1,12 @@
 {
 	"folders": [
 		{
-			"path": "."
+			"name": "Mermaid Live Editor",
+			"path": "../../../Mermaid Live Editor"
 		},
 		{
-			"path": "../../../Mermaid Live Editor"
+			"name": "rtf-markdown-editor",
+			"path": "."
 		}
 	],
 	"settings": {
