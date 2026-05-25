@@ -2,6 +2,14 @@
 
 All notable changes to the RTF Markdown Editor extension will be documented in this file.
 
+## [3.2.3] - 2026-05-25
+
+> Build refresh tested against **Mermaid NG — Visual Editor 2.5.0**, which brings a per-node green **"+"** button → 4-shape picker (one-click flow building), multi-line labels with `\n` encoding across every object type, and a default + recently-used colour palette in the edit modal. No behaviour changes in the RTF Markdown Editor itself — clicking a Mermaid diagram still hands off to the companion via `mermaidVisualEditor.openFromFile`, and users on v2.5.0+ of the companion automatically see the new editing features.
+
+### Changed
+
+- **Documented companion floor bump.** The "single-click hand-off to Mermaid NG" entry-point still works against any companion `≥ 2.3.0` (the version that introduced the direct-open API), but the README now points readers at **2.5.0+** so they get the new one-click flow building, multi-line labels, and colour palette out of the box. No code change in this extension — the contract with the companion is unchanged.
+
 ## [3.2.2] - 2026-05-24
 
 > Bug-fix release. Fixes `@pdfmd convert … to markdown` failing on Windows 11 with `Setting up fake worker failed: "Only URLs with a scheme in: file, data, node, and electron are supported by the default ESM loader. … Received protocol 'c:'"`.

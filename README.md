@@ -72,7 +72,7 @@ A rich text editor extension for VS Code that provides a Microsoft Word / Google
   - Git graphs
   - Pie charts
 - **Syntax**: Standard ` ```mermaid ` blocks (GitHub compatible) and `::: mermaid` blocks (Azure DevOps compatible)
-- **Live Editing**: Click any diagram to open it directly in the [**Mermaid NG — Visual Editor**](https://marketplace.visualstudio.com/items?itemName=NGPowerToys.mermaid-visual-editor) companion extension (drag-and-drop WYSIWYG canvas; v2.3.0+ opens the clicked diagram active without showing the thumbnail picker). Falls back silently to the built-in source-edit modal when the companion isn't installed — no install prompt, no broken click.
+- **Live Editing**: Click any diagram to open it directly in the [**Mermaid NG — Visual Editor**](https://marketplace.visualstudio.com/items?itemName=NGPowerToys.mermaid-visual-editor) companion extension (drag-and-drop WYSIWYG canvas; v2.3.0+ opens the clicked diagram active without showing the thumbnail picker; **v2.5.0+** adds a per-node `+` button → 4-shape picker for one-click flow building, multi-line labels with `\n` encoding across every object type, and a default + recently-used colour palette in the edit modal). Falls back silently to the built-in source-edit modal when the companion isn't installed — no install prompt, no broken click.
 - **Bundled Renderer**: No CDN required, fully offline
 - **Export as PNG**: Diagrams are pre-rendered to PNG for HTML and DOCX export
 
